@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package order.v1;
+
+option go_package = "github.com/nexora/order-service/proto/order/v1;orderv1";
+
+// OrderService is the gRPC surface for OMS (stub; HTTP is primary in memory mode).
+service OrderService {
+  rpc GetOrder(GetOrderRequest) returns (Order);
+  rpc PlaceOrder(PlaceOrderRequest) returns (Order);
+  rpc CancelOrder(CancelOrderRequest) returns (Order);
+}
+
+message GetOrderRequest {
+  string tenant_id = 1;
+  string order_id = 2;
+}
+
+message PlaceOrderRequest {
+  string tenant_id = 1;
+  string order_id = 2;
+  string idempotency_key = 3;
+}
+
+message CancelOrderRequest {
+  string tenant_id = 1;
+  string order_id = 2;
+  string reason = 3;
+}
+
+message Order {
+  string id = 1;
+  string tenant_id = 2;
+  string status = 3;
+  string currency = 4;
+  int64 total_minor = 5;
+  string idempotency_key = 6;
+}

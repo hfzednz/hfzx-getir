@@ -1,0 +1,8 @@
+syntax = "proto3";
+package nexora.liveops.v1;
+option go_package = "github.com/nexora/liveops-service/api/proto/liveops/v1;liveopsv1";
+service LiveOpsService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+message HealthRequest {}
+message HealthResponse { string status = 1; }

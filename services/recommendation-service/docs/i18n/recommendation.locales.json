@@ -1,0 +1,17 @@
+{
+  "namespace": "recommendations",
+  "locales": {
+    "en": {
+      "rec.for_you": "For you",
+      "rec.fbt": "Frequently bought together",
+      "rec.similar": "Similar products",
+      "rec.trending": "Trending"
+    },
+    "tr": {
+      "rec.for_you": "Sizin için",
+      "rec.fbt": "Sık birlikte alınanlar",
+      "rec.similar": "Benzer ürünler",
+      "rec.trending": "Trend"
+    }
+  }
+}

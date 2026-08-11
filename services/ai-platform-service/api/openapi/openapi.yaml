@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: NEXORA AI Platform
+  version: 1.0.0
+servers:
+  - url: http://localhost:8106
+paths:
+  /v1/ai/infer:
+    post:
+      summary: Real-time model inference
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: OK }
+  /v1/ai/llm/complete:
+    post:
+      summary: LLM completion with guardrails
+      responses:
+        "200": { description: OK }
+  /v1/ai/agents/{kind}/run:
+    post:
+      summary: Run enterprise AI agent
+      parameters:
+        - name: kind
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /v1/ai/models:
+    post:
+      summary: Register model version
+      responses:
+        "201": { description: Created }
+  /v1/ai/features:
+    post:
+      summary: Upsert feature vector
+      responses:
+        "201": { description: Created }

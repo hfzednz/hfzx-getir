@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package location.v1;
+
+option go_package = "github.com/nexora/location-service/proto/location/v1;locationv1";
+
+// LocationService is a gRPC stub surface; HTTP is primary.
+service LocationService {
+  rpc ForwardGeocode(GeocodeRequest) returns (GeocodeResponse);
+  rpc ReverseGeocode(ReverseGeocodeRequest) returns (GeocodeResponse);
+  rpc Nearby(NearbyRequest) returns (NearbyResponse);
+  rpc CheckServiceability(ServiceabilityRequest) returns (ServiceabilityResponse);
+  rpc ProxyRoute(ProxyRouteRequest) returns (ProxyRouteResponse);
+}
+
+message LatLng {
+  double lat = 1;
+  double lng = 2;
+}
+
+message GeocodeRequest {
+  string tenant_id = 1;
+  string query = 2;
+}
+
+message ReverseGeocodeRequest {
+  string tenant_id = 1;
+  double lat = 2;
+  double lng = 3;
+}
+
+message GeocodeResponse {
+  string place_id = 1;
+  string formatted = 2;
+  double lat = 3;
+  double lng = 4;
+  double confidence = 5;
+  bool cached = 6;
+}
+
+message NearbyRequest {
+  string tenant_id = 1;
+  LatLng center = 2;
+  double radius_m = 3;
+  string kind = 4;
+  int32 limit = 5;
+}
+
+message POI {
+  string id = 1;
+  string kind = 2;
+  string ref_id = 3;
+  string name = 4;
+  double lat = 5;
+  double lng = 6;
+}
+
+message NearbyResponse {
+  repeated POI items = 1;
+}
+
+message ServiceabilityRequest {
+  string tenant_id = 1;
+  double lat = 2;
+  double lng = 3;
+}
+
+message ServiceabilityResponse {
+  bool serviceable = 1;
+  string zone_id = 2;
+  string reason = 3;
+  double score = 4;
+}
+
+message ProxyRouteRequest {
+  string tenant_id = 1;
+  LatLng origin = 2;
+  LatLng dest = 3;
+}
+
+message ProxyRouteResponse {
+  string route_id = 1;
+  double distance_meters = 2;
+  double duration_seconds = 3;
+}

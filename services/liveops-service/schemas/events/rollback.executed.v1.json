@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "liveops.RollbackExecuted.v1",
+  "type": "object",
+  "required": ["type", "aggregateId", "tenantId", "occurredAt", "kind", "subjectKey"],
+  "properties": {
+    "type": { "const": "RollbackExecuted" },
+    "kind": { "type": "string" },
+    "subjectKey": { "type": "string" },
+    "fromVersion": { "type": "integer" },
+    "toVersion": { "type": "integer" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "tenantId": { "type": "string", "format": "uuid" },
+    "occurredAt": { "type": "string", "format": "date-time" }
+  }
+}

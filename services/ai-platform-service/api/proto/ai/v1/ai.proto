@@ -1,0 +1,45 @@
+syntax = "proto3";
+package nexora.ai.v1;
+option go_package = "github.com/nexora/ai-platform-service/api/proto/ai/v1;aiv1";
+
+service AIPlatform {
+  rpc Infer (InferRequest) returns (InferResponse);
+  rpc CompleteLLM (LLMRequest) returns (LLMResponse);
+  rpc RunAgent (AgentRequest) returns (AgentResponse);
+}
+
+message InferRequest {
+  string tenant_id = 1;
+  string model_key = 2;
+  map<string, double> features = 3;
+}
+
+message InferResponse {
+  string id = 1;
+  map<string, double> predictions = 2;
+  int64 latency_ms = 3;
+}
+
+message LLMRequest {
+  string tenant_id = 1;
+  string user_prompt = 2;
+  string prompt_key = 3;
+  string rag_query = 4;
+}
+
+message LLMResponse {
+  string content = 1;
+  bool blocked = 2;
+}
+
+message AgentRequest {
+  string tenant_id = 1;
+  string kind = 2;
+  string input = 3;
+}
+
+message AgentResponse {
+  string run_id = 1;
+  string status = 2;
+  string output = 3;
+}

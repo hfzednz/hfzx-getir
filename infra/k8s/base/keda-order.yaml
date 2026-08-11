@@ -1,0 +1,17 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: order-service-keda
+  namespace: nexora-apps
+spec:
+  scaleTargetRef:
+    name: order-service
+  minReplicaCount: 3
+  maxReplicaCount: 40
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.nexora-data:9092
+        consumerGroup: order-service
+        topic: orders.events
+        lagThreshold: "100"

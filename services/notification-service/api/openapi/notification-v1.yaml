@@ -1,0 +1,426 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Notification Service
+  version: 1.0.0
+  description: Omnichannel messaging — templates, preferences, send, schedule, inbox, deliveries.
+servers:
+  - url: http://localhost:8101
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/send:
+    post:
+      summary: Send a notification
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendRequest"
+      responses:
+        "201":
+          description: Created
+        "400":
+          $ref: "#/components/responses/NexoraError"
+  /v1/notifications/send/bulk:
+    post:
+      summary: Bulk send
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                principalIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                channel:
+                  type: string
+                priority:
+                  type: string
+                templateKey:
+                  type: string
+      responses:
+        "201":
+          description: Created
+  /v1/notifications/events:
+    post:
+      summary: Handle domain event → template send
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventType, principalId]
+              properties:
+                eventType:
+                  type: string
+                principalId:
+                  type: string
+                  format: uuid
+                orderId:
+                  type: string
+                  format: uuid
+                channel:
+                  type: string
+      responses:
+        "201":
+          description: Created
+  /v1/notifications/templates:
+    post:
+      summary: Upsert template
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateUpsert"
+      responses:
+        "201":
+          description: Created
+  /v1/notifications/templates/{id}/approve:
+    post:
+      summary: Approve template
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/templates/preview:
+    post:
+      summary: Preview template render
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                channel:
+                  type: string
+                vars:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/preferences/{principalId}:
+    get:
+      summary: Get preferences
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: principalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+    put:
+      summary: Set preferences
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: principalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Preferences"
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/devices:
+    post:
+      summary: Register device push token
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                principalId:
+                  type: string
+                  format: uuid
+                platform:
+                  type: string
+                  enum: [fcm, apns, web]
+                token:
+                  type: string
+      responses:
+        "201":
+          description: Created
+  /v1/notifications/inbox/{principalId}:
+    get:
+      summary: List inbox
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: principalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/inbox/{id}/read:
+    post:
+      summary: Mark inbox item read
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/deliveries/{id}:
+    get:
+      summary: Get delivery status
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/deliveries/{id}/retry:
+    post:
+      summary: Retry failed delivery
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/schedules:
+    post:
+      summary: Schedule send
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleRequest"
+      responses:
+        "201":
+          description: Created
+  /v1/notifications/schedules/process-due:
+    post:
+      summary: Process due schedules
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/ai/best-send-time/{principalId}:
+    get:
+      summary: Best send time stub
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: principalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/ai/recommend-channel/{principalId}:
+    get:
+      summary: Recommend channel stub
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: principalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/notifications/admin/stats:
+    get:
+      summary: Admin stats
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+  schemas:
+    NexoraErrorBody:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string
+        retriable:
+          type: boolean
+    SendRequest:
+      type: object
+      required: [channel, principalId]
+      properties:
+        principalId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        channel:
+          type: string
+          enum: [push, email, sms, whatsapp, in_app, web]
+        priority:
+          type: string
+          enum: [otp, transactional, system, marketing]
+        templateKey:
+          type: string
+        recipient:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        vars:
+          type: object
+          additionalProperties:
+            type: string
+        idempotencyKey:
+          type: string
+    TemplateUpsert:
+      type: object
+      required: [key, channel]
+      properties:
+        key:
+          type: string
+        channel:
+          type: string
+        locale:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        activate:
+          type: boolean
+    Preferences:
+      type: object
+      properties:
+        channelOptOut:
+          type: object
+          additionalProperties:
+            type: boolean
+        quietStart:
+          type: integer
+        quietEnd:
+          type: integer
+    ScheduleRequest:
+      type: object
+      required: [channel, principalId, sendAt]
+      properties:
+        principalId:
+          type: string
+          format: uuid
+        channel:
+          type: string
+        priority:
+          type: string
+        sendAt:
+          type: string
+          format: date-time
+        subject:
+          type: string
+        body:
+          type: string
+  responses:
+    NexoraError:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: "#/components/schemas/NexoraErrorBody"

@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: NEXORA LiveOps Service
+  version: 1.0.0
+  description: Feature flags, remote config, experiments, LiveOps events, rollbacks
+servers:
+  - url: http://localhost:8116
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    TraceId:
+      name: X-Request-Id
+      in: header
+      schema: { type: string }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            traceId: { type: string }
+            retriable: { type: boolean }
+    FeatureFlag:
+      type: object
+      properties:
+        key: { type: string }
+        description: { type: string }
+        enabled: { type: boolean }
+        percentage: { type: integer, minimum: 0, maximum: 100 }
+        rules: { type: array, items: { type: object } }
+        dependsOn: { type: array, items: { type: string } }
+        emergencyOff: { type: boolean }
+    TargetingContext:
+      type: object
+      properties:
+        subjectId: { type: string }
+        country: { type: string }
+        city: { type: string }
+        warehouseId: { type: string }
+        segment: { type: string }
+        role: { type: string }
+        device: { type: string }
+        os: { type: string }
+        appVersion: { type: string }
+        language: { type: string }
+    ConfigDoc:
+      type: object
+      properties:
+        key: { type: string }
+        namespace: { type: string }
+        payload: { type: object }
+    Experiment:
+      type: object
+      properties:
+        key: { type: string }
+        name: { type: string }
+        kind: { type: string, enum: [ab, aa, mvt, canary] }
+        hypothesis: { type: string }
+        variants: { type: array, items: { type: object } }
+        primaryMetric: { type: string }
+    LiveOpsEvent:
+      type: object
+      properties:
+        key: { type: string }
+        kind: { type: string }
+        title: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        scopes: { type: array, items: { type: object } }
+        configPatch: { type: object }
+    ChangeRequest:
+      type: object
+      properties:
+        kind: { type: string }
+        subjectKey: { type: string }
+        payload: { type: object }
+    RollbackRequest:
+      type: object
+      properties:
+        kind: { type: string, enum: [flag, config, experiment, emergency] }
+        subjectKey: { type: string }
+        toVersion: { type: integer }
+        reason: { type: string }
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200": { description: ok }
+  /ready:
+    get:
+      summary: Readiness
+      responses:
+        "200": { description: ok }
+  /v1/liveops/flags:
+    get:
+      summary: List feature flags
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200": { description: flags }
+    post:
+      summary: Upsert feature flag
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FeatureFlag" }
+      responses:
+        "200": { description: upserted }
+  /v1/liveops/flags/evaluate:
+    post:
+      summary: Evaluate flags for subject context
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                context: { $ref: "#/components/schemas/TargetingContext" }
+                keys: { type: array, items: { type: string } }
+      responses:
+        "200": { description: evaluations }
+  /v1/liveops/configs:
+    post:
+      summary: Publish remote config document
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfigDoc" }
+      responses:
+        "200": { description: published }
+  /v1/liveops/configs/resolve:
+    get:
+      summary: Resolve remote config with LiveOps patches
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: key
+          in: query
+          schema: { type: string }
+        - name: namespace
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: resolved config }
+  /v1/liveops/experiments:
+    get:
+      summary: List experiments
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200": { description: experiments }
+    post:
+      summary: Upsert experiment
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Experiment" }
+      responses:
+        "200": { description: upserted }
+  /v1/liveops/experiments/{key}/start:
+    post:
+      summary: Start experiment
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: started }
+  /v1/liveops/experiments/{key}/assign:
+    post:
+      summary: Sticky assign subject to variant
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TargetingContext" }
+      responses:
+        "200": { description: assignment }
+  /v1/liveops/experiments/{key}/complete:
+    post:
+      summary: Complete experiment and optionally auto-rollout winner
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                winner: { type: string }
+                autoRollout: { type: boolean }
+      responses:
+        "200": { description: completed }
+  /v1/liveops/events:
+    get:
+      summary: List LiveOps calendar events
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200": { description: events }
+    post:
+      summary: Upsert LiveOps event
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LiveOpsEvent" }
+      responses:
+        "200": { description: upserted }
+  /v1/liveops/events/{key}/activate:
+    post:
+      summary: Activate LiveOps event
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: activated }
+  /v1/liveops/changes:
+    post:
+      summary: Submit change request for approval
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChangeRequest" }
+      responses:
+        "200": { description: pending }
+  /v1/liveops/changes/{id}/decide:
+    post:
+      summary: Approve or reject change
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approve: { type: boolean }
+                note: { type: string }
+      responses:
+        "200": { description: decided }
+  /v1/liveops/rollbacks:
+    post:
+      summary: Execute rollback
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RollbackRequest" }
+      responses:
+        "200": { description: executed }
+  /v1/liveops/admin/stats:
+    get:
+      summary: LiveOps dashboard stats
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200": { description: stats }
+  /v1/liveops/outbox/publish:
+    post:
+      summary: Drain outbox (worker)
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200": { description: published count }

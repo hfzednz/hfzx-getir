@@ -1,0 +1,31 @@
+# NEXORA inventory-service — example configuration
+# Copy to config.yaml or map keys to environment variables.
+
+http:
+  addr: ":8083"
+  publicBaseUrl: "http://localhost:8083"
+  corsAllowedOrigins: ["*"]
+  rateLimitPerMinute: 240
+
+grpc:
+  addr: ":9093"
+
+database:
+  url: "" # empty → in-memory repositories (dev mode)
+
+redis:
+  url: "redis://localhost:6381"
+
+kafka:
+  brokers: [] # e.g. ["localhost:9095"]
+
+opensearch:
+  url: "" # e.g. "http://localhost:9202"
+
+reservation:
+  softReserveTTL: 15m
+
+# Environment variable mapping (preferred in containers):
+# HTTP_ADDR, GRPC_ADDR, PUBLIC_BASE_URL, DATABASE_URL, REDIS_URL,
+# KAFKA_BROKERS, OPENSEARCH_URL, CORS_ALLOWED_ORIGINS,
+# RATE_LIMIT_PER_MINUTE, SOFT_RESERVE_TTL

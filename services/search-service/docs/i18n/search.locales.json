@@ -1,0 +1,15 @@
+{
+  "namespace": "search",
+  "locales": {
+    "en": {
+      "search.zero_results": "No products matched your search.",
+      "search.did_you_mean": "Did you mean: {suggestion}?",
+      "search.trending": "Trending now"
+    },
+    "tr": {
+      "search.zero_results": "Aramanızla eşleşen ürün bulunamadı.",
+      "search.did_you_mean": "Bunu mu demek istediniz: {suggestion}?",
+      "search.trending": "Öne çıkanlar"
+    }
+  }
+}

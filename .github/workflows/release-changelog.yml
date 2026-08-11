@@ -1,0 +1,36 @@
+name: release-changelog
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "mobile/*"
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Generate notes
+        run: |
+          mkdir -p ops/release/notes
+          TAG="${GITHUB_REF_NAME}"
+          {
+            echo "# Release ${TAG}"
+            echo
+            echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            echo "## Commits since previous tag"
+            PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+            if [ -n "$PREV" ]; then
+              git log --pretty=format:'- %s (%h)' "$PREV..HEAD"
+            else
+              git log -20 --pretty=format:'- %s (%h)'
+            fi
+          } > "ops/release/notes/${TAG}.md"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: ops/release/notes/

@@ -1,0 +1,235 @@
+openapi: 3.0.3
+info:
+  title: NEXORA CRM Service
+  version: 1.0.0
+  description: Tickets, live chat, AI assist, KB, cases, SLA, CSAT/NPS, Customer360.
+servers:
+  - url: http://localhost:8102
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/crm/tickets:
+    post:
+      summary: Create ticket
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerId, subject]
+              properties:
+                customerId: { type: string, format: uuid }
+                subject: { type: string }
+                description: { type: string }
+                priority: { type: string, enum: [low, normal, high, urgent] }
+                category: { type: string }
+                idempotencyKey: { type: string }
+      responses:
+        "201":
+          description: Created
+        "400":
+          $ref: "#/components/responses/NexoraError"
+  /v1/crm/tickets/{id}/assign:
+    post:
+      summary: Assign ticket
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agentId]
+              properties:
+                agentId: { type: string, format: uuid }
+                teamId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+  /v1/crm/tickets/{id}/resolve:
+    post:
+      summary: Resolve ticket
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+        "422":
+          $ref: "#/components/responses/NexoraError"
+  /v1/crm/tickets/{id}/close:
+    post:
+      summary: Close ticket (resolved only)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+        "422":
+          $ref: "#/components/responses/NexoraError"
+  /v1/crm/chats:
+    post:
+      summary: Start chat
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerId]
+              properties:
+                customerId: { type: string, format: uuid }
+                channel: { type: string }
+      responses:
+        "201":
+          description: Created
+  /v1/crm/chats/{id}/messages:
+    post:
+      summary: Post chat message
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [senderRole, body]
+              properties:
+                senderRole: { type: string, enum: [customer, agent, ai, system] }
+                body: { type: string }
+      responses:
+        "201":
+          description: Created
+  /v1/crm/ai/assist:
+    post:
+      summary: AI assist (KB + LLM)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+                customerId: { type: string, format: uuid }
+                conversationId: { type: string, format: uuid }
+                autoEscalate: { type: boolean }
+      responses:
+        "200":
+          description: OK
+  /v1/crm/kb/search:
+    get:
+      summary: Search knowledge base
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+  /v1/crm/feedback/csat:
+    post:
+      summary: Submit CSAT
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerId, score]
+              properties:
+                customerId: { type: string, format: uuid }
+                score: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: string }
+      responses:
+        "201":
+          description: Created
+  /v1/crm/customers/{customerId}/360:
+    get:
+      summary: Customer 360 aggregate
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: customerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+  /v1/crm/admin/stats:
+    get:
+      summary: Admin stats
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string }
+  responses:
+    NexoraError:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: "#/components/schemas/NexoraErrorBody"
+  schemas:
+    NexoraErrorBody:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        traceId: { type: string }
+        retriable: { type: boolean }

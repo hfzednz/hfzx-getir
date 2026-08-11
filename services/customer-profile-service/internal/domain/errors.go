@@ -1,0 +1,18 @@
+package domain
+
+import "errors"
+
+// Sentinel domain errors. Adapters map these to HTTP/gRPC codes.
+var (
+	ErrNotFound        = errors.New("not found")
+	ErrAlreadyExists   = errors.New("already exists")
+	ErrInvalidArgument = errors.New("invalid argument")
+	ErrInvariant       = errors.New("invariant violation")
+	ErrConflict        = errors.New("conflict")
+	ErrUnauthorized    = errors.New("unauthorized")
+	ErrForbidden       = errors.New("forbidden")
+	ErrProfileDeleted  = errors.New("profile deleted")
+	ErrProfileMerged   = errors.New("profile merged")
+	ErrRateLimited     = errors.New("rate limited")
+	ErrZoneInvalid     = errors.New("address outside delivery zone")
+)

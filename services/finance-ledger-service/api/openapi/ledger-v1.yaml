@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: NEXORA finance-ledger-service
+  version: 1.0.0
+  description: Double-entry ledger, tax, and invoices. Money as int64 minor units.
+servers:
+  - url: http://localhost:8091
+paths:
+  /v1/ledger/accounts:
+    post:
+      summary: EnsureAccount
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, type, currency]
+              properties:
+                code: { type: string }
+                name: { type: string }
+                type: { type: string, enum: [asset, liability, revenue, expense, clearing] }
+                currency: { type: string, minLength: 3, maxLength: 3 }
+      responses:
+        '201': { description: Account ensured }
+  /v1/ledger/accounts/{id}/balance:
+    get:
+      summary: GetBalance
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Account balance in minor units }
+  /v1/ledger/journals:
+    post:
+      summary: PostJournal
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currency, lines]
+              properties:
+                currency: { type: string }
+                reference: { type: string, description: Opaque external ref }
+                description: { type: string }
+                lines:
+                  type: array
+                  minItems: 2
+                  items:
+                    type: object
+                    properties:
+                      accountId: { type: string, format: uuid }
+                      accountCode: { type: string }
+                      debitMinor: { type: integer, format: int64 }
+                      creditMinor: { type: integer, format: int64 }
+                      memo: { type: string }
+      responses:
+        '201': { description: Journal posted }
+        '422': { description: Unbalanced journal }
+    get:
+      summary: ListJournals
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { description: Journal list }
+  /v1/ledger/invoices:
+    post:
+      summary: CreateInvoice
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201': { description: Invoice created }
+  /v1/ledger/tax/calculate:
+    post:
+      summary: TaxCalculate
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { description: Tax result }
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string }

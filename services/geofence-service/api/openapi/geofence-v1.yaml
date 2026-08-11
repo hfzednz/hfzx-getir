@@ -1,0 +1,158 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Geofence Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8099
+paths:
+  /v1/geofence/health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/geofence/zones:
+    get:
+      summary: List zones
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: city
+          in: query
+          schema: { type: string }
+        - name: kind
+          in: query
+          schema: { type: string, enum: [delivery, restricted, warehouse] }
+      responses:
+        "200":
+          description: Zone page
+    post:
+      summary: Create zone
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateZone"
+      responses:
+        "201":
+          description: Created
+  /v1/geofence/zones/{id}:
+    get:
+      summary: Get zone
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ZoneId"
+      responses:
+        "200":
+          description: Zone
+    put:
+      summary: Update zone
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ZoneId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateZone"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      summary: Delete zone
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ZoneId"
+      responses:
+        "200":
+          description: Deleted
+  /v1/geofence/contains:
+    post:
+      summary: Point-in-zone check
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [zoneId, point]
+              properties:
+                zoneId: { type: string, format: uuid }
+                point: { $ref: "#/components/schemas/Point" }
+      responses:
+        "200":
+          description: Contains result
+  /v1/geofence/serviceability:
+    post:
+      summary: City + point serviceability
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [point]
+              properties:
+                city: { type: string }
+                point: { $ref: "#/components/schemas/Point" }
+      responses:
+        "200":
+          description: Serviceability result
+  /v1/geofence/outbox/publish:
+    post:
+      summary: Drain outbox
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Published count
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    ZoneId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Point:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number }
+        lng: { type: number }
+    CreateZone:
+      type: object
+      required: [name, kind]
+      properties:
+        name: { type: string }
+        city: { type: string }
+        kind: { type: string, enum: [delivery, restricted, warehouse] }
+        vertices:
+          type: array
+          items: { $ref: "#/components/schemas/Point" }
+        centerLat: { type: number }
+        centerLng: { type: number }
+        radiusM: { type: number }
+        active: { type: boolean }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            traceId: { type: string }
+            retriable: { type: boolean }

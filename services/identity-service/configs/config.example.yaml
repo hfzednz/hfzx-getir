@@ -1,0 +1,27 @@
+# Example configuration (env vars take precedence via config.Load).
+http_addr: ":8080"
+grpc_addr: ":9090"
+public_base_url: "http://localhost:8080"
+
+database_url: "postgres://nexora:nexora@localhost:5432/identity?sslmode=disable"
+redis_url: "redis://localhost:6379/0"
+kafka_brokers:
+  - "localhost:9092"
+
+jwt_iss: "https://identity.nexora.local"
+jwt_aud: "nexora"
+# jwt_key_pem: "/secrets/jwt-rsa.pem"
+access_ttl: "15m"
+refresh_ttl: "720h"
+session_idle_ttl: "30m"
+session_absolute_ttl: "12h"
+
+otp_dev_mode: true
+otp_ttl: "5m"
+otp_length: 6
+
+rate_limit_per_minute: 120
+cors_allowed_origins:
+  - "*"
+
+oidc_issuer: "http://localhost:8080"

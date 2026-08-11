@@ -1,0 +1,38 @@
+name: nexora_core
+description: NEXORA shared mobile core — network, storage, security, sync, analytics.
+publish_to: "none"
+version: 1.0.0
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  collection: ^1.19.1
+  connectivity_plus: ^6.1.5
+  crypto: ^3.0.7
+  dio: ^5.11.0
+  drift: ^2.28.2
+  drift_flutter: ^0.2.7
+  equatable: ^2.0.7
+  flutter_secure_storage: ^9.2.4
+  hive_ce: ^2.19.3
+  hive_ce_flutter: ^2.3.4
+  logging: ^1.3.0
+  meta: ^1.15.0
+  path: ^1.9.1
+  path_provider: ^2.1.6
+  sqlite3_flutter_libs: ^0.5.42
+  uuid: ^4.6.0
+  web_socket_channel: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.5
+
+flutter:
+  uses-material-design: false

@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package cart.v1;
+
+option go_package = "github.com/nexora/cart-service/proto/cart/v1;cartv1";
+
+// CartService exposes cart operations over gRPC.
+// Money fields are integer minor units. variant_id is opaque.
+service CartService {
+  rpc CreateCart(CreateCartRequest) returns (Cart);
+  rpc GetCart(GetCartRequest) returns (Cart);
+  rpc AddLine(AddLineRequest) returns (Cart);
+  rpc UpdateQty(UpdateQtyRequest) returns (Cart);
+  rpc RemoveLine(RemoveLineRequest) returns (Cart);
+  rpc ApplyCoupon(ApplyCouponRequest) returns (Cart);
+  rpc RemoveCoupon(RemoveCouponRequest) returns (Cart);
+  rpc RefreshQuote(RefreshQuoteRequest) returns (Cart);
+  rpc MergeCarts(MergeCartsRequest) returns (Cart);
+  rpc SoftReserveLines(SoftReserveRequest) returns (Cart);
+  rpc MarkAbandoned(CartIdRequest) returns (Cart);
+  rpc Recover(CartIdRequest) returns (Cart);
+  rpc Recommendations(RecommendationsRequest) returns (RecommendationsResponse);
+  rpc SaveCart(SaveCartRequest) returns (SavedCart);
+}
+
+message Cart {
+  string id = 1;
+  string tenant_id = 2;
+  string guest_token = 3;
+  string principal_id = 4;
+  string city_id = 5;
+  string status = 6;
+  string currency = 7;
+  repeated CartLine lines = 8;
+  repeated AppliedCoupon coupons = 9;
+  QuoteSnapshot quote = 10;
+  int64 version = 11;
+}
+
+message CartLine {
+  string id = 1;
+  string variant_id = 2;
+  int32 qty = 3;
+  int32 max_qty = 4;
+  string notes = 5;
+}
+
+message AppliedCoupon {
+  string code = 1;
+  int64 discount_minor = 2;
+}
+
+message QuoteSnapshot {
+  string quote_id = 1;
+  string currency = 2;
+  int64 subtotal_minor = 3;
+  int64 discount_minor = 4;
+  int64 tax_minor = 5;
+  int64 delivery_minor = 6;
+  int64 service_minor = 7;
+  int64 packaging_minor = 8;
+  int64 tip_minor = 9;
+  int64 total_minor = 10;
+}
+
+message CreateCartRequest {
+  string tenant_id = 1;
+  string guest_token = 2;
+  string principal_id = 3;
+  string city_id = 4;
+  string currency = 5;
+}
+
+message GetCartRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string guest_token = 3;
+  string principal_id = 4;
+}
+
+message AddLineRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string variant_id = 3;
+  int32 qty = 4;
+  int32 max_qty = 5;
+  string notes = 6;
+}
+
+message UpdateQtyRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string line_id = 3;
+  int32 qty = 4;
+}
+
+message RemoveLineRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string line_id = 3;
+}
+
+message ApplyCouponRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string code = 3;
+}
+
+message RemoveCouponRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string code = 3;
+}
+
+message RefreshQuoteRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  bool soft_reserve = 3;
+}
+
+message MergeCartsRequest {
+  string tenant_id = 1;
+  string guest_token = 2;
+  string principal_id = 3;
+  string policy = 4;
+}
+
+message SoftReserveRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string idempotency_key = 3;
+}
+
+message CartIdRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+}
+
+message RecommendationsRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  int32 limit = 3;
+}
+
+message RecommendItem {
+  string variant_id = 1;
+  double score = 2;
+  string reason = 3;
+}
+
+message RecommendationsResponse {
+  repeated RecommendItem items = 1;
+}
+
+message SaveCartRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string principal_id = 3;
+  string name = 4;
+}
+
+message SavedCart {
+  string id = 1;
+  string tenant_id = 2;
+  string principal_id = 3;
+  string name = 4;
+}

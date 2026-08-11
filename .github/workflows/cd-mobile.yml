@@ -1,0 +1,74 @@
+name: cd-mobile
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: customer|courier|warehouse
+        required: true
+        default: customer
+      track:
+        description: internal|closed|open|production|testflight
+        required: true
+        default: internal
+      version:
+        description: Override pubspec version (optional)
+        required: false
+        default: ""
+
+jobs:
+  android-aab:
+    if: inputs.track != 'testflight'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile_${{ inputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Build App Bundle
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ secrets.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: flutter build appbundle --release --dart-define=ENV=prod
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.app }}-aab
+          path: apps/mobile_${{ inputs.app }}/build/app/outputs/bundle/release/*.aab
+      - name: Fastlane Play upload
+        if: inputs.track != 'testflight'
+        working-directory: apps/mobile_${{ inputs.app }}
+        env:
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          gem install fastlane -N
+          bundle exec fastlane ${{ inputs.track }} || fastlane ${{ inputs.track }}
+
+  ios-ipa:
+    if: inputs.track == 'testflight' || inputs.track == 'production'
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/mobile_${{ inputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - name: Build IPA
+        run: flutter build ipa --release --dart-define=ENV=prod --no-codesign
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.app }}-ipa
+          path: apps/mobile_${{ inputs.app }}/build/ios/ipa/*.ipa
+      - name: Note
+        run: echo "Codesign + ASC upload via Fastlane match/pilot using org secrets in protected environment."

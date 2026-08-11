@@ -1,0 +1,10 @@
+name: superapp_shell
+description: NEXORA Flutter Super App shell — dynamic module loader + navigation host.
+version: 0.1.0
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  superapp_plugin_sdk:
+    path: ../superapp_plugin_sdk

@@ -1,0 +1,335 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Cart Service
+  version: 1.0.0
+  description: |
+    Shopping cart persistence (guest + auth). Opaque variant_id.
+    Money = integer minor units. No catalog/stock/order/PSP ownership.
+servers:
+  - url: http://localhost:8087
+    description: Local
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/cart:
+    get:
+      summary: Get or create current cart
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/GuestToken"
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      summary: Create cart
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/GuestToken"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                guestToken: { type: string }
+                principalId: { type: string, format: uuid }
+                cityId: { type: string, format: uuid }
+                currency: { type: string, example: TRY }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}:
+    get:
+      summary: Get cart by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+      responses:
+        "200":
+          description: Cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/lines:
+    post:
+      summary: Add line
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variantId, qty]
+              properties:
+                variantId: { type: string, format: uuid }
+                qty: { type: integer, minimum: 1 }
+                maxQty: { type: integer, minimum: 1 }
+                notes: { type: string }
+      responses:
+        "200":
+          description: Updated cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/lines/{lineId}:
+    patch:
+      summary: Update line qty
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+        - name: lineId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [qty]
+              properties:
+                qty: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Updated cart
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      summary: Remove line
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+        - name: lineId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Updated cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/coupons:
+    post:
+      summary: Apply coupon
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        "200":
+          description: Updated cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/coupons/{code}:
+    delete:
+      summary: Remove coupon
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+        - name: code
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Updated cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/refresh-quote:
+    post:
+      summary: Refresh pricing quote
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                softReserve: { type: boolean, description: Optional soft reserve after quote }
+      responses:
+        "200":
+          description: Cart with quote snapshot (minor units)
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/merge:
+    post:
+      summary: Merge guest cart into principal on login
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/GuestToken"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                guestToken: { type: string }
+                principalId: { type: string, format: uuid }
+                policy: { type: string, enum: [sum_qty, prefer_guest, prefer_auth] }
+      responses:
+        "200":
+          description: Merged cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/soft-reserve:
+    post:
+      summary: Soft-reserve cart lines via inventory
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+      responses:
+        "200":
+          description: Cart with reservation refs
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/abandon:
+    post:
+      summary: Mark cart abandoned
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+      responses:
+        "200":
+          description: Abandoned cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/recover:
+    post:
+      summary: Recover abandoned cart
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+      responses:
+        "200":
+          description: Active cart
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/recommendations:
+    get:
+      summary: Cart recommendations
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CartId"
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Recommendations
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/cart/{id}/save:
+    post:
+      summary: Save cart for later
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/CartId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+      responses:
+        "201":
+          description: Saved cart
+        default:
+          $ref: "#/components/responses/Error"
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+    GuestToken:
+      name: X-Guest-Token
+      in: header
+      required: false
+      schema: { type: string }
+    CartId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Cart:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        guestToken: { type: string }
+        principalId: { type: string, format: uuid }
+        status: { type: string, enum: [active, abandoned, converted, merged] }
+        currency: { type: string }
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              variantId: { type: string, format: uuid }
+              qty: { type: integer }
+              maxQty: { type: integer }
+        quote:
+          type: object
+          description: Pricing snapshot; all amounts int64 minor units
+          properties:
+            quoteId: { type: string, format: uuid }
+            totalMinor: { type: integer, format: int64 }
+            subtotalMinor: { type: integer, format: int64 }
+    ErrorBody:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        traceId: { type: string }
+        retriable: { type: boolean }
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: "#/components/schemas/ErrorBody"

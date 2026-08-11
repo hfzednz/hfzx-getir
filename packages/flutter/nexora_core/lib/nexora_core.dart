@@ -1,0 +1,27 @@
+// NEXORA shared mobile core — network, storage, security, sync, analytics.
+export 'src/analytics/analytics_gateway.dart';
+export 'src/config/app_environment.dart';
+export 'src/config/env.dart';
+export 'src/config/nexora_headers.dart';
+export 'src/connectivity/connectivity_service.dart';
+export 'src/errors/dio_error_mapper.dart';
+export 'src/errors/error_envelope.dart';
+export 'src/errors/nexora_error_code.dart';
+export 'src/errors/nexora_exception.dart';
+export 'src/errors/result.dart';
+export 'src/network/api_client.dart';
+export 'src/network/certificate_pinning_adapter.dart';
+export 'src/network/interceptors/accept_language_interceptor.dart';
+export 'src/network/interceptors/auth_interceptor.dart';
+export 'src/network/interceptors/city_header_interceptor.dart';
+export 'src/network/interceptors/idempotency_interceptor.dart';
+export 'src/network/interceptors/logging_interceptor.dart';
+export 'src/realtime/realtime_client.dart';
+export 'src/security/device_integrity.dart';
+export 'src/storage/preferences_store.dart';
+export 'src/storage/secure_token_store.dart';
+export 'src/sync/default_sync_engine.dart';
+export 'src/sync/hive_mutation_outbox.dart';
+export 'src/sync/models/pending_mutation.dart';
+export 'src/sync/mutation_outbox.dart';
+export 'src/sync/sync_engine.dart';

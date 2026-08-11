@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexora
+      POSTGRES_DB: tracking
+    ports:
+      - "5449:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d tracking"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6388:6379"
+
+  tracking-service:
+    build: .
+    ports:
+      - "8098:8098"
+    environment:
+      HTTP_ADDR: ":8098"
+      GRPC_ADDR: ":9108"
+      CORS_ALLOWED_ORIGINS: "*"
+      GEOFENCE_BASE_URL: "http://host.docker.internal:8099"
+      HISTORY_CAP: "100"
+      ARRIVAL_THRESHOLD_M: "50"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

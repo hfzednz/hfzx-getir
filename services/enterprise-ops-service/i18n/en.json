@@ -1,0 +1,10 @@
+{
+  "enterprise.org": "Organization",
+  "enterprise.governance": "Governance",
+  "enterprise.pmo": "PMO Center",
+  "enterprise.strategy": "Strategy",
+  "enterprise.continuity": "Business Continuity",
+  "enterprise.risk": "Risk",
+  "enterprise.audit": "Audit",
+  "enterprise.executive": "Executive Dashboard"
+}

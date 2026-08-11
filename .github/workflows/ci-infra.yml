@@ -1,0 +1,52 @@
+name: ci-infra
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - "ops/**"
+      - ".github/workflows/ci-infra.yml"
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+
+jobs:
+  terraform-fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+      - name: fmt check
+        run: terraform fmt -check -recursive infra/terraform
+
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: lint
+        run: helm lint infra/helm/nexora
+
+  kustomize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build overlays
+        run: |
+          curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz | tar xz
+          ./kustomize build infra/k8s/overlays/staging >/dev/null
+          ./kustomize build infra/k8s/overlays/prod >/dev/null
+
+  gitops-promote:
+    if: github.ref == 'refs/heads/main'
+    needs: [terraform-fmt, helm-lint, kustomize]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record promote intent
+        run: |
+          echo "GitOps: ArgoCD reconciles infra/k8s overlays; image digests updated via CD job."
+          echo "event=DeploymentCompleted env=staging" 

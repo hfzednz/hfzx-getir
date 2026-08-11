@@ -1,0 +1,68 @@
+groups:
+  - name: nexora-production
+    rules:
+      - alert: PaymentAuthorizeFail
+        expr: |
+          sum(rate(http_requests_total{service="payment-service",handler=~".*authorize.*",status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total{service="payment-service",handler=~".*authorize.*"}[5m])) > 0.02
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Payment authorize 5xx ratio > 2%"
+          runbook: "ops/runbooks/payment-outage.md"
+      - alert: OrderPlaceLatencyHigh
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{service="order-service"}[5m])) by (le)) > 2
+        for: 10m
+        labels: { severity: high }
+        annotations:
+          summary: "Order service p99 latency > 2s"
+      - alert: KafkaConsumerLag
+        expr: max(kafka_consumergroup_lag) by (consumergroup, topic) > 10000
+        for: 10m
+        labels: { severity: high }
+        annotations:
+          summary: "Kafka consumer lag high"
+          runbook: "ops/runbooks/kafka-lag.md"
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 10m
+        labels: { severity: high }
+        annotations:
+          summary: "Redis memory > 85%"
+          runbook: "ops/runbooks/redis-memory.md"
+      - alert: PostgresConnectionsHigh
+        expr: sum(pg_stat_activity_count) / sum(pg_settings_max_connections) > 0.8
+        for: 10m
+        labels: { severity: high }
+        annotations:
+          summary: "Postgres connections > 80% of max"
+      - alert: AIInferenceLatency
+        expr: histogram_quantile(0.99, sum(rate(ai_inference_duration_seconds_bucket[5m])) by (le, model)) > 3
+        for: 10m
+        labels: { severity: high }
+        annotations:
+          summary: "AI inference p99 > 3s"
+      - alert: NotificationDeliveryFail
+        expr: |
+          sum(rate(notification_delivery_total{status="failed"}[5m]))
+          /
+          sum(rate(notification_delivery_total[5m])) > 0.05
+        for: 10m
+        labels: { severity: high }
+        annotations:
+          summary: "Notification failure ratio > 5%"
+      - alert: MobileCrashSpike
+        expr: increase(mobile_crash_reports_total[15m]) > 50
+        for: 5m
+        labels: { severity: high }
+        annotations:
+          summary: "Mobile crash spike"
+          runbook: "ops/runbooks/mobile-crash-spike.md"
+      - alert: AvailabilityBurnCritical
+        expr: |
+          (1 - sum(rate(http_requests_total{status!~"5.."}[1h])) / sum(rate(http_requests_total[1h]))) > 0.02
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Error budget burn > 2% in 1h"

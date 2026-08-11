@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Enterprise Operations
+  version: 1.0.0
+servers:
+  - url: http://localhost:8123
+paths:
+  /health:
+    get:
+      responses: { "200": { description: ok } }
+  /v1/enterprise/org:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: org nodes } }
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "201": { description: upserted } }
+  /v1/enterprise/policies/approve:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: approved } }
+  /v1/enterprise/pmo/projects:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: projects } }
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "201": { description: created } }
+  /v1/enterprise/continuity/activate:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: activated } }
+  /v1/enterprise/executive/dashboard:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: role
+          in: query
+          schema: { type: string }
+      responses: { "200": { description: executive dashboard } }
+  /v1/enterprise/admin/stats:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: stats } }

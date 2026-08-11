@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Catalog Service API
+  version: 1.0.0
+  description: |
+    PIM / headless catalog API. Requires `X-Tenant-Id` on tenant-scoped routes.
+    Does not expose inventory quantities or sell prices.
+servers:
+  - url: http://localhost:8082/v1/catalog
+    description: Local dev (default port 8082)
+tags:
+  - name: health
+  - name: products
+  - name: variants
+  - name: categories
+  - name: workflow
+  - name: search
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      responses:
+        "200":
+          description: OK
+  /ready:
+    get:
+      tags: [health]
+      summary: Readiness probe
+      responses:
+        "200":
+          description: Ready
+  /products:
+    get:
+      tags: [products]
+      summary: List products
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ProductStatus" }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Product page
+    post:
+      tags: [products]
+      summary: Create draft product
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: Created
+        "400":
+          $ref: "#/components/responses/Error"
+  /products/{id}:
+    get:
+      tags: [products]
+      summary: Get product
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: Product
+        "404":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [products]
+      summary: Update product
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                slug: { type: string }
+                skuCode: { type: string }
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [products]
+      summary: Soft-delete product
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "204":
+          description: Deleted
+  /products/{id}/workflow/publish:
+    post:
+      tags: [workflow]
+      summary: Publish approved product (creates version snapshot)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ProductId"
+        - $ref: "#/components/parameters/ActorId"
+      responses:
+        "200":
+          description: Published with version
+  /skus/lookup:
+    get:
+      tags: [variants]
+      summary: Lookup SKU by barcode
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: type
+          in: query
+          required: true
+          schema: { $ref: "#/components/schemas/SKUIdentifierType" }
+        - name: value
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: SKU, variant, and product
+        "404":
+          $ref: "#/components/responses/Error"
+  /categories:
+    get:
+      tags: [categories]
+      summary: List category tree (flat)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Categories
+    post:
+      tags: [categories]
+      summary: Create category node
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, slug]
+              properties:
+                parentId: { type: string, format: uuid }
+                name: { type: string }
+                slug: { type: string }
+                kind: { type: string }
+      responses:
+        "201":
+          description: Created
+  /import/validate:
+    post:
+      tags: [products]
+      summary: Validate CSV import (columns slug, sku_code, title, lang)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        content:
+          text/csv:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: Validation job result
+  /search:
+    get:
+      tags: [search]
+      summary: Search catalog index
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Search hits
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      schema: { type: string, format: uuid }
+    ProductId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+  schemas:
+    APIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            traceId: { type: string }
+            retriable: { type: boolean }
+    ProductStatus:
+      type: string
+      enum: [draft, pending_review, approved, published, hidden, archived, deleted, scheduled]
+    SKUIdentifierType:
+      type: string
+      enum: [barcode, qr, ean, upc, gtin, internal, supplier, warehouse]
+    CreateProductRequest:
+      type: object
+      required: [slug]
+      properties:
+        kind: { type: string }
+        slug: { type: string }
+        skuCode: { type: string }
+        brandId: { type: string, format: uuid }

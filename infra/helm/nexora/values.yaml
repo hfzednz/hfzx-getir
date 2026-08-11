@@ -1,0 +1,214 @@
+global:
+  imageRegistry: ghcr.io/nexora
+  imagePullPolicy: IfNotPresent
+  environment: staging
+  mesh:
+    enabled: true
+    inject: true
+
+serviceAccount:
+  create: true
+  name: nexora
+
+deployments:
+  strategy: RollingUpdate
+  canary:
+    enabled: false
+    weight: 10
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 20
+  cpuAverage: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+services:
+  platform-ops-service:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: platform-ops-service
+      tag: "1.0.0"
+    ports:
+      http: 8110
+      grpc: 9110
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  bff-customer:
+    enabled: true
+    replicaCount: 3
+    image: { repository: bff-customer, tag: "1.0.0" }
+    ports: { http: 8111 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  bff-courier:
+    enabled: true
+    replicaCount: 2
+    image: { repository: bff-courier, tag: "1.0.0" }
+    ports: { http: 8112 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  bff-warehouse:
+    enabled: true
+    replicaCount: 2
+    image: { repository: bff-warehouse, tag: "1.0.0" }
+    ports: { http: 8113 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  bff-admin:
+    enabled: true
+    replicaCount: 2
+    image: { repository: bff-admin, tag: "1.0.0" }
+    ports: { http: 8114 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  realtime-gateway:
+    enabled: true
+    replicaCount: 3
+    image: { repository: realtime-gateway, tag: "1.0.0" }
+    ports: { http: 8115 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  liveops-service:
+    enabled: true
+    replicaCount: 3
+    image: { repository: liveops-service, tag: "1.0.0" }
+    ports: { http: 8116, grpc: 9116 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  supplier-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: supplier-service, tag: "1.0.0" }
+    ports: { http: 8117, grpc: 9117 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  quality-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: quality-service, tag: "1.0.0" }
+    ports: { http: 8118, grpc: 9118 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  global-service:
+    enabled: true
+    replicaCount: 3
+    image: { repository: global-service, tag: "1.0.0" }
+    ports: { http: 8119, grpc: 9119 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  open-platform-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: open-platform-service, tag: "1.0.0" }
+    ports: { http: 8120, grpc: 9120 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  superapp-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: superapp-service, tag: "1.0.0" }
+    ports: { http: 8121, grpc: 9121 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  innovation-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: innovation-service, tag: "1.0.0" }
+    ports: { http: 8122, grpc: 9122 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  enterprise-ops-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: enterprise-ops-service, tag: "1.0.0" }
+    ports: { http: 8123, grpc: 9123 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  hyperscale-cert-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: hyperscale-cert-service, tag: "1.0.0" }
+    ports: { http: 8124, grpc: 9124 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  autonomy-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: autonomy-service, tag: "1.0.0" }
+    ports: { http: 8125, grpc: 9125 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+  identity-service:
+    enabled: true
+    replicaCount: 3
+    image: { repository: identity-service, tag: "1.0.0" }
+    ports: { http: 8081 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 1000m, memory: 512Mi }
+  order-service:
+    enabled: true
+    replicaCount: 3
+    image: { repository: order-service, tag: "1.0.0" }
+    ports: { http: 8085 }
+    resources:
+      requests: { cpu: 150m, memory: 256Mi }
+      limits: { cpu: 1000m, memory: 1Gi }
+  payment-service:
+    enabled: true
+    replicaCount: 3
+    image: { repository: payment-service, tag: "1.0.0" }
+    ports: { http: 8089 }
+    resources:
+      requests: { cpu: 150m, memory: 256Mi }
+      limits: { cpu: 1000m, memory: 1Gi }
+  catalog-service:
+    enabled: true
+    replicaCount: 3
+    image: { repository: catalog-service, tag: "1.0.0" }
+    ports: { http: 8083 }
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: 1000m, memory: 1Gi }
+  notification-service:
+    enabled: true
+    replicaCount: 2
+    image: { repository: notification-service, tag: "1.0.0" }
+    ports: { http: 8101 }
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.nexora.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.nexora-obs:4317
+  KAFKA_BROKERS: kafka.nexora-data:9092

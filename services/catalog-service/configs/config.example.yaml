@@ -1,0 +1,31 @@
+# NEXORA catalog-service — example configuration
+# Copy to config.yaml or map keys to environment variables.
+
+http:
+  addr: ":8082"
+  publicBaseUrl: "http://localhost:8082"
+  corsAllowedOrigins: ["*"]
+  rateLimitPerMinute: 240
+
+grpc:
+  addr: ":9092"
+
+database:
+  url: "" # empty → in-memory repositories (dev mode)
+
+redis:
+  url: "redis://localhost:6380"
+
+kafka:
+  brokers: [] # e.g. ["localhost:9094"]
+
+opensearch:
+  url: "" # e.g. "http://localhost:9201"
+
+mediaService:
+  url: "http://localhost:8085"
+
+# Environment variable mapping (preferred in containers):
+# HTTP_ADDR, GRPC_ADDR, PUBLIC_BASE_URL, DATABASE_URL, REDIS_URL,
+# KAFKA_BROKERS, OPENSEARCH_URL, MEDIA_SERVICE_URL, CORS_ALLOWED_ORIGINS,
+# RATE_LIMIT_PER_MINUTE

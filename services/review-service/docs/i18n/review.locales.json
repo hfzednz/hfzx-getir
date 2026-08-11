@@ -1,0 +1,35 @@
+{
+  "namespace": "review",
+  "locales": {
+    "en": {
+      "review.submitted": "Thanks for your review. It may be moderated before publishing.",
+      "review.published": "Your review is live.",
+      "review.rejected": "Your review could not be published.",
+      "review.deleted": "Your review was deleted.",
+      "rating.submitted": "Rating recorded.",
+      "moderation.pending": "Awaiting moderation",
+      "trust.verified_buyer": "Verified buyer",
+      "trust.trusted_reviewer": "Trusted reviewer",
+      "reputation.tier.elite": "Elite",
+      "reputation.tier.excellent": "Excellent",
+      "reputation.tier.good": "Good",
+      "reputation.tier.fair": "Fair",
+      "reputation.tier.poor": "Poor"
+    },
+    "tr": {
+      "review.submitted": "Değerlendirmeniz için teşekkürler. Yayınlanmadan önce incelenebilir.",
+      "review.published": "Değerlendirmeniz yayında.",
+      "review.rejected": "Değerlendirmeniz yayınlanamadı.",
+      "review.deleted": "Değerlendirmeniz silindi.",
+      "rating.submitted": "Puan kaydedildi.",
+      "moderation.pending": "Moderasyon bekleniyor",
+      "trust.verified_buyer": "Doğrulanmış alıcı",
+      "trust.trusted_reviewer": "Güvenilir değerlendirici",
+      "reputation.tier.elite": "Elit",
+      "reputation.tier.excellent": "Mükemmel",
+      "reputation.tier.good": "İyi",
+      "reputation.tier.fair": "Orta",
+      "reputation.tier.poor": "Zayıf"
+    }
+  }
+}

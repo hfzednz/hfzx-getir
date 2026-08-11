@@ -1,0 +1,8 @@
+syntax = "proto3";
+package nexora.openplatform.v1;
+option go_package = "github.com/nexora/open-platform-service/api/proto/open/v1;openv1";
+service OpenPlatformService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+message HealthRequest {}
+message HealthResponse { string status = 1; }

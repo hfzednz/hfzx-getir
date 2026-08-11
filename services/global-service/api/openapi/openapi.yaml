@@ -1,0 +1,44 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Global Operations Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8119
+paths:
+  /health:
+    get:
+      responses: { "200": { description: ok } }
+  /v1/global/bootstrap/tr:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: TR seeded } }
+  /v1/global/resolve:
+    get:
+      summary: Resolve country+locale bootstrap bundle
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: country
+          in: query
+          schema: { type: string }
+        - name: locale
+          in: query
+          schema: { type: string }
+        - name: ns
+          in: query
+          schema: { type: string }
+      responses: { "200": { description: bundle } }
+  /v1/global/admin/stats:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: stats } }

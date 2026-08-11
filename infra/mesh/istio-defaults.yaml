@@ -1,0 +1,45 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: nexora-apps
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: nexora-defaults
+  namespace: nexora-apps
+spec:
+  host: "*.nexora-apps.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    retryOn: "5xx,reset,connect-failure,retriable-4xx"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: order-service-retries
+  namespace: nexora-apps
+spec:
+  hosts:
+    - order-service
+  http:
+    - retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: "5xx,reset,connect-failure"
+      timeout: 8s
+      route:
+        - destination:
+            host: order-service

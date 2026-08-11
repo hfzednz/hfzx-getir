@@ -1,0 +1,14 @@
+httpAddr: ":8088"
+grpcAddr: ":9098"
+publicBaseURL: "http://localhost:8088"
+databaseURL: ""          # empty => in-memory repos
+redisURL: ""
+kafkaBrokers: []
+cartURL: ""
+orderURL: ""
+paymentURL: ""
+inventoryURL: ""
+pricingURL: ""
+rateLimitPerMinute: 240
+corsAllowedOrigins: ["*"]
+minOrderMinor: 0

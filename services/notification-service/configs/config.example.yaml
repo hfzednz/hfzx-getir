@@ -1,0 +1,10 @@
+# notification-service example config
+http_addr: ":8101"
+grpc_addr: ":9101"
+public_base_url: "http://localhost:8101"
+# Leave empty for in-memory / DevMode
+database_url: ""
+redis_url: ""
+kafka_brokers: []
+rate_limit_per_minute: 240
+cors_allowed_origins: ["*"]

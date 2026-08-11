@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package nexora.security.v1;
+
+option go_package = "github.com/nexora/security-service/api/proto/security/v1;securityv1";
+
+service SecurityService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc AdminStats(AdminStatsRequest) returns (AdminStatsResponse);
+}
+
+message HealthRequest {}
+message HealthResponse { string status = 1; }
+
+message AdminStatsRequest { string tenant_id = 1; }
+message AdminStatsResponse {
+  int32 open_threats = 1;
+  int32 open_incidents = 2;
+  int32 open_vulns = 3;
+  double avg_risk_score = 4;
+}

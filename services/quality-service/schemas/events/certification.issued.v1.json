@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "quality.CertificationIssued.v1",
+  "type": "object",
+  "required": ["type", "aggregateId", "tenantId", "occurredAt", "version"],
+  "properties": {
+    "type": { "const": "CertificationIssued" },
+    "kind": { "type": "string" },
+    "version": { "type": "string" },
+    "commitSha": { "type": "string" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "tenantId": { "type": "string", "format": "uuid" },
+    "occurredAt": { "type": "string", "format": "date-time" }
+  }
+}

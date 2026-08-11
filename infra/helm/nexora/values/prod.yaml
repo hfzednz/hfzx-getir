@@ -1,0 +1,47 @@
+global:
+  environment: production
+  imageRegistry: ghcr.io/nexora
+  imagePullPolicy: IfNotPresent
+  mesh:
+    enabled: true
+    inject: true
+
+deployments:
+  strategy: RollingUpdate
+  canary:
+    enabled: true
+    weight: 10
+
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 40
+  cpuAverage: 65
+
+pdb:
+  enabled: true
+  minAvailable: 2
+
+services:
+  bff-customer:
+    replicaCount: 5
+  order-service:
+    replicaCount: 5
+  identity-service:
+    replicaCount: 4
+  realtime-gateway:
+    replicaCount: 5
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.nexora.example
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.nexora-obs:4317
+  KAFKA_BROKERS: kafka.nexora-data:9092
+  OTP_DEV_MODE: "false"

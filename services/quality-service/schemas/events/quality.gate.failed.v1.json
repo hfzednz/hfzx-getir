@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "quality.QualityGateFailed.v1",
+  "type": "object",
+  "required": ["type", "aggregateId", "tenantId", "occurredAt", "policyKey"],
+  "properties": {
+    "type": { "const": "QualityGateFailed" },
+    "policyKey": { "type": "string" },
+    "runId": { "type": "string", "format": "uuid" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "tenantId": { "type": "string", "format": "uuid" },
+    "occurredAt": { "type": "string", "format": "date-time" }
+  }
+}

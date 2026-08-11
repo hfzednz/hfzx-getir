@@ -1,0 +1,15 @@
+# Redis hyperscale defaults
+maxmemory-policy: allkeys-lru
+tcp-keepalive: 60
+timeout: 0
+io-threads: 4
+io-threads-do-reads: yes
+hz: 20
+lazyfree-lazy-eviction: yes
+lazyfree-lazy-expire: yes
+client-output-buffer-limit:
+  normal: "0 0 0"
+  pubsub: "32mb 8mb 60"
+cluster:
+  enabled: recommended_for_multi_region
+  hash_slots: 16384

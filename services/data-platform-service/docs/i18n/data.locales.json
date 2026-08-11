@@ -1,0 +1,17 @@
+{
+  "namespace": "data",
+  "locales": {
+    "en": {
+      "data.event_ingested": "Event ingested.",
+      "data.schema_incompatible": "Schema change is incompatible.",
+      "data.quality_failed": "Data quality check failed.",
+      "data.alert_fired": "Alert fired: {message}"
+    },
+    "tr": {
+      "data.event_ingested": "Olay alındı.",
+      "data.schema_incompatible": "Şema değişikliği uyumsuz.",
+      "data.quality_failed": "Veri kalitesi kontrolü başarısız.",
+      "data.alert_fired": "Uyarı tetiklendi: {message}"
+    }
+  }
+}

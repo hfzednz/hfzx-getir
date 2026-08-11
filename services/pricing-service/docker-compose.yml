@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexora
+      POSTGRES_DB: pricing
+    ports:
+      - "5446:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d pricing"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6385:6379"
+
+  pricing-service:
+    build: .
+    ports:
+      - "8095:8095"
+    environment:
+      HTTP_ADDR: ":8095"
+      GRPC_ADDR: ":9105"
+      CORS_ALLOWED_ORIGINS: "*"
+      DATABASE_URL: "postgres://nexora:nexora@postgres:5432/pricing?sslmode=disable"
+      PROMO_BASE_URL: "http://host.docker.internal:8094"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

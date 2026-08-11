@@ -1,0 +1,8 @@
+http_addr: ":8102"
+grpc_addr: ":9102"
+public_base_url: "http://localhost:8102"
+database_url: ""          # empty => in-memory / DevMode
+redis_url: ""
+kafka_brokers: []
+rate_limit_per_minute: 240
+cors_allowed_origins: ["*"]

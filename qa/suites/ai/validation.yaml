@@ -1,0 +1,8 @@
+# AI validation checklist (calls ai-platform via port; no model training)
+checks:
+  - inference_latency_p95_ms: 300
+  - recommendation_diversity_min: 0.2
+  - prompt_injection_blocked: true
+  - bias_slice_delta_max: 0.1
+  - drift_psi_max: 0.2
+  - safety_toxic_rate_max: 0.01

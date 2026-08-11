@@ -1,0 +1,16 @@
+# Chaos pack metadata (execution via platform-ops / chaos mesh — recorded in hyperscale-cert-service)
+experiments:
+  - kind: node
+    name: kill-random-worker
+  - kind: database
+    name: primary-failover
+  - kind: kafka
+    name: broker-partition-loss
+  - kind: redis
+    name: cache-flush
+  - kind: region
+    name: secondary-region-cutover
+  - kind: payment
+    name: psp-timeout-injection
+  - kind: ai
+    name: inference-latency-spike

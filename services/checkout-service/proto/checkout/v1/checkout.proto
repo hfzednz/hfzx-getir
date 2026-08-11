@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package nexora.checkout.v1;
+
+option go_package = "github.com/nexora/checkout-service/proto/checkout/v1;checkoutv1";
+
+// CheckoutService orchestrates checkout sessions (no PSP capture, no OMS saga).
+service CheckoutService {
+  rpc StartFromCart(StartFromCartRequest) returns (CheckoutSession);
+  rpc GetSession(GetSessionRequest) returns (CheckoutSession);
+  rpc PatchSession(PatchSessionRequest) returns (CheckoutSession);
+  rpc Validate(ValidateRequest) returns (CheckoutSession);
+  rpc RefreshQuote(RefreshQuoteRequest) returns (CheckoutSession);
+  rpc Complete(CompleteRequest) returns (CheckoutSession);
+  rpc RecoverAbandoned(RecoverRequest) returns (CheckoutSession);
+  rpc Metrics(MetricsRequest) returns (AbandonmentMetrics);
+}
+
+message StartFromCartRequest {
+  string tenant_id = 1;
+  string cart_id = 2;
+  string principal_id = 3;
+  string idempotency_key = 4;
+  string delivery_option = 5;
+  string currency = 6;
+}
+
+message GetSessionRequest {
+  string tenant_id = 1;
+  string session_id = 2;
+}
+
+message PatchSessionRequest {
+  string tenant_id = 1;
+  string session_id = 2;
+  string notes = 3;
+  int64 tip_minor = 4;
+  string delivery_option = 5;
+}
+
+message ValidateRequest {
+  string tenant_id = 1;
+  string session_id = 2;
+}
+
+message RefreshQuoteRequest {
+  string tenant_id = 1;
+  string session_id = 2;
+}
+
+message CompleteRequest {
+  string tenant_id = 1;
+  string session_id = 2;
+  string idempotency_key = 3;
+  bool place_order = 4;
+}
+
+message RecoverRequest {
+  string recovery_token = 1;
+  string principal_id = 2;
+}
+
+message MetricsRequest {
+  string tenant_id = 1;
+}
+
+message CheckoutSession {
+  string id = 1;
+  string tenant_id = 2;
+  string cart_id = 3;
+  string principal_id = 4;
+  string status = 5;
+  string delivery_option = 6;
+  string currency = 7;
+  int64 tip_minor = 8;
+  int64 quote_total_minor = 9;
+  string order_id = 10;
+  string recovery_token = 11;
+  bool validation_passed = 12;
+}
+
+message AbandonmentMetrics {
+  int32 abandoned_count = 1;
+  int32 completed_count = 2;
+  int32 blocked_count = 3;
+  double abandon_rate = 4;
+}

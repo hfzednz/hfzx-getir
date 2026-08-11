@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexora
+      POSTGRES_DB: customer_profile
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d customer_profile"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.4
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - 512M
+      - --reserve-memory
+      - 0M
+      - --node-id
+      - "0"
+      - --check=false
+      - --kafka-addr
+      - INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - INTERNAL://redpanda:9092,EXTERNAL://localhost:19092
+    ports:
+      - "19093:19092"
+    profiles: ["kafka"]
+
+  opensearch:
+    image: opensearchproject/opensearch:2.14.0
+    environment:
+      discovery.type: single-node
+      plugins.security.disabled: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    profiles: ["search"]
+
+  customer-profile-service:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      HTTP_ADDR: ":8081"
+      DATABASE_URL: "postgres://nexora:nexora@postgres:5432/customer_profile?sslmode=disable"
+      REDIS_URL: "redis://redis:6379/0"
+      KAFKA_BROKERS: "redpanda:9092"
+      SEARCH_URL: "http://opensearch:9200"
+      CORS_ALLOWED_ORIGINS: "*"
+      RATE_LIMIT_PER_MINUTE: "120"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:

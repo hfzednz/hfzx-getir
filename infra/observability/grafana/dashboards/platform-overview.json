@@ -1,0 +1,35 @@
+{
+  "annotations": {
+    "list": [
+      { "builtIn": 1, "datasource": { "type": "grafana", "uid": "-- Grafana --" }, "type": "dashboard" }
+    ]
+  },
+  "title": "NEXORA Platform Overview",
+  "uid": "nexora-platform",
+  "timezone": "utc",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Availability (30d)",
+      "id": 1,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "1 - (sum(rate(http_requests_total{status=~\"5..\"}[30d])) / sum(rate(http_requests_total[30d])))" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Request rate",
+      "id": 2,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [{ "expr": "sum(rate(http_requests_total[5m])) by (service)" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Deployments",
+      "id": 3,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [{ "expr": "increase(nexora_deployments_total[1h])" }]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

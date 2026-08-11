@@ -1,0 +1,211 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Checkout Service
+  version: 1.0.0
+  description: |
+    Checkout session orchestration. No PSP capture, no OMS saga ownership, no inventory ledger.
+    Money is integer minor units + ISO-4217 currency.
+servers:
+  - url: http://localhost:8088
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/checkout/health:
+    get:
+      summary: Service liveness
+      responses:
+        "200":
+          description: OK
+  /v1/checkout/sessions:
+    get:
+      summary: List sessions (admin explorer)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: principalId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: offset
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Page of sessions
+    post:
+      summary: Start checkout from cart
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cartId]
+              properties:
+                cartId: { type: string, format: uuid }
+                principalId: { type: string, format: uuid }
+                idempotencyKey: { type: string }
+                deliveryOption:
+                  type: string
+                  enum: [instant, scheduled, priority, economy, pickup, corporate]
+                currency: { type: string, minLength: 3, maxLength: 3 }
+      responses:
+        "201":
+          description: Session created
+  /v1/checkout/sessions/{id}:
+    get:
+      summary: Get session
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Session
+    patch:
+      summary: Patch address/slot/gift/invoice/notes/substitutions/tip
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address: { type: object }
+                slot: { type: object }
+                gift: { type: object }
+                invoice: { type: object }
+                notes: { type: string }
+                substitutions: { type: string, enum: [allow, ask, refuse] }
+                tipMinor: { type: integer, format: int64 }
+                deliveryOption: { type: string }
+                couponCodes: { type: array, items: { type: string } }
+      responses:
+        "200":
+          description: Updated session
+  /v1/checkout/sessions/{id}/validate:
+    post:
+      summary: Run validation pipeline
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: ready or blocked with validation_results
+  /v1/checkout/sessions/{id}/refresh-quote:
+    post:
+      summary: Refresh pricing quote snapshot
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Session with quote
+  /v1/checkout/sessions/{id}/complete:
+    post:
+      summary: Complete checkout (idempotent CreateFromCheckout)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idempotencyKey: { type: string }
+                placeOrder: { type: boolean, description: Optional OMS PlaceOrder trigger }
+      responses:
+        "200":
+          description: Completed session with opaque orderId
+  /v1/checkout/sessions/{id}/abandon:
+    post:
+      summary: Mark session abandoned
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Abandoned session with recoveryToken
+  /v1/checkout/recover:
+    post:
+      summary: Recover abandoned session
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recoveryToken]
+              properties:
+                recoveryToken: { type: string }
+                principalId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Recovered session (started)
+  /v1/checkout/admin/metrics:
+    get:
+      summary: Abandonment / funnel metrics
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Metrics
+  /v1/checkout/outbox/publish:
+    post:
+      summary: Drain transactional outbox
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Published count
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string }
+    SessionId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            traceId: { type: string }
+            retriable: { type: boolean }

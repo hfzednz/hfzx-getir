@@ -1,0 +1,154 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Routing Service
+  version: 1.0.0
+  description: Route plans, multi-stop optimize, ETA with traffic/weather factors.
+servers:
+  - url: http://localhost:8097
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/routing/routes:
+    post:
+      summary: Create draft route with waypoints
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [waypoints]
+              properties:
+                dispatchId:
+                  type: string
+                  format: uuid
+                courierId:
+                  type: string
+                  format: uuid
+                warehouseId:
+                  type: string
+                  format: uuid
+                speedMps:
+                  type: number
+                waypoints:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/WaypointInput"
+      responses:
+        "201":
+          description: Created
+  /v1/routing/routes/{id}:
+    get:
+      summary: Get route by id
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/routing/routes/{id}/optimize:
+    post:
+      summary: Optimize multi-stop order (nearest-neighbor)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/routing/routes/{id}/recalculate-eta:
+    post:
+      summary: Recalculate ETA (optional current position)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentLat:
+                  type: number
+                currentLon:
+                  type: number
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: OK
+  /v1/routing/traffic-hints:
+    post:
+      summary: Upsert regional traffic hint
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lat, lon, factor]
+              properties:
+                hintId:
+                  type: string
+                  format: uuid
+                regionKey:
+                  type: string
+                lat:
+                  type: number
+                lon:
+                  type: number
+                radiusM:
+                  type: number
+                factor:
+                  type: number
+      responses:
+        "201":
+          description: Created
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    WaypointInput:
+      type: object
+      required: [lat, lon]
+      properties:
+        kind:
+          type: string
+          enum: [warehouse, stop, courier]
+        lat:
+          type: number
+        lon:
+          type: number
+        orderId:
+          type: string
+          format: uuid
+        label:
+          type: string

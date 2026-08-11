@@ -1,0 +1,17 @@
+{
+  "namespace": "ai",
+  "locales": {
+    "en": {
+      "ai.model_not_ready": "Model is not ready for inference.",
+      "ai.guardrail_blocked": "Request blocked by safety policy.",
+      "ai.agent_running": "Agent is processing your request.",
+      "ai.human_gated_price": "Price suggestion requires human approval."
+    },
+    "tr": {
+      "ai.model_not_ready": "Model çıkarım için hazır değil.",
+      "ai.guardrail_blocked": "İstek güvenlik politikası tarafından engellendi.",
+      "ai.agent_running": "Ajan isteğinizi işliyor.",
+      "ai.human_gated_price": "Fiyat önerisi insan onayı gerektirir."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "supplier.PurchaseOrderCreated.v1",
+  "type": "object",
+  "required": ["type", "aggregateId", "tenantId", "occurredAt", "number"],
+  "properties": {
+    "type": { "const": "PurchaseOrderCreated" },
+    "number": { "type": "string" },
+    "supplierId": { "type": "string", "format": "uuid" },
+    "totalMinor": { "type": "integer" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "tenantId": { "type": "string", "format": "uuid" },
+    "occurredAt": { "type": "string", "format": "date-time" }
+  }
+}

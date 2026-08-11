@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Recommendation Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8105
+paths:
+  /v1/recommendations/rails:
+    post:
+      summary: Build recommendation rail
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: OK }
+  /v1/recommendations/for-you:
+    post:
+      summary: Personalized recommendations
+      responses:
+        "200": { description: OK }
+  /v1/recommendations/signals:
+    post:
+      summary: Ingest behavior signal
+      responses:
+        "201": { description: Created }

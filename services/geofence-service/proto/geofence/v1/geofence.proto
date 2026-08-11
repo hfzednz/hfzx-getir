@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package geofence.v1;
+
+option go_package = "github.com/nexora/geofence-service/proto/geofence/v1;geofencev1";
+
+service GeofenceService {
+  rpc CreateZone(CreateZoneRequest) returns (Zone);
+  rpc CheckServiceability(ServiceabilityRequest) returns (ServiceabilityResponse);
+  rpc Contains(ContainsRequest) returns (ContainsResponse);
+}
+
+message Point {
+  double lat = 1;
+  double lng = 2;
+}
+
+message CreateZoneRequest {
+  string tenant_id = 1;
+  string name = 2;
+  string city = 3;
+  string kind = 4;
+  repeated Point vertices = 5;
+  double center_lat = 6;
+  double center_lng = 7;
+  double radius_m = 8;
+}
+
+message Zone {
+  string id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  string city = 4;
+  string kind = 5;
+  bool active = 6;
+}
+
+message ServiceabilityRequest {
+  string tenant_id = 1;
+  string city = 2;
+  Point point = 3;
+}
+
+message ServiceabilityResponse {
+  bool serviceable = 1;
+  bool blocked = 2;
+  string reason = 3;
+  repeated string matching_zone_ids = 4;
+}
+
+message ContainsRequest {
+  string tenant_id = 1;
+  string zone_id = 2;
+  Point point = 3;
+}
+
+message ContainsResponse {
+  bool inside = 1;
+  string zone_id = 2;
+  string kind = 3;
+}

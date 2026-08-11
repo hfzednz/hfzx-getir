@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Order Service API
+  version: 1.0.0
+  description: OMS aggregate, place saga, cancel/return/refund, admin ops.
+servers:
+  - url: http://localhost:8086
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /ready:
+    get:
+      summary: Readiness
+      responses:
+        "200":
+          description: Ready
+  /v1/orders:
+    get:
+      summary: List orders
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order list
+    post:
+      summary: Create draft or checkout order
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Created
+  /v1/orders/search:
+    get:
+      summary: Search orders
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search hits
+  /v1/orders/{id}:
+    get:
+      summary: Get order
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Order
+  /v1/orders/{id}/place:
+    post:
+      summary: Start place-order saga
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Placed / progressed order
+  /v1/orders/{id}/cancel:
+    post:
+      summary: Cancel order with compensations
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Cancelled
+  /v1/orders/{id}/returns:
+    post:
+      summary: Request return
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "201":
+          description: Return created
+  /v1/orders/{id}/refunds:
+    post:
+      summary: Request refund
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "201":
+          description: Refund created
+  /v1/orders/{id}/events/warehouse:
+    post:
+      summary: Apply warehouse lifecycle event
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Updated order
+  /v1/orders/{id}/events/dispatch:
+    post:
+      summary: Apply dispatch lifecycle event
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Updated order
+  /v1/orders/{id}/timeline:
+    get:
+      summary: Order event timeline
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Timeline events
+  /v1/orders/{id}/admin/priority:
+    post:
+      summary: Set priority
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Updated
+  /v1/orders/{id}/admin/split:
+    post:
+      summary: Split fulfillment units
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Fulfillments
+  /v1/orders/{id}/admin/intervene:
+    post:
+      summary: Guarded status intervene
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Updated
+  /v1/orders/outbox/publish:
+    post:
+      summary: Drain transactional outbox (stub)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Published count
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+    OrderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required: [customerPrincipalId, currency, idempotencyKey, lines]
+      properties:
+        customerPrincipalId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        idempotencyKey:
+          type: string
+        fromCheckout:
+          type: boolean
+        discountMinor:
+          type: integer
+          format: int64
+        shippingMinor:
+          type: integer
+          format: int64
+        tipMinor:
+          type: integer
+          format: int64
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              variantId:
+                type: string
+                format: uuid
+              skuCode:
+                type: string
+              qty:
+                type: integer
+              unitPriceMinor:
+                type: integer
+                format: int64
+              warehouseId:
+                type: string
+                format: uuid
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            traceId:
+              type: string
+            retriable:
+              type: boolean

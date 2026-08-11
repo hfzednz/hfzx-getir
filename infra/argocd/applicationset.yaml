@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: nexora-envs
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            path: infra/k8s/overlays/dev
+            auto: "false"
+          - env: qa
+            path: infra/k8s/overlays/qa
+            auto: "true"
+          - env: staging
+            path: infra/k8s/overlays/staging
+            auto: "true"
+          - env: demo
+            path: infra/k8s/overlays/demo
+            auto: "true"
+          - env: sandbox
+            path: infra/k8s/overlays/sandbox
+            auto: "true"
+          - env: load
+            path: infra/k8s/overlays/load
+            auto: "true"
+          - env: training
+            path: infra/k8s/overlays/training
+            auto: "true"
+          - env: prod
+            path: infra/k8s/overlays/prod
+            auto: "true"
+          - env: dr
+            path: infra/k8s/overlays/dr
+            auto: "true"
+  template:
+    metadata:
+      name: 'nexora-{{env}}'
+      labels:
+        nexora.io/env: '{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/nexora/platform.git
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: nexora-apps
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

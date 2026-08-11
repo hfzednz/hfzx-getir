@@ -1,0 +1,19 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: nexora-postgres-chaos
+  namespace: nexora-apps
+spec:
+  appinfo:
+    appns: nexora-apps
+    applabel: app=payment-service
+    appkind: deployment
+  engineState: active
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "30"
+# Expect: reconnect + retry; no dual-charge (idempotency).

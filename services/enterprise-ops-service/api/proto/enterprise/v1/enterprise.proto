@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package nexora.enterprise.v1;
+
+option go_package = "github.com/nexora/enterprise-ops-service/api/proto/enterprise/v1;enterprisev1";
+
+service EnterpriseOpsService {
+  rpc ApprovePolicy(ApprovePolicyRequest) returns (ApprovePolicyResponse);
+  rpc ActivateContinuity(ActivateContinuityRequest) returns (ActivateContinuityResponse);
+}
+
+message ApprovePolicyRequest {
+  string tenant_id = 1;
+  string key = 2;
+  string approver = 3;
+}
+
+message ApprovePolicyResponse {
+  string policy_id = 1;
+  string status = 2;
+  string version = 3;
+}
+
+message ActivateContinuityRequest {
+  string tenant_id = 1;
+  string key = 2;
+}
+
+message ActivateContinuityResponse {
+  string plan_id = 1;
+  string status = 2;
+}

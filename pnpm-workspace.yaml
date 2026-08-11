@@ -1,0 +1,5 @@
+packages:
+  - "apps/admin_web"
+  - "apps/super_admin_web"
+  - "packages/web/ui"
+  - "qa/playwright"

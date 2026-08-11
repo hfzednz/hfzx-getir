@@ -1,0 +1,237 @@
+asyncapi: 2.6.0
+info:
+  title: NEXORA Platform Events
+  version: 1.0.0
+channels:
+  order.events:
+    publish:
+      message:
+        name: OrderLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId]
+  payment.events:
+    publish:
+      message:
+        name: PaymentLifecycle
+  tracking.events:
+    publish:
+      message:
+        name: TrackingUpdate
+  platform.events:
+    publish:
+      message:
+        name: PlatformOps
+  security.events:
+    publish:
+      message:
+        name: SecurityAlert
+  liveops.events:
+    publish:
+      message:
+        name: LiveOpsLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - FeatureFlagCreated
+                - FeatureFlagUpdated
+                - FeatureEnabled
+                - FeatureDisabled
+                - ExperimentStarted
+                - ExperimentCompleted
+                - ConfigurationUpdated
+                - RollbackExecuted
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  supplier.events:
+    publish:
+      message:
+        name: SupplierEcosystemLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - SupplierCreated
+                - SupplierApproved
+                - PurchaseOrderCreated
+                - ShipmentReceived
+                - InvoiceMatched
+                - ContractRenewed
+                - SellerOnboarded
+                - SupplierRated
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  quality.events:
+    publish:
+      message:
+        name: QualityLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - TestStarted
+                - TestCompleted
+                - CoverageGenerated
+                - QualityGatePassed
+                - QualityGateFailed
+                - CertificationIssued
+                - RegressionCompleted
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  global.events:
+    publish:
+      message:
+        name: GlobalOpsLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - CountryAdded
+                - LanguageAdded
+                - TranslationUpdated
+                - ExchangeRateUpdated
+                - TaxRuleUpdated
+                - RegionActivated
+                - HolidayImported
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  openplatform.events:
+    publish:
+      message:
+        name: OpenPlatformLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - ApiKeyCreated
+                - WebhookRegistered
+                - WebhookDelivered
+                - SdkGenerated
+                - ApiVersionReleased
+                - PartnerIntegrated
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  superapp.events:
+    publish:
+      message:
+        name: SuperAppLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - PluginInstalled
+                - PluginRemoved
+                - PluginUpdated
+                - MiniAppLaunched
+                - WidgetAdded
+                - ModuleActivated
+                - PermissionGranted
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  innovation.events:
+    publish:
+      message:
+        name: InnovationLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - SimulationStarted
+                - SimulationCompleted
+                - InnovationEnabled
+                - ResearchExperimentCreated
+                - EdgeNodeRegistered
+                - IoTDeviceConnected
+                - RobotAssigned
+                - DroneMissionCreated
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  enterprise.events:
+    publish:
+      message:
+        name: EnterpriseOpsLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - PolicyApproved
+                - ProjectCreated
+                - RiskIdentified
+                - AuditCompleted
+                - MeetingScheduled
+                - DecisionRecorded
+                - ContinuityPlanActivated
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  hyperscale.events:
+    publish:
+      message:
+        name: HyperscaleLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - AuditCompleted
+                - BenchmarkRecorded
+                - ChaosExperimentCompleted
+                - OptimizationApplied
+                - HyperscaleCertified
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }
+  autonomy.events:
+    publish:
+      message:
+        name: AutonomyLifecycle
+        payload:
+          type: object
+          required: [type, tenantId, aggregateId, occurredAt]
+          properties:
+            type:
+              type: string
+              enum:
+                - AutonomyAuditCompleted
+                - SelfHealExecuted
+                - AICTOReviewCompleted
+                - EvolutionTaskCreated
+                - AutonomousReleaseScored
+                - GenesisCertified
+            tenantId: { type: string, format: uuid }
+            aggregateId: { type: string, format: uuid }
+            occurredAt: { type: string, format: date-time }

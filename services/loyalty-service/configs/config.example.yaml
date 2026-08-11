@@ -1,0 +1,11 @@
+http_addr: ":8093"
+grpc_addr: ":9103"
+public_base_url: "http://localhost:8093"
+database_url: "postgres://nexora:nexora@localhost:5444/loyalty?sslmode=disable"
+redis_url: "redis://localhost:6383/0"
+kafka_brokers:
+  - "localhost:9092"
+wallet_base_url: "http://localhost:8090"
+rate_limit_per_minute: 240
+cors_allowed_origins:
+  - "*"

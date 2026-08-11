@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package nexora.settlement.v1;
+
+option go_package = "github.com/nexora/settlement-service/proto/settlement/v1;settlementv1";
+
+// SettlementService is the gRPC surface (HTTP is primary in v1).
+service SettlementService {
+  rpc CreateBatch(CreateBatchRequest) returns (Batch);
+  rpc AddLine(AddLineRequest) returns (Batch);
+  rpc Submit(BatchActionRequest) returns (Batch);
+  rpc Approve(BatchActionRequest) returns (Batch);
+  rpc ExecutePayouts(BatchActionRequest) returns (Batch);
+  rpc Reconcile(ReconcileRequest) returns (ReconcileResponse);
+  rpc List(ListRequest) returns (ListResponse);
+}
+
+message BatchLine {
+  string id = 1;
+  string payee_type = 2;
+  string payee_ref = 3;
+  int64 amount_minor = 4;
+  string currency = 5;
+  string external_ref = 6;
+}
+
+message Batch {
+  string id = 1;
+  string status = 2;
+  string currency = 3;
+  int64 total_minor = 4;
+  repeated BatchLine lines = 5;
+  string submitted_by = 6;
+  string approved_by = 7;
+}
+
+message CreateBatchRequest {
+  string tenant_id = 1;
+  string currency = 2;
+  string period_start = 3;
+  string period_end = 4;
+  string description = 5;
+  string idempotency_key = 6;
+  string actor_id = 7;
+}
+
+message AddLineRequest {
+  string tenant_id = 1;
+  string batch_id = 2;
+  string payee_type = 3;
+  string payee_ref = 4;
+  int64 amount_minor = 5;
+  string external_ref = 6;
+}
+
+message BatchActionRequest {
+  string tenant_id = 1;
+  string batch_id = 2;
+  string actor_id = 3;
+}
+
+message ReconcileRequest {
+  string tenant_id = 1;
+  string batch_id = 2;
+  string provider_ref = 3;
+  int64 reported_minor = 4;
+  string actor_id = 5;
+}
+
+message ReconcileResponse {
+  bool matched = 1;
+  int64 expected_minor = 2;
+  int64 reported_minor = 3;
+  int64 delta_minor = 4;
+}
+
+message ListRequest {
+  string tenant_id = 1;
+  string status = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message ListResponse {
+  repeated Batch items = 1;
+  int32 total = 2;
+}

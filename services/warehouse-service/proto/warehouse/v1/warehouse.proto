@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package warehouse.v1;
+
+option go_package = "github.com/nexora/warehouse-service/proto/warehouse/v1;warehousev1";
+
+// WarehouseService exposes fulfillment operations over gRPC.
+// Wire after: protoc --go_out=. --go-grpc_out=. proto/warehouse/v1/warehouse.proto
+service WarehouseService {
+  rpc ReceiveFulfillment(ReceiveFulfillmentRequest) returns (ReceiveFulfillmentResponse);
+  rpc ClaimPickTask(ClaimPickTaskRequest) returns (TaskResponse);
+  rpc ScanPickLine(ScanPickLineRequest) returns (PickSessionResponse);
+  rpc CompletePick(CompletePickRequest) returns (TaskResponse);
+  rpc HandoffConfirm(HandoffConfirmRequest) returns (DispatchUnitResponse);
+  rpc OptimizeRoute(OptimizeRouteRequest) returns (OptimizeRouteResponse);
+  rpc Dashboard(DashboardRequest) returns (DashboardResponse);
+}
+
+message ReceiveLine {
+  string variant_id = 1;
+  string sku_code = 2;
+  string barcode = 3;
+  string location_code = 4;
+  int64 qty = 5;
+}
+
+message ReceiveFulfillmentRequest {
+  string tenant_id = 1;
+  string warehouse_id = 2;
+  string external_order_id = 3;
+  string idempotency_key = 4;
+  repeated ReceiveLine lines = 5;
+}
+
+message ReceiveFulfillmentResponse {
+  string fulfillment_id = 1;
+  string status = 2;
+  string reservation_id = 3;
+}
+
+message ClaimPickTaskRequest {
+  string tenant_id = 1;
+  string warehouse_id = 2;
+  string task_id = 3;
+  string picker_id = 4;
+}
+
+message TaskResponse {
+  string task_id = 1;
+  string type = 2;
+  string status = 3;
+}
+
+message ScanPickLineRequest {
+  string tenant_id = 1;
+  string session_id = 2;
+  string line_id = 3;
+  string barcode = 4;
+  int64 qty = 5;
+}
+
+message PickSessionResponse {
+  string session_id = 1;
+  string status = 2;
+}
+
+message CompletePickRequest {
+  string tenant_id = 1;
+  string task_id = 2;
+  string picker_id = 3;
+}
+
+message HandoffConfirmRequest {
+  string tenant_id = 1;
+  string dispatch_unit_id = 2;
+  string courier_ref = 3;
+}
+
+message DispatchUnitResponse {
+  string dispatch_unit_id = 1;
+  string status = 2;
+}
+
+message RouteLine {
+  string line_id = 1;
+  string location_code = 2;
+  string sku_code = 3;
+  int32 sequence = 4;
+}
+
+message OptimizeRouteRequest {
+  string tenant_id = 1;
+  string warehouse_id = 2;
+  repeated RouteLine lines = 3;
+}
+
+message OptimizeRouteResponse {
+  repeated RouteLine lines = 1;
+}
+
+message DashboardRequest {
+  string tenant_id = 1;
+  string warehouse_id = 2;
+}
+
+message DashboardResponse {
+  map<string, int32> fulfillments_by_status = 1;
+  map<string, int32> tasks_by_status = 2;
+  int32 dispatch_queued = 3;
+}

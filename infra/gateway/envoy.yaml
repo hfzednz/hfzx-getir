@@ -1,0 +1,159 @@
+static_resources:
+  listeners:
+    - name: listener_0
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 8080 }
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: nexora_edge
+                codec_type: AUTO
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: backend
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: "/v1/platform" }
+                          route:
+                            cluster: platform_ops
+                            timeout: 15s
+                        - match: { prefix: "/v1/open" }
+                          route:
+                            cluster: open_platform
+                            timeout: 15s
+                        - match: { prefix: "/v1/autonomy" }
+                          route:
+                            cluster: autonomy
+                            timeout: 15s
+                        - match: { prefix: "/" }
+                          route:
+                            cluster: bff_customer
+                            timeout: 15s
+                http_filters:
+                  - name: envoy.filters.http.local_ratelimit
+                    typed_config:
+                      "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+                      type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                      value:
+                        stat_prefix: http_local_rate_limiter
+                        token_bucket:
+                          max_tokens: 1000
+                          tokens_per_fill: 1000
+                          fill_interval: 60s
+                        filter_enabled:
+                          runtime_key: local_rate_limit_enabled
+                          default_value: { numerator: 100, denominator: HUNDRED }
+                        filter_enforced:
+                          runtime_key: local_rate_limit_enforced
+                          default_value: { numerator: 100, denominator: HUNDRED }
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+    - name: platform_ops
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: platform_ops
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: platform-ops-service.nexora-apps
+                      port_value: 8110
+    - name: open_platform
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: open_platform
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: open-platform-service.nexora-apps
+                      port_value: 8120
+    - name: superapp
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: superapp
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: superapp-service.nexora-apps
+                      port_value: 8121
+    - name: innovation
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: innovation
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: innovation-service.nexora-apps
+                      port_value: 8122
+    - name: enterprise_ops
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: enterprise_ops
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: enterprise-ops-service.nexora-apps
+                      port_value: 8123
+    - name: hyperscale_cert
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: hyperscale_cert
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: hyperscale-cert-service.nexora-apps
+                      port_value: 8124
+    - name: autonomy
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: autonomy
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: autonomy-service.nexora-apps
+                      port_value: 8125
+    - name: bff_customer
+      connect_timeout: 1s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: bff_customer
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: bff-customer.nexora-apps
+                      port_value: 8080

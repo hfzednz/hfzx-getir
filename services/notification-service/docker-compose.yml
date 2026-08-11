@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexora
+      POSTGRES_DB: notification
+    ports:
+      - "5456:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d notification"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6396:6379"
+
+  notification-service:
+    build: .
+    ports:
+      - "8101:8101"
+    environment:
+      HTTP_ADDR: ":8101"
+      GRPC_ADDR: ":9101"
+      CORS_ALLOWED_ORIGINS: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

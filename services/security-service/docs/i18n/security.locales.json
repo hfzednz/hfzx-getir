@@ -1,0 +1,12 @@
+{
+  "en": {
+    "policy_denied": "Access denied by security policy",
+    "secret_not_rotatable": "Secret cannot be rotated",
+    "compliance_failed": "Compliance audit failed threshold"
+  },
+  "tr": {
+    "policy_denied": "Güvenlik politikası erişimi reddetti",
+    "secret_not_rotatable": "Gizli anahtar döndürülemez",
+    "compliance_failed": "Uyumluluk denetimi eşiği geçilemedi"
+  }
+}

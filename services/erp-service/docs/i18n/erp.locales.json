@@ -1,0 +1,12 @@
+{
+  "en": {
+    "period_closed": "Accounting period is closed",
+    "journal_unbalanced": "Journal debits must equal credits",
+    "approval_required": "Approval is required"
+  },
+  "tr": {
+    "period_closed": "Muhasebe dönemi kapalı",
+    "journal_unbalanced": "Yevmiye borç ve alacakları eşit olmalıdır",
+    "approval_required": "Onay gerekli"
+  }
+}

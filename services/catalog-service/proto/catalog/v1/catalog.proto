@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+option go_package = "github.com/nexora/catalog-service/proto/catalog/v1;catalogv1";
+
+// CatalogService exposes headless catalog operations over gRPC.
+// Wire after: protoc --go_out=. --go-grpc_out=. proto/catalog/v1/catalog.proto
+service CatalogService {
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc LookupBarcode(LookupBarcodeRequest) returns (LookupBarcodeResponse);
+  rpc PublishProduct(PublishProductRequest) returns (PublishProductResponse);
+}
+
+message Product {
+  string id = 1;
+  string tenant_id = 2;
+  string slug = 3;
+  string sku_code = 4;
+  string status = 5;
+  string kind = 6;
+}
+
+message GetProductRequest {
+  string tenant_id = 1;
+  string product_id = 2;
+}
+
+message GetProductResponse {
+  Product product = 1;
+}
+
+message ListProductsRequest {
+  string tenant_id = 1;
+  string query = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message ListProductsResponse {
+  repeated Product items = 1;
+  int32 total = 2;
+}
+
+message LookupBarcodeRequest {
+  string tenant_id = 1;
+  string type = 2;
+  string value = 3;
+}
+
+message LookupBarcodeResponse {
+  string sku_id = 1;
+  string variant_id = 2;
+  Product product = 3;
+}
+
+message PublishProductRequest {
+  string tenant_id = 1;
+  string product_id = 2;
+  string actor_id = 3;
+  string comment = 4;
+}
+
+message PublishProductResponse {
+  Product product = 1;
+  string version_id = 2;
+  int32 version_number = 3;
+}

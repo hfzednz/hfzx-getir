@@ -1,0 +1,17 @@
+http:
+  addr: ":8096"
+  publicBaseUrl: "http://localhost:8096"
+grpc:
+  addr: ":9106"
+database:
+  url: "" # empty → in-memory repos
+redis:
+  url: ""
+kafka:
+  brokers: []
+# empty → in-process memory clients; set when wiring real services
+routingBaseUrl: ""
+trackingBaseUrl: ""
+geofenceBaseUrl: ""
+rateLimitPerMinute: 240
+corsAllowedOrigins: ["*"]

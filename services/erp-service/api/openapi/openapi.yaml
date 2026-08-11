@@ -1,0 +1,76 @@
+openapi: 3.0.3
+info:
+  title: NEXORA ERP Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8108
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: ok
+  /v1/erp/companies:
+    post:
+      summary: Upsert company
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "201":
+          description: created
+    get:
+      summary: List companies
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "200":
+          description: ok
+  /v1/erp/journals:
+    post:
+      summary: Post balanced journal (ledger port)
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+        - $ref: "#/components/parameters/Idempotency"
+      responses:
+        "201":
+          description: posted
+  /v1/erp/purchase-orders:
+    post:
+      summary: Create purchase order
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "201":
+          description: created
+  /v1/erp/ap/invoices:
+    post:
+      summary: Create AP invoice (optional 3-way match)
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "201":
+          description: created
+  /v1/erp/admin/stats:
+    get:
+      summary: Admin ERP stats
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "200":
+          description: ok
+components:
+  parameters:
+    Tenant:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Idempotency:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string

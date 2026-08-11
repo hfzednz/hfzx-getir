@@ -1,0 +1,356 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Warehouse Service API
+  version: 1.0.0
+  description: Pick/pack/dispatch fulfillment operations for dark-store WOMS.
+servers:
+  - url: http://localhost:8085
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /ready:
+    get:
+      summary: Readiness
+      responses:
+        "200":
+          description: Ready
+  /v1/warehouse/fulfillments/receive:
+    post:
+      summary: Receive fulfillment (SoftReserve + pick queue)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [warehouseId, externalOrderId, lines]
+              properties:
+                warehouseId: { type: string, format: uuid }
+                externalOrderId: { type: string }
+                strategy: { type: string }
+                priority: { type: integer }
+                idempotencyKey: { type: string }
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [variantId, barcode, qty]
+                    properties:
+                      variantId: { type: string, format: uuid }
+                      skuCode: { type: string }
+                      barcode: { type: string }
+                      locationCode: { type: string }
+                      qty: { type: integer }
+      responses:
+        "201":
+          description: Created
+        "400":
+          $ref: "#/components/responses/Error"
+  /v1/warehouse/fulfillments:
+    get:
+      summary: List fulfillments
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: warehouseId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List
+  /v1/warehouse/fulfillments/{id}:
+    get:
+      summary: Get fulfillment
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Fulfillment
+  /v1/warehouse/fulfillments/{id}/cancel:
+    post:
+      summary: Cancel fulfillment
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Cancelled
+  /v1/warehouse/tasks:
+    get:
+      summary: List task queue
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: warehouseId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: type
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Tasks
+  /v1/warehouse/tasks/claim:
+    post:
+      summary: Claim pick task
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Claimed
+  /v1/warehouse/tasks/{id}/reassign:
+    post:
+      summary: Reassign task
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Reassigned
+  /v1/warehouse/picking/{taskId}/start:
+    post:
+      summary: Start pick
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Session
+  /v1/warehouse/picking/sessions/{sessionId}/scan:
+    post:
+      summary: Scan pick line (barcode validate)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Session
+        "422":
+          $ref: "#/components/responses/Error"
+  /v1/warehouse/picking/{taskId}/complete:
+    post:
+      summary: Complete pick → pack task
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Pack task
+  /v1/warehouse/packing/{taskId}/claim:
+    post:
+      summary: Claim pack at station
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Pack session
+  /v1/warehouse/packing/sessions/{sessionId}/verify-weight:
+    post:
+      summary: Verify pack weight
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Pack session
+  /v1/warehouse/packing/sessions/{sessionId}/seal:
+    post:
+      summary: Seal pack
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Pack session
+  /v1/warehouse/packing/sessions/{sessionId}/label:
+    post:
+      summary: Generate label → dispatch unit
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Label + dispatch unit
+  /v1/warehouse/dispatch/queue:
+    get:
+      summary: Dispatch queue
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: warehouseId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Queue
+  /v1/warehouse/dispatch/{id}/verify:
+    post:
+      summary: Verify package
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Verified
+  /v1/warehouse/dispatch/{id}/handoff:
+    post:
+      summary: Courier handoff (inventory Consume)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Handed off
+  /v1/warehouse/qc:
+    post:
+      summary: Create QC inspection
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Created
+  /v1/warehouse/qc/{id}/pass:
+    post:
+      summary: QC pass
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Passed
+  /v1/warehouse/qc/{id}/fail:
+    post:
+      summary: QC fail
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Failed
+  /v1/warehouse/workforce/clock-in:
+    post:
+      summary: Clock in
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Shift
+  /v1/warehouse/workforce/clock-out:
+    post:
+      summary: Clock out
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Shift
+  /v1/warehouse/equipment/{id}/heartbeat:
+    post:
+      summary: Equipment heartbeat
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Equipment
+  /v1/warehouse/ai/optimize-route:
+    post:
+      summary: AI optimize pick route (stub)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Sorted lines
+  /v1/warehouse/admin/dashboard:
+    get:
+      summary: Dashboard aggregates
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: warehouseId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Aggregates
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string }
+                  message: { type: string }
+                  traceId: { type: string }
+                  retriable: { type: boolean }

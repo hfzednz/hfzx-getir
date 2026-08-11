@@ -1,0 +1,29 @@
+syntax = "proto3";
+package nexora.data.v1;
+option go_package = "github.com/nexora/data-platform-service/api/proto/data/v1;datav1";
+
+service DataPlatform {
+  rpc IngestEvent (IngestEventRequest) returns (IngestEventResponse);
+  rpc RefreshMarts (RefreshMartsRequest) returns (RefreshMartsResponse);
+}
+
+message IngestEventRequest {
+  string tenant_id = 1;
+  string name = 2;
+  string family = 3;
+  string idempotency_key = 4;
+  string payload_json = 5;
+}
+
+message IngestEventResponse {
+  string event_id = 1;
+  bool valid = 2;
+}
+
+message RefreshMartsRequest {
+  string tenant_id = 1;
+}
+
+message RefreshMartsResponse {
+  int32 kpi_count = 1;
+}

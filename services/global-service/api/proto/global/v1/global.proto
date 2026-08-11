@@ -1,0 +1,8 @@
+syntax = "proto3";
+package nexora.global.v1;
+option go_package = "github.com/nexora/global-service/api/proto/global/v1;globalv1";
+service GlobalService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+message HealthRequest {}
+message HealthResponse { string status = 1; }

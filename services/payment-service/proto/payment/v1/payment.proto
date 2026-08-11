@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package nexora.payment.v1;
+
+option go_package = "github.com/nexora/payment-service/proto/payment/v1;paymentv1";
+
+// PaymentService orchestrates payment intents (no order/cart engines).
+service PaymentService {
+  rpc CreateIntent(CreateIntentRequest) returns (PaymentIntent);
+  rpc GetIntent(GetIntentRequest) returns (PaymentIntent);
+  rpc Authorize(AuthorizeRequest) returns (PaymentIntent);
+  rpc Capture(CaptureRequest) returns (PaymentIntent);
+  rpc Void(VoidRequest) returns (PaymentIntent);
+  rpc Refund(RefundRequest) returns (RefundResponse);
+  rpc CheckEligibility(EligibilityRequest) returns (EligibilityResponse);
+  rpc ListIntents(ListIntentsRequest) returns (ListIntentsResponse);
+}
+
+message CreateIntentRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string order_id = 3;
+  int64 amount_minor = 4;
+  string currency = 5;
+  string method_type = 6;
+  string idempotency_key = 7;
+}
+
+message GetIntentRequest {
+  string tenant_id = 1;
+  string intent_id = 2;
+}
+
+message AuthorizeRequest {
+  string tenant_id = 1;
+  string intent_id = 2;
+  string idempotency_key = 3;
+  string token = 4;
+}
+
+message CaptureRequest {
+  string tenant_id = 1;
+  string intent_id = 2;
+  int64 amount_minor = 3;
+  string idempotency_key = 4;
+}
+
+message VoidRequest {
+  string tenant_id = 1;
+  string intent_id = 2;
+  string idempotency_key = 3;
+}
+
+message RefundRequest {
+  string tenant_id = 1;
+  string intent_id = 2;
+  int64 amount_minor = 3;
+  string reason = 4;
+  string idempotency_key = 5;
+}
+
+message EligibilityRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  int64 amount_minor = 3;
+  string currency = 4;
+}
+
+message ListIntentsRequest {
+  string tenant_id = 1;
+  string status = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message PaymentIntent {
+  string id = 1;
+  string tenant_id = 2;
+  string principal_id = 3;
+  string order_id = 4;
+  string status = 5;
+  int64 amount_minor = 6;
+  int64 captured_minor = 7;
+  int64 refunded_minor = 8;
+  string currency = 9;
+  string method_type = 10;
+  string provider = 11;
+}
+
+message RefundResponse {
+  string refund_id = 1;
+  string status = 2;
+  int64 amount_minor = 3;
+  PaymentIntent intent = 4;
+}
+
+message EligibilityResponse {
+  bool eligible = 1;
+  string reason = 2;
+  repeated string methods = 3;
+}
+
+message ListIntentsResponse {
+  repeated PaymentIntent items = 1;
+  int32 total = 2;
+}

@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package routing.v1;
+
+option go_package = "github.com/nexora/routing-service/proto/routing/v1;routingv1";
+
+// RoutingService gRPC surface (stub — HTTP is primary in memory mode).
+service RoutingService {
+  rpc CreateRoute(CreateRouteRequest) returns (Route);
+  rpc GetRoute(GetRouteRequest) returns (Route);
+  rpc Optimize(OptimizeRequest) returns (Route);
+  rpc RecalculateETA(RecalculateETARequest) returns (Route);
+  rpc UpdateTrafficHint(UpdateTrafficHintRequest) returns (TrafficHint);
+}
+
+message WaypointInput {
+  string kind = 1;
+  double lat = 2;
+  double lon = 3;
+  string order_id = 4;
+  string label = 5;
+}
+
+message CreateRouteRequest {
+  string tenant_id = 1;
+  string dispatch_id = 2;
+  string courier_id = 3;
+  string warehouse_id = 4;
+  repeated WaypointInput waypoints = 5;
+  double speed_mps = 6;
+}
+
+message GetRouteRequest {
+  string tenant_id = 1;
+  string route_id = 2;
+}
+
+message OptimizeRequest {
+  string tenant_id = 1;
+  string route_id = 2;
+}
+
+message RecalculateETARequest {
+  string tenant_id = 1;
+  string route_id = 2;
+  double current_lat = 3;
+  double current_lon = 4;
+  bool has_current = 5;
+  string reason = 6;
+}
+
+message UpdateTrafficHintRequest {
+  string tenant_id = 1;
+  string hint_id = 2;
+  string region_key = 3;
+  double lat = 4;
+  double lon = 5;
+  double radius_m = 6;
+  double factor = 7;
+}
+
+message Waypoint {
+  string id = 1;
+  int32 sequence = 2;
+  string kind = 3;
+  double lat = 4;
+  double lon = 5;
+  string order_id = 6;
+  string label = 7;
+}
+
+message Route {
+  string id = 1;
+  string tenant_id = 2;
+  string status = 3;
+  repeated Waypoint waypoints = 4;
+  double distance_meters = 5;
+  double duration_seconds = 6;
+  double traffic_factor = 7;
+  double weather_factor = 8;
+}
+
+message TrafficHint {
+  string id = 1;
+  string tenant_id = 2;
+  string region_key = 3;
+  double lat = 4;
+  double lon = 5;
+  double radius_m = 6;
+  double factor = 7;
+}

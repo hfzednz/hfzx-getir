@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package nexora.autonomy.v1;
+
+option go_package = "github.com/nexora/autonomy-service/api/proto/autonomy/v1;autonomyv1";
+
+service AutonomyService {
+  rpc Ping(PingRequest) returns (PingResponse);
+}
+
+message PingRequest {}
+message PingResponse {
+  string status = 1;
+}

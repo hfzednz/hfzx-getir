@@ -1,0 +1,35 @@
+name: cd-gitops
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Service image name
+        required: true
+      tag:
+        description: Image tag / digest
+        required: true
+      environment:
+        description: staging|prod
+        required: true
+        default: staging
+
+jobs:
+  update-overlay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch kustomize image tag
+        run: |
+          set -euo pipefail
+          OVERLAY="infra/k8s/overlays/${{ inputs.environment }}"
+          sed -i "s|newTag: .*|newTag: ${{ inputs.tag }}|" "$OVERLAY/kustomization.yaml" || true
+          echo "DeploymentStarted service=${{ inputs.service }} env=${{ inputs.environment }} tag=${{ inputs.tag }}"
+      - name: Open GitOps PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(gitops): ${{ inputs.service }}@${{ inputs.tag }} -> ${{ inputs.environment }}"
+          title: "GitOps promote ${{ inputs.service }} to ${{ inputs.environment }}"
+          body: |
+            Automated promotion. Argo CD will reconcile after merge.
+          branch: gitops/${{ inputs.environment }}-${{ inputs.service }}

@@ -1,0 +1,58 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Innovation Platform
+  version: 1.0.0
+servers:
+  - url: http://localhost:8122
+paths:
+  /health:
+    get:
+      responses: { "200": { description: ok } }
+  /v1/innovation/bootstrap/catalog:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: seeded } }
+  /v1/innovation/modules:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: modules } }
+  /v1/innovation/modules/enable:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: enabled } }
+  /v1/innovation/simulations:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "201": { description: started } }
+  /v1/innovation/admin/stats:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: stats } }
+  /v1/innovation/admin/readiness:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: future readiness } }

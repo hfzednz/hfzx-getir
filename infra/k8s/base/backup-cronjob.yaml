@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-logical-backup
+  namespace: nexora-data
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: postgres:16-alpine
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: password
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+                  FILE=/tmp/nexora-$(date +%Y%m%d%H%M).sql.gz
+                  pg_dump -h postgres.nexora-data -U nexora nexora | gzip > "$FILE"
+                  echo "backup_completed file=$FILE"

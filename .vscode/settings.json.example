@@ -1,0 +1,6 @@
+# Copy to settings.json locally if desired. Not enforced.
+{
+  "editor.formatOnSave": true,
+  "go.useLanguageServer": true,
+  "files.eol": "\n"
+}

@@ -1,0 +1,164 @@
+# NEXORA service registry — single source for ports & ownership (Prompt #30)
+
+services:
+  - name: identity-service
+    http: 8081
+    owns: [authn, sessions, otp]
+  - name: customer-profile-service
+    http: 8082
+    owns: [customer_profile]
+  - name: catalog-service
+    http: 8083
+    owns: [pim, products]
+  - name: inventory-service
+    http: 8084
+    owns: [stock_ledger]
+  - name: order-service
+    http: 8085
+    owns: [oms]
+  - name: cart-service
+    http: 8086
+    owns: [cart]
+  - name: checkout-service
+    http: 8087
+    owns: [checkout]
+  - name: warehouse-service
+    http: 8088
+    owns: [woms]
+  - name: payment-service
+    http: 8089
+    owns: [payment_intents]
+  - name: wallet-service
+    http: 8090
+    owns: [wallets]
+  - name: finance-ledger-service
+    http: 8091
+    owns: [double_entry]
+  - name: settlement-service
+    http: 8092
+    owns: [settlements]
+  - name: loyalty-service
+    http: 8093
+    owns: [loyalty]
+  - name: promotion-service
+    http: 8094
+    owns: [campaigns]
+  - name: pricing-service
+    http: 8095
+    owns: [price_quotes]
+  - name: dispatch-service
+    http: 8096
+    owns: [dispatch]
+  - name: routing-service
+    http: 8097
+    owns: [routes_eta]
+  - name: tracking-service
+    http: 8098
+    owns: [live_tracking]
+  - name: geofence-service
+    http: 8099
+    owns: [zones]
+  - name: location-service
+    http: 8100
+    owns: [geocode_poi]
+  - name: notification-service
+    http: 8101
+    owns: [omnichannel_notify]
+  - name: crm-service
+    http: 8102
+    owns: [support_crm]
+  - name: review-service
+    http: 8103
+    owns: [reviews_trust]
+  - name: search-service
+    http: 8104
+    owns: [search]
+  - name: recommendation-service
+    http: 8105
+    owns: [recommendations]
+  - name: ai-platform-service
+    http: 8106
+    owns: [ml_llm_agents]
+  - name: data-platform-service
+    http: 8107
+    owns: [analytics_obs]
+  - name: erp-service
+    http: 8108
+    owns: [erp_finance]
+  - name: security-service
+    http: 8109
+    owns: [grc_security]
+  - name: platform-ops-service
+    http: 8110
+    owns: [sre_control_plane]
+  - name: bff-customer
+    http: 8111
+    owns: [customer_edge]
+  - name: bff-courier
+    http: 8112
+    owns: [courier_edge]
+  - name: bff-warehouse
+    http: 8113
+    owns: [warehouse_edge]
+  - name: bff-admin
+    http: 8114
+    owns: [admin_edge]
+  - name: realtime-gateway
+    http: 8115
+    owns: [ws_sse_fanout]
+  - name: liveops-service
+    http: 8116
+    owns: [feature_flags, remote_config, experiments, liveops_events, rollouts]
+  - name: supplier-service
+    http: 8117
+    owns: [suppliers_partners, sourcing_rfq, marketplace_sellers, edi, contracts]
+  - name: quality-service
+    http: 8118
+    owns: [quality_gates, test_runs, release_certs]
+  - name: global-service
+    http: 8119
+    owns: [countries_locales, translations, display_fx, regional_rules]
+  - name: open-platform-service
+    http: 8120
+    owns: [developer_apps, api_keys, webhooks, api_catalog, gateway_policies]
+  - name: superapp-service
+    http: 8121
+    owns: [mini_apps, plugins, widgets, module_registry, plugin_store, module_permissions]
+  - name: innovation-service
+    http: 8122
+    owns: [innovation_modules, simulations, digital_twins, edge_nodes, iot_registry, robot_drone_missions]
+  - name: enterprise-ops-service
+    http: 8123
+    owns: [org_hierarchy, policies, pmo, okr_kpi, bcp, enterprise_risk, internal_audit]
+  - name: hyperscale-cert-service
+    http: 8124
+    owns: [hyperscale_audits, benchmarks, capacity_scenarios, chaos_metadata, tuning_profiles, hyperscale_certificates]
+  - name: autonomy-service
+    http: 8125
+    owns: [autonomy_audits, self_heal_plans, ai_cto_reviews, evolution_tasks, release_scores, governance_loops, genesis_certificates]
+
+kafka_topics:
+  - identity.events
+  - order.events
+  - payment.events
+  - inventory.events
+  - dispatch.events
+  - tracking.events
+  - notification.events
+  - crm.events
+  - review.events
+  - erp.events
+  - security.events
+  - platform.events
+  - data.events
+  - ai.events
+  - liveops.events
+  - supplier.events
+  - quality.events
+  - global.events
+  - openplatform.events
+  - superapp.events
+  - innovation.events
+  - enterprise.events
+  - hyperscale.events
+  - autonomy.events

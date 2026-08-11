@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package loyalty.v1;
+
+option go_package = "github.com/nexora/loyalty-service/proto/loyalty/v1;loyaltyv1";
+
+// LoyaltyService gRPC surface (stub — HTTP is primary in memory mode).
+service LoyaltyService {
+  rpc EnsureAccount(EnsureAccountRequest) returns (Account);
+  rpc EarnPoints(EarnPointsRequest) returns (EarnPointsResponse);
+  rpc RedeemPoints(RedeemPointsRequest) returns (RedeemPointsResponse);
+  rpc EvaluateMembership(EvaluateMembershipRequest) returns (Membership);
+  rpc GrantCashback(GrantCashbackRequest) returns (CashbackGrant);
+  rpc ConfirmCashback(ConfirmCashbackRequest) returns (CashbackGrant);
+  rpc CreateReferralCode(CreateReferralCodeRequest) returns (ReferralCode);
+  rpc ApplyReferral(ApplyReferralRequest) returns (ReferralEvent);
+  rpc CompleteReferral(CompleteReferralRequest) returns (ReferralEvent);
+  rpc Spin(SpinRequest) returns (SpinResult);
+  rpc GetAIScores(GetAIScoresRequest) returns (AIScore);
+}
+
+message EnsureAccountRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+}
+
+message Account {
+  string id = 1;
+  string tenant_id = 2;
+  string principal_id = 3;
+  int64 points = 4;
+  int64 tier_points = 5;
+  int64 xp = 6;
+  int32 level = 7;
+}
+
+message EarnPointsRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string order_id = 3;
+  int64 points = 4;
+  int64 spend_minor = 5;
+}
+
+message EarnPointsResponse {
+  Account account = 1;
+  string entry_id = 2;
+}
+
+message RedeemPointsRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  int64 points = 3;
+  string idempotency_key = 4;
+}
+
+message RedeemPointsResponse {
+  Account account = 1;
+  string entry_id = 2;
+}
+
+message EvaluateMembershipRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+}
+
+message Membership {
+  string id = 1;
+  string account_id = 2;
+  string tier = 3;
+  bool upgraded = 4;
+}
+
+message GrantCashbackRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  int64 amount_minor = 3;
+  string currency = 4;
+  string account_type = 5;
+  string idempotency_key = 6;
+}
+
+message ConfirmCashbackRequest {
+  string tenant_id = 1;
+  string grant_id = 2;
+}
+
+message CashbackGrant {
+  string id = 1;
+  string status = 2;
+  int64 amount_minor = 3;
+  string currency = 4;
+}
+
+message CreateReferralCodeRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string code = 3;
+}
+
+message ReferralCode {
+  string id = 1;
+  string code = 2;
+  string principal_id = 3;
+}
+
+message ApplyReferralRequest {
+  string tenant_id = 1;
+  string referee_principal_id = 2;
+  string code = 3;
+}
+
+message CompleteReferralRequest {
+  string tenant_id = 1;
+  string referee_principal_id = 2;
+  string order_id = 3;
+  int64 points = 4;
+}
+
+message ReferralEvent {
+  string id = 1;
+  string status = 2;
+  int64 points_granted = 3;
+}
+
+message SpinRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+  string campaign_id = 3;
+}
+
+message SpinResult {
+  string id = 1;
+  string prize_code = 2;
+  int64 points_won = 3;
+}
+
+message GetAIScoresRequest {
+  string tenant_id = 1;
+  string account_id = 2;
+}
+
+message AIScore {
+  string account_id = 1;
+  double churn_score = 2;
+  double ltv_score = 3;
+}

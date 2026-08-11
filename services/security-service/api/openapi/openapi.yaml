@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Security Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8109
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: ok
+  /v1/security/policies/evaluate:
+    post:
+      summary: Evaluate OPA-backed security policy
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "200":
+          description: decision
+  /v1/security/audits:
+    post:
+      summary: Append immutable audit event
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "201":
+          description: created
+  /v1/security/threats/ingest:
+    post:
+      summary: Ingest threat features
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "201":
+          description: created
+  /v1/security/incidents:
+    post:
+      summary: Open security incident
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "201":
+          description: created
+  /v1/security/admin/stats:
+    get:
+      summary: Security posture stats
+      parameters:
+        - $ref: "#/components/parameters/Tenant"
+      responses:
+        "200":
+          description: ok
+components:
+  parameters:
+    Tenant:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid

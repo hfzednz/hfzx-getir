@@ -1,0 +1,21 @@
+# Envoy / edge HTTP/3 + compression guidance (merge into gateway — additive)
+http_filters_notes:
+  - enable gzip/brotli compressor for JSON responses >1KB
+  - prefer HTTP/2 upstream; HTTP/3 (QUIC) at edge where CDN terminates
+  - idle_timeout: 60s
+  - stream_idle_timeout: 30s
+  - max_requests_per_connection: 1000
+tls:
+  min_protocol: TLSv1_2
+  cipher_suites_prefer: TLS_AES_128_GCM_SHA256
+cdn:
+  cache_static_ttl: 86400
+  cache_api_bypass: true
+dns:
+  ttl_recommend_seconds: 60
+load_balancing:
+  policy: LEAST_REQUEST
+  outlier_ejection:
+    consecutive_5xx: 5
+    interval: 10s
+    base_ejection_time: 30s

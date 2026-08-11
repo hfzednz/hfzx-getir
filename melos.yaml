@@ -1,0 +1,18 @@
+name: nexora
+
+packages:
+  - apps/mobile_customer
+  - apps/mobile_courier
+  - apps/mobile_warehouse
+  - packages/flutter/nexora_core
+  - packages/flutter/nexora_design
+  - packages/flutter/superapp_shell
+  - packages/flutter/superapp_plugin_sdk
+  - packages/flutter/innovation_xr_stub
+  - packages/sdk/flutter
+
+command:
+  bootstrap: melos bootstrap
+  analyze: melos exec -- flutter analyze
+  test: melos exec -- flutter test
+  get: melos exec -- flutter pub get

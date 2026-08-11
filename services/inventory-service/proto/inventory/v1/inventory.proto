@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package inventory.v1;
+
+option go_package = "github.com/nexora/inventory-service/proto/inventory/v1;inventoryv1";
+
+// InventoryService exposes stock & reservation operations over gRPC.
+// Wire after: protoc --go_out=. --go-grpc_out=. proto/inventory/v1/inventory.proto
+service InventoryService {
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc SoftReserve(SoftReserveRequest) returns (SoftReserveResponse);
+  rpc ConfirmHard(ConfirmHardRequest) returns (ConfirmHardResponse);
+  rpc ReleaseReservation(ReleaseReservationRequest) returns (ReleaseReservationResponse);
+  rpc ConsumeReservation(ConsumeReservationRequest) returns (ConsumeReservationResponse);
+  rpc QueryATP(QueryATPRequest) returns (QueryATPResponse);
+}
+
+message StockBalance {
+  string id = 1;
+  string tenant_id = 2;
+  string warehouse_id = 3;
+  string variant_id = 4;
+  string sku_code = 5;
+  int64 on_hand = 6;
+  int64 reserved = 7;
+  int64 blocked = 8;
+  int64 available = 9;
+  int64 version = 10;
+}
+
+message GetBalanceRequest {
+  string tenant_id = 1;
+  string balance_id = 2;
+}
+
+message GetBalanceResponse {
+  StockBalance balance = 1;
+}
+
+message SoftReserveLine {
+  string warehouse_id = 1;
+  string variant_id = 2;
+  int64 qty = 3;
+  bool use_fefo = 4;
+}
+
+message SoftReserveRequest {
+  string tenant_id = 1;
+  string external_ref = 2;
+  string idempotency_key = 3;
+  repeated SoftReserveLine lines = 4;
+}
+
+message SoftReserveResponse {
+  string reservation_id = 1;
+  string status = 2;
+  string type = 3;
+}
+
+message ConfirmHardRequest {
+  string tenant_id = 1;
+  string reservation_id = 2;
+  string idempotency_key = 3;
+}
+
+message ConfirmHardResponse {
+  string reservation_id = 1;
+  string type = 2;
+  string status = 3;
+}
+
+message ReleaseReservationRequest {
+  string tenant_id = 1;
+  string reservation_id = 2;
+  string idempotency_key = 3;
+}
+
+message ReleaseReservationResponse {
+  string reservation_id = 1;
+  string status = 2;
+}
+
+message ConsumeReservationRequest {
+  string tenant_id = 1;
+  string reservation_id = 2;
+  string idempotency_key = 3;
+}
+
+message ConsumeReservationResponse {
+  string reservation_id = 1;
+  string status = 2;
+}
+
+message QueryATPRequest {
+  string tenant_id = 1;
+  string variant_id = 2;
+  string warehouse_id = 3;
+  string region_id = 4;
+}
+
+message ATPResult {
+  string warehouse_id = 1;
+  string variant_id = 2;
+  int64 available = 3;
+  int64 atp = 4;
+}
+
+message QueryATPResponse {
+  repeated ATPResult items = 1;
+}

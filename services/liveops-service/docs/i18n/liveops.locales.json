@@ -1,0 +1,12 @@
+{
+  "en": {
+    "feature_disabled": "Feature is disabled",
+    "experiment_closed": "Experiment is not running",
+    "rollback_executed": "Rollback executed"
+  },
+  "tr": {
+    "feature_disabled": "Özellik kapalı",
+    "experiment_closed": "Deney çalışmıyor",
+    "rollback_executed": "Geri alma uygulandı"
+  }
+}

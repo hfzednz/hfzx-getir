@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package nexora.superapp.v1;
+
+option go_package = "github.com/nexora/superapp-service/api/proto/superapp/v1;superappv1";
+
+service SuperAppService {
+  rpc ResolveShell(ResolveShellRequest) returns (ResolveShellResponse);
+  rpc InstallModule(InstallModuleRequest) returns (InstallModuleResponse);
+}
+
+message ResolveShellRequest {
+  string tenant_id = 1;
+  string subject_id = 2;
+  string shell_version = 3;
+}
+
+message ResolvedModule {
+  string key = 1;
+  string kind = 2;
+  string version = 3;
+  string entry_point = 4;
+  repeated string permissions = 5;
+  string bundle_uri = 6;
+}
+
+message ResolveShellResponse {
+  repeated ResolvedModule modules = 1;
+  string shell_hint = 2;
+}
+
+message InstallModuleRequest {
+  string tenant_id = 1;
+  string subject_id = 2;
+  string module_key = 3;
+}
+
+message InstallModuleResponse {
+  string install_id = 1;
+  string version = 2;
+  string status = 3;
+}

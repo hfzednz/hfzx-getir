@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Supplier & Partner Ecosystem
+  version: 1.0.0
+servers:
+  - url: http://localhost:8117
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+paths:
+  /health:
+    get:
+      responses: { "200": { description: ok } }
+  /v1/supplier/suppliers:
+    get:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "200": { description: list } }
+    post:
+      summary: Onboard supplier/partner
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "201": { description: created } }
+  /v1/supplier/suppliers/{id}/approve:
+    post:
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: approved } }
+  /v1/supplier/rfqs:
+    post:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "201": { description: created } }
+  /v1/supplier/quotations:
+    post:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "201": { description: submitted } }
+  /v1/supplier/purchase-orders:
+    get:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "200": { description: list } }
+    post:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "201": { description: created } }
+  /v1/supplier/shipments:
+    post:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "201": { description: announced } }
+  /v1/supplier/sellers:
+    post:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "201": { description: onboarded } }
+  /v1/supplier/edi:
+    post:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "201": { description: ingested } }
+  /v1/supplier/admin/stats:
+    get:
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses: { "200": { description: stats } }

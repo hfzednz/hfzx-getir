@@ -1,0 +1,238 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Loyalty Service
+  version: 1.0.0
+  description: Points, memberships, rewards, referrals, cashback (via WalletClient), gamification.
+servers:
+  - url: http://localhost:8093
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/accounts:
+    post:
+      summary: Ensure loyalty account
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                principalId:
+                  type: string
+                  format: uuid
+      responses:
+        "201":
+          description: Created
+  /v1/loyalty/accounts/{id}:
+    get:
+      summary: Get account
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/points/earn:
+    post:
+      summary: Earn points from order (idempotent by orderId)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, points]
+              properties:
+                principalId:
+                  type: string
+                  format: uuid
+                orderId:
+                  type: string
+                  format: uuid
+                points:
+                  type: integer
+                  format: int64
+                spendMinor:
+                  type: integer
+                  format: int64
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/points/redeem:
+    post:
+      summary: Redeem points
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, points]
+              properties:
+                accountId:
+                  type: string
+                  format: uuid
+                points:
+                  type: integer
+                  format: int64
+                idempotencyKey:
+                  type: string
+      responses:
+        "200":
+          description: OK
+        "422":
+          description: Insufficient points
+  /v1/loyalty/accounts/{id}/membership/evaluate:
+    post:
+      summary: Evaluate membership upgrade
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/cashback/grant:
+    post:
+      summary: Create pending cashback grant
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      responses:
+        "201":
+          description: Created
+  /v1/loyalty/cashback/{id}/confirm:
+    post:
+      summary: Confirm cashback to wallet (WalletClient.Credit)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/referrals/code:
+    post:
+      summary: Create referral code
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      responses:
+        "201":
+          description: Created
+  /v1/loyalty/referrals/apply:
+    post:
+      summary: Apply referral code (blocks self)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Self referral
+  /v1/loyalty/referrals/complete:
+    post:
+      summary: Complete referral on first order
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/missions/track:
+    post:
+      summary: Track mission progress
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/spin:
+    post:
+      summary: Spin weighted prize wheel
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/leaderboard:
+    get:
+      summary: Leaderboard stub
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+  /v1/loyalty/admin/grant:
+    post:
+      summary: Admin manual points grant (audited)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      responses:
+        "200":
+          description: OK
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+  schemas:
+    NexoraError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            traceId:
+              type: string
+            retriable:
+              type: boolean

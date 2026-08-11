@@ -1,0 +1,35 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Search Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8104
+paths:
+  /v1/search/query:
+    post:
+      summary: Hybrid product search
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: OK }
+  /v1/search/autocomplete:
+    get:
+      summary: Autocomplete
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /v1/search/index/documents:
+    post:
+      summary: Upsert search document
+      responses:
+        "201": { description: Created }

@@ -1,0 +1,12 @@
+{
+  "en": {
+    "autonomy.bootstrap.ok": "Autonomy platform bootstrapped",
+    "autonomy.genesis.issued": "Final Genesis certificate issued",
+    "autonomy.gate.failed": "Genesis gate failed"
+  },
+  "tr": {
+    "autonomy.bootstrap.ok": "Otonomi platformu hazırlandı",
+    "autonomy.genesis.issued": "Final Genesis sertifikası verildi",
+    "autonomy.gate.failed": "Genesis kapısı başarısız"
+  }
+}

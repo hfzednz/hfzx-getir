@@ -1,0 +1,7 @@
+# Open Platform / webhook contract checks
+checks:
+  - catalog_seed_public_private_partner
+  - api_key_hash_only_persisted
+  - webhook_hmac_verify
+  - gateway_policy_export
+  - sdk_registry_publish

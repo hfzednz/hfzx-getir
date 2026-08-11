@@ -1,0 +1,86 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Super App Platform
+  version: 1.0.0
+servers:
+  - url: http://localhost:8121
+paths:
+  /health:
+    get:
+      responses: { "200": { description: ok } }
+  /v1/superapp/bootstrap/mini-apps:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: seeded } }
+  /v1/superapp/modules:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: modules } }
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "201": { description: upserted } }
+  /v1/superapp/installs:
+    post:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "201": { description: installed } }
+  /v1/superapp/store:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: category
+          in: query
+          schema: { type: string }
+      responses: { "200": { description: store listings } }
+  /v1/superapp/shell/resolve:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: subjectId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: shellVersion
+          in: query
+          schema: { type: string }
+      responses: { "200": { description: resolved modules + widgets } }
+  /v1/superapp/search:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: q
+          in: query
+          schema: { type: string }
+      responses: { "200": { description: search hits } }
+  /v1/superapp/admin/stats:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses: { "200": { description: stats } }

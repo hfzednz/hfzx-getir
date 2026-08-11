@@ -1,0 +1,274 @@
+{
+  "$schema": "https://nexora.local/schemas/design-tokens.schema.json",
+  "meta": {
+    "name": "NEXORA Design Tokens",
+    "version": "1.0.0",
+    "philosophy": "Kinetic Clarity",
+    "grid": 4
+  },
+  "color": {
+    "brand": {
+      "primary": {
+        "50": "#EBF8F8",
+        "100": "#D7F0F0",
+        "500": "#0F8585",
+        "600": "#0B6E6E",
+        "700": "#085858",
+        "800": "#064545"
+      },
+      "accent": {
+        "100": "#F7FAD4",
+        "400": "#E8F07A",
+        "500": "#D4DC5C"
+      },
+      "ink": "#0B1214"
+    },
+    "neutral": {
+      "0": "#FFFFFF",
+      "25": "#F7F8F8",
+      "50": "#F1F3F3",
+      "100": "#E6E9EA",
+      "200": "#CDD3D5",
+      "300": "#A8B1B4",
+      "400": "#7E898D",
+      "500": "#5C686C",
+      "600": "#3F4A4E",
+      "700": "#2A3336",
+      "800": "#1A2225",
+      "900": "#0B1214",
+      "950": "#070B0C"
+    },
+    "semantic": {
+      "light": {
+        "success": { "100": "#E3F7EC", "600": "#1B7F4A" },
+        "warning": { "100": "#FFF4E0", "600": "#B86E00" },
+        "danger": { "100": "#FDECEA", "600": "#C62828" },
+        "info": { "100": "#EBF8F8", "600": "#0B6E6E" }
+      },
+      "dark": {
+        "success": { "100": "#143528", "600": "#3DDB8A" },
+        "warning": { "100": "#3A2A0A", "600": "#FFC14D" },
+        "danger": { "100": "#3A1414", "600": "#FF6B6B" },
+        "info": { "100": "#0E2C2C", "600": "#5ED0D0" }
+      }
+    },
+    "roles": {
+      "light": {
+        "bg.canvas": "{color.neutral.25}",
+        "bg.surface": "{color.neutral.0}",
+        "bg.surfaceRaised": "{color.neutral.0}",
+        "bg.sunken": "{color.neutral.50}",
+        "bg.nav": "{color.neutral.0}",
+        "bg.brand": "{color.brand.primary.600}",
+        "bg.accent": "{color.brand.accent.400}",
+        "bg.disabled": "{color.neutral.100}",
+        "bg.overlay": "#0B12147A",
+        "border.subtle": "{color.neutral.100}",
+        "border.default": "{color.neutral.200}",
+        "border.strong": "{color.neutral.300}",
+        "border.focus": "{color.brand.primary.600}",
+        "border.danger": "{color.semantic.light.danger.600}",
+        "text.primary": "{color.neutral.700}",
+        "text.secondary": "{color.neutral.500}",
+        "text.tertiary": "{color.neutral.400}",
+        "text.disabled": "{color.neutral.300}",
+        "text.inverse": "{color.neutral.0}",
+        "text.brand": "{color.brand.primary.700}",
+        "text.onBrand": "{color.neutral.0}",
+        "text.onAccent": "{color.brand.ink}",
+        "text.link": "{color.brand.primary.600}",
+        "icon.primary": "{color.neutral.700}",
+        "icon.secondary": "{color.neutral.500}",
+        "icon.brand": "{color.brand.primary.600}",
+        "nav.itemDefault": "{color.neutral.500}",
+        "nav.itemActive": "{color.brand.primary.600}",
+        "nav.indicator": "{color.brand.primary.600}",
+        "success": "{color.semantic.light.success.600}",
+        "successSurface": "{color.semantic.light.success.100}",
+        "warning": "{color.semantic.light.warning.600}",
+        "warningSurface": "{color.semantic.light.warning.100}",
+        "danger": "{color.semantic.light.danger.600}",
+        "dangerSurface": "{color.semantic.light.danger.100}",
+        "info": "{color.semantic.light.info.600}",
+        "infoSurface": "{color.semantic.light.info.100}"
+      },
+      "dark": {
+        "bg.canvas": "{color.neutral.950}",
+        "bg.surface": "{color.neutral.900}",
+        "bg.surfaceRaised": "{color.neutral.800}",
+        "bg.sunken": "{color.neutral.950}",
+        "bg.nav": "{color.neutral.900}",
+        "bg.brand": "{color.brand.primary.600}",
+        "bg.accent": "{color.brand.accent.400}",
+        "bg.disabled": "{color.neutral.800}",
+        "bg.overlay": "#00000099",
+        "border.subtle": "#243034",
+        "border.default": "#334044",
+        "border.strong": "{color.neutral.500}",
+        "border.focus": "{color.brand.primary.500}",
+        "border.danger": "{color.semantic.dark.danger.600}",
+        "text.primary": "{color.neutral.50}",
+        "text.secondary": "{color.neutral.300}",
+        "text.tertiary": "{color.neutral.400}",
+        "text.disabled": "{color.neutral.500}",
+        "text.inverse": "{color.neutral.900}",
+        "text.brand": "{color.brand.primary.500}",
+        "text.onBrand": "{color.neutral.0}",
+        "text.onAccent": "{color.brand.ink}",
+        "text.link": "{color.brand.primary.500}",
+        "icon.primary": "{color.neutral.50}",
+        "icon.secondary": "{color.neutral.300}",
+        "icon.brand": "{color.brand.primary.500}",
+        "nav.itemDefault": "{color.neutral.400}",
+        "nav.itemActive": "{color.brand.accent.400}",
+        "nav.indicator": "{color.brand.accent.400}",
+        "success": "{color.semantic.dark.success.600}",
+        "successSurface": "{color.semantic.dark.success.100}",
+        "warning": "{color.semantic.dark.warning.600}",
+        "warningSurface": "{color.semantic.dark.warning.100}",
+        "danger": "{color.semantic.dark.danger.600}",
+        "dangerSurface": "{color.semantic.dark.danger.100}",
+        "info": "{color.semantic.dark.info.600}",
+        "infoSurface": "{color.semantic.dark.info.100}"
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "display": "Satoshi",
+      "body": "Geist",
+      "mono": "Geist Mono"
+    },
+    "styles": {
+      "display.xl": { "size": 40, "lineHeight": 48, "weight": 700, "tracking": -0.02, "family": "display" },
+      "display.lg": { "size": 32, "lineHeight": 40, "weight": 700, "tracking": -0.02, "family": "display" },
+      "headline.lg": { "size": 28, "lineHeight": 36, "weight": 700, "tracking": -0.015, "family": "display" },
+      "headline.md": { "size": 24, "lineHeight": 32, "weight": 600, "tracking": -0.01, "family": "display" },
+      "headline.sm": { "size": 20, "lineHeight": 28, "weight": 600, "tracking": -0.01, "family": "display" },
+      "title.lg": { "size": 18, "lineHeight": 26, "weight": 600, "tracking": 0, "family": "body" },
+      "title.md": { "size": 16, "lineHeight": 24, "weight": 600, "tracking": 0, "family": "body" },
+      "title.sm": { "size": 14, "lineHeight": 20, "weight": 600, "tracking": 0, "family": "body" },
+      "body.lg": { "size": 16, "lineHeight": 24, "weight": 400, "tracking": 0, "family": "body" },
+      "body.md": { "size": 14, "lineHeight": 20, "weight": 400, "tracking": 0, "family": "body" },
+      "body.sm": { "size": 13, "lineHeight": 18, "weight": 400, "tracking": 0, "family": "body" },
+      "caption.md": { "size": 12, "lineHeight": 16, "weight": 400, "tracking": 0.01, "family": "body" },
+      "caption.sm": { "size": 11, "lineHeight": 14, "weight": 500, "tracking": 0.02, "family": "body" },
+      "overline": { "size": 11, "lineHeight": 14, "weight": 600, "tracking": 0.08, "family": "body" },
+      "button.lg": { "size": 16, "lineHeight": 24, "weight": 600, "tracking": 0, "family": "body" },
+      "button.md": { "size": 14, "lineHeight": 20, "weight": 600, "tracking": 0, "family": "body" },
+      "button.sm": { "size": 13, "lineHeight": 18, "weight": 600, "tracking": 0, "family": "body" },
+      "nav.md": { "size": 12, "lineHeight": 16, "weight": 500, "tracking": 0, "family": "body" },
+      "price.lg": { "size": 20, "lineHeight": 28, "weight": 700, "tracking": -0.01, "family": "body", "tabular": true },
+      "price.md": { "size": 16, "lineHeight": 24, "weight": 700, "tracking": 0, "family": "body", "tabular": true },
+      "price.sm": { "size": 14, "lineHeight": 20, "weight": 600, "tracking": 0, "family": "body", "tabular": true },
+      "eta.md": { "size": 16, "lineHeight": 24, "weight": 700, "tracking": 0, "family": "body", "tabular": true },
+      "table.cell": { "size": 13, "lineHeight": 18, "weight": 400, "tracking": 0, "family": "body", "tabular": true },
+      "dash.kpi": { "size": 32, "lineHeight": 40, "weight": 700, "tracking": -0.01, "family": "body", "tabular": true }
+    }
+  },
+  "spacing": {
+    "0": 0,
+    "0_5": 2,
+    "1": 4,
+    "2": 8,
+    "3": 12,
+    "4": 16,
+    "5": 20,
+    "6": 24,
+    "8": 32,
+    "10": 40,
+    "12": 48,
+    "16": 64,
+    "20": 80,
+    "24": 96
+  },
+  "radius": {
+    "none": 0,
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "full": 9999
+  },
+  "borderWidth": {
+    "hairline": 1,
+    "thick": 2,
+    "heavy": 3
+  },
+  "elevation": {
+    "0": [],
+    "1": [
+      { "color": "#0B12140F", "offsetX": 0, "offsetY": 1, "blur": 2 },
+      { "color": "#0B12140A", "offsetX": 0, "offsetY": 1, "blur": 1 }
+    ],
+    "2": [
+      { "color": "#0B121414", "offsetX": 0, "offsetY": 4, "blur": 12 }
+    ],
+    "3": [
+      { "color": "#0B12141F", "offsetX": 0, "offsetY": 8, "blur": 24 }
+    ],
+    "4": [
+      { "color": "#0B121429", "offsetX": 0, "offsetY": 16, "blur": 40 }
+    ]
+  },
+  "opacity": {
+    "disabled": 0.38,
+    "hover": 0.08,
+    "pressed": 0.12,
+    "scrim": 0.48,
+    "mapZone": 0.14,
+    "imageOutOfStock": 0.4
+  },
+  "motion": {
+    "duration": {
+      "instant": 0,
+      "fast": 120,
+      "micro": 180,
+      "short": 260,
+      "medium": 320,
+      "long": 440,
+      "xlong": 600,
+      "cartCommit": 320,
+      "orderPulse": 400,
+      "etaBreathe": 1600
+    },
+    "curve": {
+      "standard": [0.2, 0.0, 0.0, 1.0],
+      "emphasized": [0.2, 0.0, 0.0, 1.0],
+      "decelerate": [0.0, 0.0, 0.2, 1.0],
+      "accelerate": [0.3, 0.0, 1.0, 1.0]
+    }
+  },
+  "iconSize": {
+    "xs": 12,
+    "sm": 16,
+    "md": 20,
+    "lg": 24,
+    "xl": 32,
+    "xxl": 48
+  },
+  "breakpoint": {
+    "xs": 0,
+    "sm": 600,
+    "md": 905,
+    "lg": 1240,
+    "xl": 1440,
+    "xxl": 1920
+  },
+  "zIndex": {
+    "base": 0,
+    "sticky": 10,
+    "nav": 20,
+    "dropdown": 30,
+    "overlay": 40,
+    "modal": 50,
+    "toast": 60,
+    "commandPalette": 70
+  },
+  "density": {
+    "comfortable": { "rowMinHeight": 64, "controlHeight": 44, "typeBase": "body.md" },
+    "compact": { "rowMinHeight": 56, "controlHeight": 40, "typeBase": "body.md" },
+    "dense": { "rowMinHeight": 48, "controlHeight": 36, "typeBase": "body.sm" }
+  }
+}

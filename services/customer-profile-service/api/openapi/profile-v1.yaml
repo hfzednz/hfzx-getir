@@ -1,0 +1,568 @@
+openapi: 3.1.0
+info:
+  title: NEXORA Customer Profile Service API
+  version: 1.0.0
+  description: |
+    Profile, preferences, addresses, consents, household, CRM, segments,
+    personalization, and privacy APIs (`customer-profile-service`).
+    Authentication lives in identity-service; this API trusts `X-Nexora-User` / tenant headers from the gateway.
+servers:
+  - url: http://localhost:8081
+    description: Local
+tags:
+  - name: Health
+  - name: Me
+  - name: Profiles
+  - name: Addresses
+  - name: Preferences
+  - name: Media
+  - name: Tags
+  - name: Household
+  - name: Consents
+  - name: CRM
+  - name: Segments
+  - name: Personalization
+  - name: AI
+  - name: Privacy
+  - name: Admin
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness
+      responses:
+        "200":
+          description: Ready
+  /v1/profile/me:
+    get:
+      tags: [Me]
+      summary: Get profile for trusted principal
+      parameters:
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/NexoraTenant"
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        default:
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [Me]
+      summary: Patch own profile
+      parameters:
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/NexoraTenant"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchProfile"
+      responses:
+        "200":
+          description: Updated profile
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/profile/customers:
+    post:
+      tags: [Profiles]
+      summary: Provision profile after IAM registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenantId, principalId]
+              properties:
+                tenantId: { type: string, format: uuid }
+                principalId: { type: string, format: uuid }
+                displayName: { type: string }
+                fullName: { type: string }
+                language: { type: string }
+                countryCode: { type: string }
+      responses:
+        "201":
+          description: Created
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/profile/customers/{id}:
+    get:
+      tags: [Profiles]
+      summary: Get profile by id
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Profile
+        default:
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [Profiles]
+      summary: Patch profile
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchProfile"
+      responses:
+        "200":
+          description: Updated
+  /v1/profile/customers/{id}/addresses:
+    get:
+      tags: [Addresses]
+      summary: List addresses
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Address list
+    post:
+      tags: [Addresses]
+      summary: Create address
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddressInput"
+      responses:
+        "201":
+          description: Created
+  /v1/profile/customers/{id}/addresses/{addressId}:
+    patch:
+      tags: [Addresses]
+      summary: Update address
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - $ref: "#/components/parameters/AddressId"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Addresses]
+      summary: Delete address
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - $ref: "#/components/parameters/AddressId"
+      responses:
+        "204":
+          description: Deleted
+  /v1/profile/customers/{id}/addresses/{addressId}/default:
+    post:
+      tags: [Addresses]
+      summary: Set default address
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - $ref: "#/components/parameters/AddressId"
+      responses:
+        "200":
+          description: Updated
+  /v1/profile/customers/{id}/preferences:
+    get:
+      tags: [Preferences]
+      summary: Get preferences
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Preferences
+    put:
+      tags: [Preferences]
+      summary: Upsert preferences
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Preferences
+  /v1/profile/customers/{id}/avatar:
+    post:
+      tags: [Media]
+      summary: Upload avatar (multipart file or raw body)
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Profile with avatarUrl
+    delete:
+      tags: [Media]
+      summary: Delete avatar
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Profile
+  /v1/profile/customers/{id}/tags:
+    get:
+      tags: [Tags]
+      summary: List tags
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Tags
+    post:
+      tags: [Tags]
+      summary: Add tag
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "201":
+          description: Assigned
+  /v1/profile/customers/{id}/tags/{tagId}:
+    delete:
+      tags: [Tags]
+      summary: Remove tag
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - name: tagId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Removed
+  /v1/profile/customers/{id}/household:
+    get:
+      tags: [Household]
+      summary: Get household by owner profile
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Household
+    post:
+      tags: [Household]
+      summary: Create household
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "201":
+          description: Created
+  /v1/profile/customers/{id}/household/members:
+    post:
+      tags: [Household]
+      summary: Add household member
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "201":
+          description: Member added
+  /v1/profile/customers/{id}/household/sharing:
+    patch:
+      tags: [Household]
+      summary: Update sharing flags
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Updated
+  /v1/profile/customers/{id}/consents:
+    get:
+      tags: [Consents]
+      summary: List consents
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Consents
+    put:
+      tags: [Consents]
+      summary: Set consent channel
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, granted]
+              properties:
+                channel: { type: string }
+                granted: { type: boolean }
+                source: { type: string }
+      responses:
+        "200":
+          description: Consent
+  /v1/profile/customers/{id}/360:
+    get:
+      tags: [CRM]
+      summary: Customer 360 aggregate
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Aggregate view
+  /v1/profile/customers/{id}/notes:
+    get:
+      tags: [CRM]
+      summary: List CRM notes
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Notes
+    post:
+      tags: [CRM]
+      summary: Add CRM note
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "201":
+          description: Note
+  /v1/profile/customers/{id}/timeline:
+    get:
+      tags: [CRM]
+      summary: List timeline
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Timeline
+    post:
+      tags: [CRM]
+      summary: Append timeline event
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "201":
+          description: Event
+  /v1/profile/segments:
+    get:
+      tags: [Segments]
+      summary: List segments for tenant
+      parameters:
+        - name: tenantId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Segments
+    post:
+      tags: [Segments]
+      summary: Upsert segment definition
+      responses:
+        "200":
+          description: Segment
+  /v1/profile/customers/{id}/segments:
+    get:
+      tags: [Segments]
+      summary: List memberships for profile
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Memberships
+  /v1/profile/customers/{id}/segments/{segmentId}/assign:
+    post:
+      tags: [Segments]
+      summary: Assign segment
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - $ref: "#/components/parameters/SegmentId"
+      responses:
+        "200":
+          description: Membership
+  /v1/profile/customers/{id}/segments/{segmentId}/evaluate:
+    post:
+      tags: [Segments]
+      summary: Evaluate dynamic segment
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+        - $ref: "#/components/parameters/SegmentId"
+      responses:
+        "200":
+          description: Match result
+  /v1/profile/customers/{id}/personalization:
+    get:
+      tags: [Personalization]
+      summary: Get personalization
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Personalization
+    put:
+      tags: [Personalization]
+      summary: Update personalization
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Personalization
+  /v1/profile/customers/{id}/ai-model:
+    get:
+      tags: [AI]
+      summary: Get AI customer model
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Model
+  /v1/profile/customers/{id}/ai-model/recompute:
+    post:
+      tags: [AI]
+      summary: Recompute AI model (admin)
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "200":
+          description: Model
+  /v1/profile/customers/{id}/privacy/export:
+    post:
+      tags: [Privacy]
+      summary: Request data export
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "201":
+          description: Privacy request
+  /v1/profile/customers/{id}/privacy/delete:
+    post:
+      tags: [Privacy]
+      summary: Request deletion
+      parameters:
+        - $ref: "#/components/parameters/ProfileId"
+      responses:
+        "201":
+          description: Privacy request
+  /v1/profile/admin/search:
+    get:
+      tags: [Admin]
+      summary: Search customers
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Profiles
+  /v1/profile/admin/merge:
+    post:
+      tags: [Admin]
+      summary: Merge source into target
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetId, sourceId]
+              properties:
+                targetId: { type: string, format: uuid }
+                sourceId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Target profile
+  /v1/profile/admin/duplicates:
+    get:
+      tags: [Admin]
+      summary: Find duplicate profiles
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: displayName
+          in: query
+          schema: { type: string }
+        - name: fullName
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Candidates
+components:
+  parameters:
+    ProfileId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AddressId:
+      name: addressId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    SegmentId:
+      name: segmentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+      description: Trusted principal id from gateway (no IAM validation in this service)
+    NexoraTenant:
+      name: X-Nexora-Tenant
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Profile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        principalId: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        displayName: { type: string }
+        status: { type: string }
+    PatchProfile:
+      type: object
+      properties:
+        displayName: { type: string }
+        fullName: { type: string }
+        nickname: { type: string }
+        gender: { type: string }
+        language: { type: string }
+        city: { type: string }
+        dietary: { type: object, additionalProperties: true }
+        accessibility: { type: object, additionalProperties: true }
+    AddressInput:
+      type: object
+      properties:
+        label: { type: string }
+        line1: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        isDefault: { type: boolean }
+    ErrorBody:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        traceId: { type: string }
+        retriable: { type: boolean }
+    APIError:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorBody"
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"

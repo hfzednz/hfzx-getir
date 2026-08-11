@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Payment Service
+  version: 1.0.0
+  description: |
+    Payment orchestration: intents, authorize/capture/void, PSP routing/failover,
+    refunds, chargebacks, fraud score port, eligibility (no charge).
+    Money is integer minor units + ISO-4217. Opaque order_id only.
+servers:
+  - url: http://localhost:8089
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/payments/intents:
+    get:
+      summary: Admin list intents
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: principalId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: orderId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Page of intents
+    post:
+      summary: Create payment intent
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amountMinor, currency]
+              properties:
+                principalId: { type: string, format: uuid }
+                orderId: { type: string, description: Opaque order-service id }
+                amountMinor: { type: integer, format: int64 }
+                currency: { type: string, minLength: 3, maxLength: 3 }
+                methodType: { type: string, enum: [card, wallet, apple_pay, google_pay] }
+                paymentMethodId: { type: string, format: uuid }
+                idempotencyKey: { type: string }
+      responses:
+        "201":
+          description: Intent created
+  /v1/payments/intents/{id}:
+    get:
+      summary: Get intent
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IntentId"
+      responses:
+        "200":
+          description: Intent
+  /v1/payments/intents/{id}/authorize:
+    post:
+      summary: Authorize intent
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IntentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Authorized
+  /v1/payments/intents/{id}/capture:
+    post:
+      summary: Capture (full or partial)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IntentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amountMinor: { type: integer, format: int64, description: "0 = full remaining" }
+      responses:
+        "200":
+          description: Captured
+  /v1/payments/intents/{id}/void:
+    post:
+      summary: Void authorization
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IntentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Voided
+  /v1/payments/intents/{id}/refund:
+    post:
+      summary: Refund (partial or full)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IntentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amountMinor: { type: integer, format: int64 }
+                reason: { type: string }
+      responses:
+        "200":
+          description: Refunded
+  /v1/payments/eligibility:
+    post:
+      summary: Eligibility check (no charge)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amountMinor, currency]
+              properties:
+                amountMinor: { type: integer, format: int64 }
+                currency: { type: string }
+                principalId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Eligibility
+  /v1/payments/routes:
+    get:
+      summary: Resolve provider route
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: methodType
+          in: query
+          schema: { type: string }
+        - name: currency
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Ordered providers
+    post:
+      summary: Upsert provider route
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Route upserted
+  /v1/payments/intents/{id}/chargebacks:
+    post:
+      summary: Record chargeback
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IntentId"
+      responses:
+        "201":
+          description: Chargeback opened
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema: { type: string }
+    IntentId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }

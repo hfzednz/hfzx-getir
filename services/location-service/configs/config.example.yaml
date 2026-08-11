@@ -1,0 +1,11 @@
+http_addr: ":8100"
+grpc_addr: ":9110"
+public_base_url: "http://localhost:8100"
+database_url: ""          # empty → in-memory repos
+redis_url: ""
+opensearch_url: ""
+kafka_brokers: []
+geofence_url: ""          # geofence-service base URL (stub when empty)
+routing_url: ""           # routing-service base URL (stub when empty)
+rate_limit_per_minute: 240
+cors_allowed_origins: ["*"]

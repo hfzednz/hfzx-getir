@@ -1,0 +1,9 @@
+http_addr: ":8095"
+grpc_addr: ":9105"
+public_base_url: "http://localhost:8095"
+database_url: ""
+redis_url: ""
+kafka_brokers: ""
+promo_base_url: "http://localhost:8094"
+rate_limit_per_minute: 240
+cors_allowed_origins: "*"

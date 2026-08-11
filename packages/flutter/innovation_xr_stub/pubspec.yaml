@@ -1,0 +1,8 @@
+name: innovation_xr_stub
+description: Optional Flutter XR experience stub for AR shopping / VR warehouse.
+version: 0.1.0
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter

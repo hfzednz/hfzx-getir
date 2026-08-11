@@ -1,0 +1,36 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: nexora-xrd-cluster
+  labels:
+    provider: multi-cloud
+spec:
+  compositeTypeRef:
+    apiVersion: platform.nexora.io/v1alpha1
+    kind: XCluster
+  resources:
+    - name: network
+      base:
+        apiVersion: nexora.platform/v1alpha1
+        kind: NetworkClaim
+        spec:
+          cidr: 10.60.0.0/16
+    - name: kubernetes
+      base:
+        apiVersion: nexora.platform/v1alpha1
+        kind: KubernetesClaim
+        spec:
+          nodeMin: 3
+          nodeMax: 40
+---
+apiVersion: platform.nexora.io/v1alpha1
+kind: ClusterClaim
+metadata:
+  name: nexora-staging
+spec:
+  compositionSelector:
+    matchLabels:
+      provider: multi-cloud
+  parameters:
+    environment: staging
+    region: eu-west-1

@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package crm.v1;
+
+option go_package = "github.com/nexora/crm-service/proto/crm/v1;crmv1";
+
+// CRMService exposes ticket, chat, KB, and Customer360 RPCs (codegen later).
+service CRMService {
+  rpc CreateTicket(CreateTicketRequest) returns (Ticket);
+  rpc AssignTicket(AssignTicketRequest) returns (Ticket);
+  rpc ResolveTicket(TicketIdRequest) returns (Ticket);
+  rpc CloseTicket(TicketIdRequest) returns (Ticket);
+  rpc StartChat(StartChatRequest) returns (Conversation);
+  rpc PostMessage(PostMessageRequest) returns (Message);
+  rpc AIAssist(AIAssistRequest) returns (AIAssistResponse);
+  rpc SearchKB(SearchKBRequest) returns (SearchKBResponse);
+  rpc GetCustomer360(CustomerIdRequest) returns (Customer360);
+  rpc AdminStats(TenantRequest) returns (AdminStatsResponse);
+}
+
+message TenantRequest {
+  string tenant_id = 1;
+}
+
+message TicketIdRequest {
+  string tenant_id = 1;
+  string ticket_id = 2;
+}
+
+message CustomerIdRequest {
+  string tenant_id = 1;
+  string customer_id = 2;
+}
+
+message CreateTicketRequest {
+  string tenant_id = 1;
+  string customer_id = 2;
+  string subject = 3;
+  string description = 4;
+  string priority = 5;
+  string category = 6;
+  string idempotency_key = 7;
+}
+
+message AssignTicketRequest {
+  string tenant_id = 1;
+  string ticket_id = 2;
+  string agent_id = 3;
+}
+
+message Ticket {
+  string id = 1;
+  string tenant_id = 2;
+  string customer_id = 3;
+  string status = 4;
+  string priority = 5;
+  string category = 6;
+  string subject = 7;
+  bool sla_breached = 8;
+}
+
+message StartChatRequest {
+  string tenant_id = 1;
+  string customer_id = 2;
+  string channel = 3;
+}
+
+message Conversation {
+  string id = 1;
+  string tenant_id = 2;
+  string customer_id = 3;
+  string status = 4;
+  string channel = 5;
+}
+
+message PostMessageRequest {
+  string tenant_id = 1;
+  string conversation_id = 2;
+  string sender_role = 3;
+  string body = 4;
+}
+
+message Message {
+  string id = 1;
+  string conversation_id = 2;
+  string sender_role = 3;
+  string body = 4;
+  string sentiment = 5;
+}
+
+message AIAssistRequest {
+  string tenant_id = 1;
+  string customer_id = 2;
+  string conversation_id = 3;
+  string text = 4;
+  bool auto_escalate = 5;
+}
+
+message AIAssistResponse {
+  string intent = 1;
+  string reply = 2;
+  double confidence = 3;
+  string sentiment = 4;
+  bool escalated = 5;
+}
+
+message SearchKBRequest {
+  string tenant_id = 1;
+  string query = 2;
+}
+
+message SearchKBResponse {
+  repeated Article articles = 1;
+}
+
+message Article {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  string status = 4;
+}
+
+message Customer360 {
+  string customer_id = 1;
+  string display_name = 2;
+  int32 ticket_count = 3;
+  int32 order_count = 4;
+}
+
+message AdminStatsResponse {
+  int32 open_tickets = 1;
+  int32 active_chats = 2;
+  int32 published_articles = 3;
+  int32 csat_count = 4;
+  int32 agent_count = 5;
+}

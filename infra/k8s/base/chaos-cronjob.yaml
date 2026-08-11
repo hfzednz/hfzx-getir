@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: chaos-network-latency
+  namespace: nexora-system
+spec:
+  schedule: "0 4 * * 1"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: chaos
+              image: gaiaadm/pumba:0.9.0
+              args:
+                - netem
+                - --duration
+                - 2m
+                - delay
+                - --time
+                - "100"
+                - re2:^order-service
+              volumeMounts:
+                - name: dockersock
+                  mountPath: /var/run/docker.sock
+          volumes:
+            - name: dockersock
+              hostPath:
+                path: /var/run/docker.sock

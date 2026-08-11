@@ -1,0 +1,166 @@
+Analyzing mobile_customer...                                    
+
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - integration_test\app_boot_test.dart:9:9 - unawaited_futures
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\about\presentation\screens\about_screen.dart:38:37 - unnecessary_underscores
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\features\addresses\presentation\screens\addresses_screen.dart:139:17 - unawaited_futures
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\features\ai\data\datasources\ai_remote_datasource.dart:22:14 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\features\ai\data\datasources\ai_remote_datasource.dart:47:14 - use_null_aware_elements
+   info - Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._onLogout') to initialize the field - lib\features\auth\presentation\providers\auth_session_provider.dart:59:9 - prefer_initializing_formals
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\features\auth\presentation\screens\auth_phone_screen.dart:36:15 - unawaited_futures
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\auth\presentation\screens\devices_screen.dart:40:35 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\auth\presentation\screens\devices_screen.dart:58:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\auth\presentation\screens\devices_screen.dart:58:35 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\auth\presentation\screens\forgot_password_screen.dart:57:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\auth\presentation\screens\reset_password_screen.dart:81:15 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\categories\presentation\screens\categories_screen.dart:38:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\checkout\presentation\screens\checkout_payment_screen.dart:77:24 - unnecessary_underscores
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\checkout\presentation\screens\checkout_payment_screen.dart:110:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\checkout\presentation\screens\checkout_payment_screen.dart:111:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\checkout\presentation\screens\checkout_payment_screen.dart:124:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\checkout\presentation\screens\checkout_payment_screen.dart:125:15 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext - lib\features\checkout\presentation\screens\checkout_schedule_screen.dart:74:17 - use_build_context_synchronously
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\checkout\presentation\screens\checkout_screen.dart:38:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\city\presentation\screens\city_screen.dart:38:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\coupons\presentation\screens\coupons_screen.dart:100:41 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\coupons\presentation\screens\coupons_screen.dart:144:35 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\favorites\presentation\screens\favorites_screen.dart:19:43 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\favorites\presentation\screens\favorites_screen.dart:58:43 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\help\presentation\screens\help_screen.dart:38:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\home\presentation\screens\home_screen.dart:148:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\home\presentation\screens\home_screen.dart:206:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\legal\presentation\screens\legal_screen.dart:38:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\loyalty\presentation\screens\loyalty_screen.dart:71:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\loyalty\presentation\screens\loyalty_screen.dart:96:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\loyalty\presentation\screens\loyalty_screen.dart:139:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\notifications\presentation\screens\notifications_screen.dart:52:37 - unnecessary_underscores
+   info - Missing an 'await' for the 'Future' computed by this expression. Try adding an 'await' or wrapping the expression with 'unawaited' - lib\features\notifications\presentation\screens\notifications_screen.dart:135:15 - unawaited_futures
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\orders\presentation\screens\orders_screen.dart:39:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\product\presentation\screens\product_screen.dart:271:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\referral\presentation\screens\referral_screen.dart:95:43 - unnecessary_underscores
+warning - The type argument(s) of the function 'show' can't be inferred. Use explicit type argument(s) for 'show' - lib\features\search\presentation\screens\search_screen.dart:38:13 - inference_failure_on_function_invocation
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\search\presentation\screens\search_screen.dart:112:26 - unnecessary_underscores
+warning - The type argument(s) of the function 'show' can't be inferred. Use explicit type argument(s) for 'show' - lib\features\search\presentation\screens\search_screen.dart:144:13 - inference_failure_on_function_invocation
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\search\presentation\screens\search_screen.dart:214:13 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement - lib\features\search\presentation\screens\search_screen.dart:223:13 - deprecated_member_use
+warning - Unused import: 'package:nexora_core/nexora_core.dart'. Try removing the import directive - lib\features\shell\presentation\screens\shell_scaffold.dart:4:8 - unused_import
+warning - Unused import: '../../../../di/providers.dart'. Try removing the import directive - lib\features\shell\presentation\screens\shell_scaffold.dart:7:8 - unused_import
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\features\support\data\datasources\support_remote_datasource.dart:52:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\features\support\data\datasources\support_remote_datasource.dart:53:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\features\support\data\datasources\support_remote_datasource.dart:69:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\features\support\data\datasources\support_remote_datasource.dart:70:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\features\support\presentation\providers\support_providers.dart:68:19 - use_null_aware_elements
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\support\presentation\screens\support_screen.dart:68:39 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\support\presentation\screens\support_screen.dart:92:39 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\features\support\presentation\screens\support_ticket_detail_screen.dart:22:15 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\features\wallet\presentation\screens\wallet_screen.dart:52:43 - unnecessary_underscores
+warning - Unused import: 'package:flutter/material.dart'. Try removing the import directive - lib\main.dart:1:8 - unused_import
+warning - Unused import: 'package:flutter_riverpod/flutter_riverpod.dart'. Try removing the import directive - lib\main.dart:2:8 - unused_import
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:70:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:74:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:78:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:82:26 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:92:26 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:96:26 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:106:26 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:120:30 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:129:30 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:146:30 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:155:30 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:164:30 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:178:23 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:182:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:186:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:190:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:194:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:198:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:220:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:224:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:228:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:232:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:236:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:240:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:244:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:248:26 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:278:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:282:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:286:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:290:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:294:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:298:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:302:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:306:22 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores. Try using '_' - lib\routing\app_router.dart:316:22 - unnecessary_underscores
+   info - Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._gateway') to initialize the field - lib\shared\analytics\analytics_events.dart:59:8 - prefer_initializing_formals
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\shared\analytics\analytics_events.dart:92:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\shared\analytics\analytics_events.dart:93:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\shared\analytics\analytics_events.dart:94:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\shared\analytics\analytics_events.dart:130:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\shared\analytics\analytics_events.dart:157:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\shared\analytics\funnel_tracker.dart:94:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if'. Try using '?' - lib\shared\analytics\funnel_tracker.dart:107:9 - use_null_aware_elements
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:15:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:16:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:66:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:67:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:79:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:80:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:90:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:91:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:156:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\checkout_rules.dart:157:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\coupon_rules.dart:124:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\order_rules.dart:138:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\order_rules.dart:139:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\order_rules.dart:148:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\order_rules.dart:149:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\payment_rules.dart:56:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\payment_rules.dart:57:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\payment_rules.dart:66:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\business_rules\payment_rules.dart:67:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\address_validator.dart:39:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\address_validator.dart:40:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\address_validator.dart:66:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\address_validator.dart:67:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\age_restriction_validator.dart:15:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\age_restriction_validator.dart:16:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\age_restriction_validator.dart:26:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\age_restriction_validator.dart:27:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\age_restriction_validator.dart:71:12 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\age_restriction_validator.dart:72:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\coupon_validator.dart:19:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\coupon_validator.dart:20:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\coupon_validator.dart:29:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\coupon_validator.dart:30:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\coupon_validator.dart:39:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\coupon_validator.dart:40:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\email_validator.dart:18:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\email_validator.dart:19:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\email_validator.dart:28:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\email_validator.dart:29:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\email_validator.dart:39:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\email_validator.dart:40:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\otp_validator.dart:16:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\otp_validator.dart:17:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:21:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:22:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:41:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:42:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:51:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:52:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:61:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:62:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:71:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\password_validator.dart:72:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\phone_validator.dart:24:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - lib\shared\validators\phone_validator.dart:25:9 - prefer_const_constructors
+warning - Unused import: 'package:dio/dio.dart'. Try removing the import directive - test\unit\auth_repository_test.dart:1:8 - unused_import
+warning - Unused import: 'package:nexora_customer/features/auth/domain/repositories/auth_repository.dart'. Try removing the import directive - test\unit\auth_repository_test.dart:7:8 - unused_import
+  error - 3 positional arguments expected by 'AuthRepositoryImpl.new', but 2 found. Try adding the missing arguments - test\unit\auth_repository_test.dart:21:55 - not_enough_positional_arguments
+warning - The type argument(s) of the function 'any' can't be inferred. Use explicit type argument(s) for 'any' - test\unit\auth_repository_test.dart:27:17 - inference_failure_on_function_invocation
+warning - The type argument(s) of the function 'any' can't be inferred. Use explicit type argument(s) for 'any' - test\unit\auth_repository_test.dart:57:17 - inference_failure_on_function_invocation
+warning - Unused import: 'package:flutter/material.dart'. Try removing the import directive - test\widget\home_smoke_test.dart:1:8 - unused_import
+warning - Unused import: 'package:nexora_design/nexora_design.dart'. Try removing the import directive - test\widget\home_smoke_test.dart:4:8 - unused_import
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - test\widget\home_smoke_test.dart:24:56 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - test\widget\home_smoke_test.dart:26:19 - prefer_const_constructors
+
+162 issues found. (ran in 6.7s)

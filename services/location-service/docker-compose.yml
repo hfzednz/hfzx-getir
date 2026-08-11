@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexora
+      POSTGRES_DB: location
+    ports:
+      - "5451:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d location"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  location-service:
+    build: .
+    ports:
+      - "8100:8100"
+    environment:
+      HTTP_ADDR: ":8100"
+      GRPC_ADDR: ":9110"
+      CORS_ALLOWED_ORIGINS: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

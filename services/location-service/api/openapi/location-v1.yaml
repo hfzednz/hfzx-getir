@@ -1,0 +1,217 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Location Service
+  version: 1.0.0
+  description: Geocoding, addresses, spatial POI index, provider facade, heatmaps. No tiles, no dispatch, no live GPS SoT.
+servers:
+  - url: http://localhost:8100
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/location/geocode:
+    post:
+      summary: Forward geocode
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+      responses:
+        "200":
+          description: Geocode result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeocodeResult"
+        "400":
+          $ref: "#/components/responses/Error"
+  /v1/location/geocode/reverse:
+    post:
+      summary: Reverse geocode
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lat, lng]
+              properties:
+                lat: { type: number }
+                lng: { type: number }
+      responses:
+        "200":
+          description: Address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeocodeResult"
+  /v1/location/addresses/validate:
+    post:
+      summary: Validate address (geofence serviceability)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                line1: { type: string }
+                lat: { type: number }
+                lng: { type: number }
+                placeId: { type: string }
+      responses:
+        "200":
+          description: Validated address + feasibility
+  /v1/location/spatial/nearby:
+    post:
+      summary: Nearby POIs
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lat, lng, radiusM]
+              properties:
+                lat: { type: number }
+                lng: { type: number }
+                radiusM: { type: number }
+                kind: { type: string }
+                limit: { type: integer }
+      responses:
+        "200":
+          description: POI list
+  /v1/location/spatial/nearest:
+    post:
+      summary: Nearest POI of kind
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, lat, lng]
+              properties:
+                kind: { type: string, enum: [warehouse, pickup, partner, store, dropoff] }
+                lat: { type: number }
+                lng: { type: number }
+                limit: { type: integer }
+      responses:
+        "200":
+          description: Nearest POIs
+  /v1/location/routes:
+    post:
+      summary: Proxy CreateRoute → routing-service
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origin, dest]
+              properties:
+                origin: { $ref: "#/components/schemas/LatLng" }
+                dest: { $ref: "#/components/schemas/LatLng" }
+      responses:
+        "201":
+          description: Route proxy result
+  /v1/location/zones/serviceability:
+    post:
+      summary: Proxy serviceability → geofence-service
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lat, lng]
+              properties:
+                lat: { type: number }
+                lng: { type: number }
+      responses:
+        "200":
+          description: Feasibility
+  /v1/location/ai/heatmap:
+    get:
+      summary: Demand heatmap cells
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Heat cells
+  /v1/location/admin/coverage:
+    get:
+      summary: Coverage dashboard aggregates
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Coverage stats
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    LatLng:
+      type: object
+      properties:
+        lat: { type: number }
+        lng: { type: number }
+    GeocodeResult:
+      type: object
+      properties:
+        placeId: { type: string }
+        formatted: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        confidence: { type: number }
+        cached: { type: boolean }
+        provider: { type: string }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            traceId: { type: string }
+            retriable: { type: boolean }

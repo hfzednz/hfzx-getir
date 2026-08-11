@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package nexora.innovation.v1;
+
+option go_package = "github.com/nexora/innovation-service/api/proto/innovation/v1;innovationv1";
+
+service InnovationService {
+  rpc EnableModule(EnableModuleRequest) returns (EnableModuleResponse);
+  rpc StartSimulation(StartSimulationRequest) returns (StartSimulationResponse);
+}
+
+message EnableModuleRequest {
+  string tenant_id = 1;
+  string key = 2;
+}
+
+message EnableModuleResponse {
+  string module_id = 1;
+  string status = 2;
+  int32 trl = 3;
+}
+
+message StartSimulationRequest {
+  string tenant_id = 1;
+  string kind = 2;
+  string name = 3;
+}
+
+message StartSimulationResponse {
+  string simulation_id = 1;
+  string status = 2;
+}

@@ -1,0 +1,19 @@
+# Canary rollout annotation contract (Argo Rollouts / Flagger compatible labels).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexora-canary-policy
+  namespace: nexora-apps
+data:
+  strategy: canary
+  steps: |
+    - setWeight: 10
+    - pause: {duration: 5m}
+    - setWeight: 25
+    - pause: {duration: 10m}
+    - setWeight: 50
+    - pause: {duration: 15m}
+    - setWeight: 100
+  successRate: "99.5"
+  maxErrorRate: "1.0"
+  rollbackOn: slo_breach

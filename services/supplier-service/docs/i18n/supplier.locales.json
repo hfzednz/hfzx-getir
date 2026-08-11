@@ -1,0 +1,12 @@
+{
+  "en": {
+    "supplier_not_verified": "Supplier is not verified",
+    "supplier_approved": "Supplier approved",
+    "po_created": "Purchase order created"
+  },
+  "tr": {
+    "supplier_not_verified": "Tedarikçi doğrulanmadı",
+    "supplier_approved": "Tedarikçi onaylandı",
+    "po_created": "Satınalma siparişi oluşturuldu"
+  }
+}

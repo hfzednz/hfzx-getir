@@ -1,0 +1,366 @@
+openapi: 3.1.0
+info:
+  title: NEXORA Identity Service API
+  version: 1.0.0
+  description: |
+    Authentication, authorization, sessions, devices, OIDC, and privacy APIs
+    for the NEXORA platform (`identity-service`).
+servers:
+  - url: http://localhost:8080
+    description: Local
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness
+      responses:
+        "200":
+          description: Ready
+  /v1/identity/auth/otp/start:
+    post:
+      tags: [Auth]
+      summary: Start phone OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { type: string }
+                tenantId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Challenge created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Challenge"
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/identity/auth/otp/verify:
+    post:
+      tags: [Auth]
+      summary: Verify phone OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeId, code]
+              properties:
+                challengeId: { type: string }
+                code: { type: string }
+      responses:
+        "200":
+          description: Tokens or MFA challenge
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/TokenPair"
+                  - $ref: "#/components/schemas/Challenge"
+  /v1/identity/auth/password/login:
+    post:
+      tags: [Auth]
+      summary: Email/password login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                tenantId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Tokens or MFA challenge
+  /v1/identity/auth/magic-link/start:
+    post:
+      tags: [Auth]
+      summary: Issue magic link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string }
+                tenantId: { type: string }
+      responses:
+        "200":
+          description: Challenge
+  /v1/identity/auth/magic-link/consume:
+    post:
+      tags: [Auth]
+      summary: Consume magic link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Tokens
+  /v1/identity/auth/social/start:
+    post:
+      tags: [Auth]
+      summary: Start social OIDC
+  /v1/identity/auth/social/callback:
+    post:
+      tags: [Auth]
+      summary: Social OIDC callback
+  /v1/identity/auth/webauthn/register/options:
+    post:
+      tags: [Auth]
+      summary: WebAuthn registration options
+  /v1/identity/auth/webauthn/register/verify:
+    post:
+      tags: [Auth]
+      summary: WebAuthn registration verify
+  /v1/identity/auth/webauthn/authenticate/options:
+    post:
+      tags: [Auth]
+      summary: WebAuthn authentication options
+  /v1/identity/auth/webauthn/authenticate/verify:
+    post:
+      tags: [Auth]
+      summary: WebAuthn authentication verify
+  /v1/identity/auth/guest:
+    post:
+      tags: [Auth]
+      summary: Create guest session
+  /v1/identity/mfa/totp/enroll:
+    post:
+      tags: [MFA]
+      summary: Enroll TOTP
+  /v1/identity/mfa/challenge:
+    post:
+      tags: [MFA]
+      summary: Start MFA challenge
+  /v1/identity/mfa/verify:
+    post:
+      tags: [MFA]
+      summary: Verify MFA
+  /v1/identity/token/refresh:
+    post:
+      tags: [Token]
+      summary: Rotate refresh token
+  /v1/identity/token/revoke:
+    post:
+      tags: [Token]
+      summary: Revoke token
+  /v1/identity/token/introspect:
+    post:
+      tags: [Token]
+      summary: Introspect token
+  /v1/identity/sessions:
+    get:
+      tags: [Sessions]
+      summary: List sessions
+      parameters:
+        - in: query
+          name: principalId
+          required: true
+          schema: { type: string, format: uuid }
+  /v1/identity/sessions/{id}/revoke:
+    post:
+      tags: [Sessions]
+      summary: Revoke session
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+  /v1/identity/devices:
+    get:
+      tags: [Devices]
+      summary: List devices
+      parameters:
+        - in: query
+          name: principalId
+          required: true
+          schema: { type: string, format: uuid }
+  /v1/identity/devices/{id}/trust:
+    post:
+      tags: [Devices]
+      summary: Trust device
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+  /v1/identity/devices/{id}/revoke:
+    post:
+      tags: [Devices]
+      summary: Revoke device
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+  /v1/identity/principals:
+    get:
+      tags: [Principals]
+      summary: List principals
+      parameters:
+        - in: query
+          name: tenantId
+          required: true
+          schema: { type: string, format: uuid }
+    post:
+      tags: [Principals]
+      summary: Create principal
+  /v1/identity/principals/{id}:
+    get:
+      tags: [Principals]
+      summary: Get principal
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+  /v1/identity/principals/{id}/roles:
+    get:
+      tags: [RBAC]
+      summary: List principal roles
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+    post:
+      tags: [RBAC]
+      summary: Assign role
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+  /v1/identity/roles:
+    get:
+      tags: [RBAC]
+      summary: List roles
+  /v1/identity/permissions:
+    get:
+      tags: [RBAC]
+      summary: List permissions
+  /v1/identity/privacy/export:
+    post:
+      tags: [Privacy]
+      summary: Export principal data
+  /v1/identity/privacy/delete:
+    post:
+      tags: [Privacy]
+      summary: Delete / anonymize principal
+  /.well-known/openid-configuration:
+    get:
+      tags: [OIDC]
+      summary: OpenID Provider metadata
+  /v1/oidc/authorize:
+    get:
+      tags: [OIDC]
+      summary: Authorization Code + PKCE
+      parameters:
+        - in: query
+          name: client_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: redirect_uri
+          required: true
+          schema: { type: string, format: uri }
+        - in: query
+          name: response_type
+          required: true
+          schema: { type: string, enum: [code] }
+        - in: query
+          name: scope
+          required: true
+          schema: { type: string }
+        - in: query
+          name: code_challenge
+          required: true
+          schema: { type: string }
+        - in: query
+          name: code_challenge_method
+          schema: { type: string, enum: [S256, plain] }
+        - in: query
+          name: state
+          schema: { type: string }
+  /v1/oidc/token:
+    post:
+      tags: [OIDC]
+      summary: Token endpoint
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type: { type: string }
+                code: { type: string }
+                redirect_uri: { type: string }
+                client_id: { type: string }
+                code_verifier: { type: string }
+                refresh_token: { type: string }
+  /v1/oidc/jwks:
+    get:
+      tags: [OIDC]
+      summary: JWKS
+  /v1/oidc/userinfo:
+    get:
+      tags: [OIDC]
+      summary: UserInfo
+    post:
+      tags: [OIDC]
+      summary: UserInfo
+components:
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Challenge:
+      type: object
+      properties:
+        challengeId: { type: string }
+        expiresIn: { type: integer }
+        mfaRequired: { type: boolean }
+    TokenPair:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        tokenType: { type: string }
+        expiresIn: { type: integer }
+        sessionId: { type: string }
+    ErrorBody:
+      type: object
+      required: [code, message, traceId, retriable]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        traceId: { type: string }
+        retriable: { type: boolean }
+    APIError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorBody"
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"

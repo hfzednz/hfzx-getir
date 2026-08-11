@@ -1,0 +1,10 @@
+# Example configuration (env vars are authoritative at runtime).
+http_addr: ":8092"
+grpc_addr: ":9092"
+public_base_url: "http://localhost:8092"
+database_url: "" # empty = in-memory dev mode
+redis_url: ""
+kafka_brokers: []
+ledger_base_url: "http://localhost:8091"
+rate_limit_per_minute: 240
+cors_allowed_origins: ["*"]

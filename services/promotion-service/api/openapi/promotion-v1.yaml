@@ -1,0 +1,262 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Promotion Service
+  version: 1.0.0
+  description: |
+    Campaigns, promotions, coupons, vouchers, and cart evaluate engine.
+    Money fields are int64 minor units. Opaque variant/category/brand/segment ids.
+servers:
+  - url: http://localhost:8094
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/promo/campaigns:
+    get:
+      summary: List campaigns
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campaign list
+        "400":
+          $ref: "#/components/responses/Error"
+    post:
+      summary: Create campaign
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                startsAt: { type: string, format: date-time }
+                endsAt: { type: string, format: date-time }
+      responses:
+        "201":
+          description: Created
+        "400":
+          $ref: "#/components/responses/Error"
+  /v1/promo/campaigns/{id}/activate:
+    post:
+      summary: Activate campaign
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Activated
+        default:
+          $ref: "#/components/responses/Error"
+  /v1/promo/campaigns/{id}/pause:
+    post:
+      summary: Pause campaign
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Paused
+  /v1/promo/campaigns/{id}/expire:
+    post:
+      summary: Expire campaign
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Expired
+  /v1/promo/promotions:
+    post:
+      summary: Create promotion + rule
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromotion"
+      responses:
+        "201":
+          description: Created
+  /v1/promo/coupons:
+    post:
+      summary: Generate coupon
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Created
+  /v1/promo/coupons/redeem:
+    post:
+      summary: Redeem coupon (idempotent)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Redeemed
+  /v1/promo/vouchers:
+    post:
+      summary: Issue voucher
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Issued
+  /v1/promo/vouchers/redeem:
+    post:
+      summary: Redeem voucher (idempotent)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Redeemed
+  /v1/promo/evaluate:
+    post:
+      summary: Evaluate cart promotions
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluateRequest"
+      responses:
+        "200":
+          description: Discount lines
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluateResult"
+        "400":
+          $ref: "#/components/responses/Error"
+  /v1/promo/simulate:
+    post:
+      summary: Simulate evaluate and persist result
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluateRequest"
+      responses:
+        "200":
+          description: Simulation result
+  /v1/promo/admin/overview:
+    get:
+      summary: Admin campaign overview
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Overview counts
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    CreatePromotion:
+      type: object
+      required: [campaignId, name, type]
+      properties:
+        campaignId: { type: string, format: uuid }
+        name: { type: string }
+        type:
+          type: string
+          enum: [percent, fixed, bogo, bxgy, bundle, threshold, free_ship, gift, multibuy]
+        percentOff: { type: integer }
+        fixedOffMinor: { type: integer, format: int64 }
+        buyQty: { type: integer }
+        getQty: { type: integer }
+        priority: { type: integer }
+        stackGroup: { type: string }
+        stackable: { type: boolean }
+        perUserLimit: { type: integer }
+        excludePromotionIds:
+          type: array
+          items: { type: string, format: uuid }
+    EvaluateRequest:
+      type: object
+      required: [currency, lines]
+      properties:
+        principalId: { type: string, format: uuid }
+        deviceId: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        couponCodes:
+          type: array
+          items: { type: string }
+        shippingMinor: { type: integer, format: int64 }
+        segmentIds:
+          type: array
+          items: { type: string }
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              lineId: { type: string }
+              variantId: { type: string }
+              categoryId: { type: string }
+              brandId: { type: string }
+              quantity: { type: integer }
+              unitPriceMinor: { type: integer, format: int64 }
+    EvaluateResult:
+      type: object
+      properties:
+        totalDiscountMinor: { type: integer, format: int64 }
+        shippingDiscountMinor: { type: integer, format: int64 }
+        currency: { type: string }
+        discounts:
+          type: array
+          items:
+            type: object
+            properties:
+              promotionId: { type: string, format: uuid }
+              type: { type: string }
+              amountMinor: { type: integer, format: int64 }
+              priority: { type: integer }
+    ErrorBody:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        traceId: { type: string }
+        retriable: { type: boolean }
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: "#/components/schemas/ErrorBody"

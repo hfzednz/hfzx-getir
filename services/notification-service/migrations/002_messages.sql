@@ -1,0 +1,27 @@
+-- messages
+CREATE TABLE IF NOT EXISTS messages (
+    id               UUID PRIMARY KEY,
+    tenant_id        UUID NOT NULL,
+    principal_id     UUID NOT NULL,
+    order_id         UUID NULL,
+    channel          TEXT NOT NULL,
+    priority         TEXT NOT NULL,
+    template_key     TEXT NOT NULL DEFAULT '',
+    template_id      UUID NULL,
+    locale           TEXT NOT NULL DEFAULT 'en',
+    subject          TEXT NOT NULL DEFAULT '',
+    body             TEXT NOT NULL DEFAULT '',
+    recipient        TEXT NOT NULL DEFAULT '',
+    status           TEXT NOT NULL,
+    idempotency_key  TEXT NOT NULL DEFAULT '',
+    vars_json        JSONB NOT NULL DEFAULT '{}',
+    suppress_reason  TEXT NOT NULL DEFAULT '',
+    attempts         INT NOT NULL DEFAULT 0,
+    max_attempts     INT NOT NULL DEFAULT 3,
+    last_error       TEXT NOT NULL DEFAULT '',
+    provider         TEXT NOT NULL DEFAULT '',
+    provider_ref     TEXT NOT NULL DEFAULT '',
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    sent_at          TIMESTAMPTZ NULL
+);

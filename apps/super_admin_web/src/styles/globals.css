@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "@nexora/ui/styles.css";
+
+@theme inline {
+  --font-sans: var(--nx-font-body);
+  --font-mono: var(--nx-font-mono);
+  --font-display: var(--nx-font-display);
+  --color-nx-brand: var(--nx-brand-600);
+  --color-nx-canvas: var(--nx-bg-canvas);
+  --color-nx-surface: var(--nx-bg-surface);
+  --color-nx-text: var(--nx-text-primary);
+  --color-nx-border: var(--nx-border-subtle);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--nx-bg-canvas);
+  color: var(--nx-text-primary);
+  font-family: var(--nx-font-body);
+  font-size: var(--nx-font-size-body);
+  line-height: var(--nx-line-height-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dense table defaults */
+table.nx-dense,
+.nx-dense-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--nx-font-size-table);
+  line-height: var(--nx-line-height-table);
+}
+
+table.nx-dense th,
+table.nx-dense td,
+.nx-dense-table th,
+.nx-dense-table td {
+  padding: var(--nx-space-2) var(--nx-space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--nx-border-subtle);
+  vertical-align: middle;
+}
+
+table.nx-dense th,
+.nx-dense-table th {
+  font-weight: 600;
+  color: var(--nx-text-secondary);
+  background: var(--nx-bg-sunken);
+}
+
+table.nx-dense tbody tr:hover,
+.nx-dense-table tbody tr:hover {
+  background: var(--nx-bg-sunken);
+}
+
+/* Scrollbar — subtle dense chrome */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--nx-neutral-300) transparent;
+}
+
+[data-theme="dark"] *,
+.nx-dark * {
+  scrollbar-color: var(--nx-neutral-600) transparent;
+}

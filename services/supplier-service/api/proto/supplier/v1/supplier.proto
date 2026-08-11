@@ -1,0 +1,8 @@
+syntax = "proto3";
+package nexora.supplier.v1;
+option go_package = "github.com/nexora/supplier-service/api/proto/supplier/v1;supplierv1";
+service SupplierService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+message HealthRequest {}
+message HealthResponse { string status = 1; }

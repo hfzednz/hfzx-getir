@@ -1,0 +1,7 @@
+# DB migration validation procedure
+steps:
+  - apply_forward: migrations/*
+  - smoke_queries: true
+  - rollback_one: true
+  - reapply: true
+  - integrity_checks: [fk, unique, not_null]

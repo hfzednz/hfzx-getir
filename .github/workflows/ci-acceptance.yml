@@ -1,0 +1,110 @@
+name: ci-acceptance
+
+# Prompt 52/53 — Linux acceptance: build/test, race (CGO), Docker, compose, migrations, startup smoke.
+# Local Windows agents without CGO/Docker must not claim these gates PASS until this workflow runs.
+
+on:
+  pull_request:
+    paths:
+      - "services/**"
+      - "infra/docker/**"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-acceptance.yml"
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  go-build-test-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          cache: true
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Build, test, verify all services
+        env:
+          GOWORK: "off"
+          GOTOOLCHAIN: auto
+        run: |
+          set -euo pipefail
+          fail=0
+          for mod in services/*/go.mod; do
+            dir="$(dirname "$mod")"
+            name="$(basename "$dir")"
+            echo "==> $name"
+            (
+              cd "$dir"
+              go mod verify
+              go test ./...
+              go build ./...
+            ) || fail=$((fail+1))
+          done
+          echo "FAILS=$fail"
+          test "$fail" -eq 0
+
+  go-race-all:
+    runs-on: ubuntu-latest
+    needs: go-build-test-verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          cache: true
+      - name: Install gcc (CGO)
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Race all services
+        env:
+          CGO_ENABLED: "1"
+          GOWORK: "off"
+          GOTOOLCHAIN: auto
+        run: bash scripts/ci/race-all.sh
+
+  docker-build-all:
+    runs-on: ubuntu-latest
+    needs: go-build-test-verify
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Build all service images
+        env:
+          DOCKER_BUILDKIT: "1"
+        run: bash scripts/ci/docker-build-all.sh
+
+  compose-migration-smoke:
+    runs-on: ubuntu-latest
+    needs: go-build-test-verify
+    steps:
+      - uses: actions/checkout@v4
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Compose config validate
+        run: docker compose -f infra/docker/docker-compose.yml config -q
+      - name: Migration + Redis + Kafka smoke
+        run: bash scripts/ci/migration-smoke.sh
+
+  service-startup-smoke:
+    runs-on: ubuntu-latest
+    needs: [docker-build-all, compose-migration-smoke]
+    steps:
+      - uses: actions/checkout@v4
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Core service startup + health + SIGTERM
+        run: bash scripts/ci/service-startup-smoke.sh

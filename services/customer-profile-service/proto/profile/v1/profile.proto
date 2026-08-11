@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package nexora.profile.v1;
+
+option go_package = "github.com/nexora/customer-profile-service/gen/profile/v1;profilev1";
+
+// ProfileService is the internal profile read surface for BFFs and sibling services.
+service ProfileService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse);
+  rpc ListAddresses(ListAddressesRequest) returns (ListAddressesResponse);
+  rpc CheckConsent(CheckConsentRequest) returns (CheckConsentResponse);
+  rpc GetPersonalization(GetPersonalizationRequest) returns (GetPersonalizationResponse);
+}
+
+message GetProfileRequest {
+  string profile_id = 1;
+}
+
+message GetProfileResponse {
+  Profile profile = 1;
+}
+
+message GetPreferencesRequest {
+  string profile_id = 1;
+}
+
+message GetPreferencesResponse {
+  Preferences preferences = 1;
+}
+
+message ListAddressesRequest {
+  string profile_id = 1;
+}
+
+message ListAddressesResponse {
+  repeated Address addresses = 1;
+}
+
+message CheckConsentRequest {
+  string profile_id = 1;
+  string channel = 2;
+}
+
+message CheckConsentResponse {
+  bool granted = 1;
+}
+
+message GetPersonalizationRequest {
+  string profile_id = 1;
+}
+
+message GetPersonalizationResponse {
+  Personalization personalization = 1;
+}
+
+message Profile {
+  string id = 1;
+  string principal_id = 2;
+  string tenant_id = 3;
+  string display_name = 4;
+  string full_name = 5;
+  string language = 6;
+  string country_code = 7;
+  string city = 8;
+  string status = 9;
+  string avatar_url = 10;
+}
+
+message Preferences {
+  string profile_id = 1;
+  string theme = 2;
+  string language = 3;
+}
+
+message Address {
+  string id = 1;
+  string profile_id = 2;
+  string label = 3;
+  string line1 = 4;
+  double lat = 5;
+  double lng = 6;
+  bool is_default = 7;
+}
+
+message Personalization {
+  string profile_id = 1;
+}

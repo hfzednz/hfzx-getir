@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Platform Ops Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8110
+paths:
+  /health:
+    get:
+      responses:
+        "200":
+          description: ok
+  /v1/platform/deployments:
+    post:
+      summary: Start deployment
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "201":
+          description: started
+  /v1/platform/admin/stats:
+    get:
+      parameters:
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: ok

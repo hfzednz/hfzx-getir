@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package nexora.erp.v1;
+
+option go_package = "github.com/nexora/erp-service/api/proto/erp/v1;erpv1";
+
+service ERPService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc AdminStats(AdminStatsRequest) returns (AdminStatsResponse);
+}
+
+message HealthRequest {}
+message HealthResponse { string status = 1; }
+
+message AdminStatsRequest { string tenant_id = 1; }
+message AdminStatsResponse {
+  int32 companies = 1;
+  int32 pending_approvals = 2;
+}

@@ -1,0 +1,8 @@
+# Localization / regional rule checks
+checks:
+  - resolve_bundle_tr_tr
+  - fx_convert_usd_try
+  - tax_bps_calc
+  - translation_fallback
+  - kvkk_privacy_present
+  - rtl_locale_flag

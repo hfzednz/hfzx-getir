@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package nexora.review.v1;
+
+option go_package = "github.com/nexora/review-service/api/proto/review/v1;reviewv1";
+
+service ReviewService {
+  rpc CreateReview (CreateReviewRequest) returns (CreateReviewResponse);
+  rpc GetReview (GetReviewRequest) returns (Review);
+  rpc GetReputation (GetReputationRequest) returns (Reputation);
+  rpc GetTrust (GetTrustRequest) returns (Trust);
+}
+
+message CreateReviewRequest {
+  string tenant_id = 1;
+  string author_id = 2;
+  string target_type = 3;
+  string target_id = 4;
+  string title = 5;
+  string body = 6;
+  string order_id = 7;
+  double rating_value = 8;
+  string scheme = 9;
+}
+
+message CreateReviewResponse {
+  Review review = 1;
+  string moderation_status = 2;
+}
+
+message GetReviewRequest {
+  string tenant_id = 1;
+  string review_id = 2;
+}
+
+message Review {
+  string id = 1;
+  string status = 2;
+  string target_type = 3;
+  string target_id = 4;
+  string body = 5;
+  bool verified_purchase = 6;
+  double sentiment = 7;
+}
+
+message GetReputationRequest {
+  string tenant_id = 1;
+  string target_type = 2;
+  string target_id = 3;
+}
+
+message Reputation {
+  double score = 1;
+  string tier = 2;
+  int32 review_count = 3;
+}
+
+message GetTrustRequest {
+  string tenant_id = 1;
+  string reviewer_id = 2;
+}
+
+message Trust {
+  double score = 1;
+  repeated string badges = 2;
+}

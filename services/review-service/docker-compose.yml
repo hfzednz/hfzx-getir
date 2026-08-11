@@ -1,0 +1,12 @@
+services:
+  review-service:
+    build: .
+    ports:
+      - "8103:8103"
+      - "9103:9103"
+    environment:
+      HTTP_ADDR: ":8103"
+      GRPC_ADDR: ":9103"
+      DATABASE_URL: ""
+      KAFKA_BROKERS: ""
+      RATE_LIMIT_PER_MINUTE: "300"

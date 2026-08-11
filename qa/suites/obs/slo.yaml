@@ -1,0 +1,7 @@
+# Observability validation
+checks:
+  - metrics_present: [http_requests_total, workqueue_depth]
+  - traces_sample_ok: true
+  - logs_json_structured: true
+  - alert_rules_loaded: true
+  - slo_burn_alerts: true

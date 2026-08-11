@@ -1,0 +1,11 @@
+# OWASP ZAP baseline against staging edge
+# Usage: zap-baseline.py -t https://staging.nexora.example -r qa/reports/zap.html -J qa/reports/zap.json
+target: ${ZAP_TARGET:-http://localhost:8111}
+rules:
+  fail_on:
+    - critical
+  warn_on:
+    - high
+ignore:
+  - path: /metrics
+  - path: /health

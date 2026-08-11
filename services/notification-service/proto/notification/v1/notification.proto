@@ -1,0 +1,253 @@
+syntax = "proto3";
+
+package notification.v1;
+
+option go_package = "github.com/nexora/notification-service/proto/notification/v1;notificationv1";
+
+service NotificationService {
+  rpc Send(SendRequest) returns (SendResponse);
+  rpc SendBulk(SendBulkRequest) returns (SendBulkResponse);
+  rpc UpsertTemplate(UpsertTemplateRequest) returns (Template);
+  rpc ApproveTemplate(ApproveTemplateRequest) returns (Template);
+  rpc PreviewTemplate(PreviewTemplateRequest) returns (PreviewTemplateResponse);
+  rpc RegisterDevice(RegisterDeviceRequest) returns (Device);
+  rpc SetPreferences(SetPreferencesRequest) returns (Preferences);
+  rpc GetPreferences(GetPreferencesRequest) returns (Preferences);
+  rpc ScheduleSend(ScheduleSendRequest) returns (Schedule);
+  rpc CancelSchedule(CancelScheduleRequest) returns (Schedule);
+  rpc ListInbox(ListInboxRequest) returns (ListInboxResponse);
+  rpc MarkInboxRead(MarkInboxReadRequest) returns (InboxItem);
+  rpc GetDelivery(GetDeliveryRequest) returns (GetDeliveryResponse);
+  rpc RetryFailed(RetryFailedRequest) returns (Message);
+  rpc HandleDomainEvent(HandleDomainEventRequest) returns (SendResponse);
+  rpc AdminStats(AdminStatsRequest) returns (AdminStatsResponse);
+  rpc BestSendTime(BestSendTimeRequest) returns (BestSendTimeResponse);
+  rpc RecommendChannel(RecommendChannelRequest) returns (RecommendChannelResponse);
+}
+
+message SendRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string order_id = 3;
+  string channel = 4;
+  string priority = 5;
+  string template_key = 6;
+  string locale = 7;
+  string recipient = 8;
+  string subject = 9;
+  string body = 10;
+  map<string, string> vars = 11;
+  string idempotency_key = 12;
+}
+
+message SendResponse {
+  Message message = 1;
+}
+
+message SendBulkRequest {
+  string tenant_id = 1;
+  repeated string principal_ids = 2;
+  string channel = 3;
+  string priority = 4;
+  string template_key = 5;
+  map<string, string> vars = 6;
+}
+
+message SendBulkResponse {
+  repeated Message messages = 1;
+}
+
+message Message {
+  string id = 1;
+  string status = 2;
+  string channel = 3;
+  string priority = 4;
+  string subject = 5;
+  string body = 6;
+  string provider = 7;
+  string provider_ref = 8;
+  string suppress_reason = 9;
+  int32 attempts = 10;
+}
+
+message UpsertTemplateRequest {
+  string tenant_id = 1;
+  string key = 2;
+  string channel = 3;
+  string locale = 4;
+  string subject = 5;
+  string body = 6;
+  bool activate = 7;
+}
+
+message ApproveTemplateRequest {
+  string tenant_id = 1;
+  string template_id = 2;
+}
+
+message Template {
+  string id = 1;
+  string key = 2;
+  string channel = 3;
+  string locale = 4;
+  int32 version = 5;
+  string status = 6;
+  string subject = 7;
+  string body = 8;
+}
+
+message PreviewTemplateRequest {
+  string tenant_id = 1;
+  string template_id = 2;
+  string key = 3;
+  string channel = 4;
+  string locale = 5;
+  map<string, string> vars = 6;
+}
+
+message PreviewTemplateResponse {
+  string subject = 1;
+  string body = 2;
+}
+
+message RegisterDeviceRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string platform = 3;
+  string token = 4;
+  string locale = 5;
+}
+
+message Device {
+  string id = 1;
+  string platform = 2;
+  string token = 3;
+  bool active = 4;
+}
+
+message SetPreferencesRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  map<string, bool> channel_opt_out = 3;
+  int32 quiet_start = 4;
+  int32 quiet_end = 5;
+}
+
+message GetPreferencesRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+}
+
+message Preferences {
+  string principal_id = 1;
+  map<string, bool> channel_opt_out = 2;
+  int32 quiet_start = 3;
+  int32 quiet_end = 4;
+}
+
+message ScheduleSendRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string channel = 3;
+  string priority = 4;
+  string template_key = 5;
+  string recipient = 6;
+  string subject = 7;
+  string body = 8;
+  string send_at = 9; // RFC3339
+}
+
+message Schedule {
+  string id = 1;
+  string status = 2;
+  string send_at = 3;
+}
+
+message CancelScheduleRequest {
+  string tenant_id = 1;
+  string schedule_id = 2;
+}
+
+message ListInboxRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  bool include_archived = 3;
+}
+
+message ListInboxResponse {
+  repeated InboxItem items = 1;
+}
+
+message MarkInboxReadRequest {
+  string tenant_id = 1;
+  string item_id = 2;
+}
+
+message InboxItem {
+  string id = 1;
+  string title = 2;
+  string body = 3;
+  bool read = 4;
+}
+
+message GetDeliveryRequest {
+  string tenant_id = 1;
+  string message_id = 2;
+}
+
+message GetDeliveryResponse {
+  Message message = 1;
+  repeated DeliveryAttempt attempts = 2;
+}
+
+message DeliveryAttempt {
+  string id = 1;
+  int32 attempt_no = 2;
+  string provider = 3;
+  string status = 4;
+  string error = 5;
+}
+
+message RetryFailedRequest {
+  string tenant_id = 1;
+  string message_id = 2;
+}
+
+message HandleDomainEventRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string order_id = 3;
+  string event_type = 4;
+  string channel = 5;
+  map<string, string> vars = 6;
+}
+
+message AdminStatsRequest {
+  string tenant_id = 1;
+}
+
+message AdminStatsResponse {
+  map<string, int32> by_status = 1;
+  int32 dlq_count = 2;
+}
+
+message BestSendTimeRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+}
+
+message BestSendTimeResponse {
+  int32 hour_utc = 1;
+  string reason = 2;
+}
+
+message RecommendChannelRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string priority = 3;
+}
+
+message RecommendChannelResponse {
+  string channel = 1;
+  string reason = 2;
+}

@@ -1,0 +1,43 @@
+{
+  "editable": true,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP 5xx ratio",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Canary weight (annotation)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "nexora_canary_weight",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Failed deployments (15m)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "increase(nexora_deployments_failed_total[15m])",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["nexora", "release"],
+  "title": "NEXORA Release Health",
+  "uid": "nexora-release-health",
+  "version": 1
+}

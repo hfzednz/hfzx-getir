@@ -1,0 +1,7 @@
+# Infra validation
+steps:
+  - terraform_fmt_check: true
+  - terraform_validate: true
+  - helm_lint: infra/helm/nexora
+  - kustomize_build: infra/k8s/overlays/staging
+  - kubeconform: true

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package dispatch.v1;
+
+option go_package = "github.com/nexora/dispatch-service/proto/dispatch/v1;dispatchv1";
+
+service DispatchService {
+  rpc CreateDispatch(CreateDispatchRequest) returns (Dispatch);
+  rpc AutoAssign(AutoAssignRequest) returns (Dispatch);
+  rpc CompleteDelivery(CompleteDeliveryRequest) returns (Dispatch);
+}
+
+message Point {
+  double lat = 1;
+  double lng = 2;
+}
+
+message CreateDispatchRequest {
+  string tenant_id = 1;
+  string order_id = 2;
+  string fulfillment_id = 3;
+  string warehouse_id = 4;
+  Point pickup = 5;
+  Point dropoff = 6;
+  string required_vehicle = 7;
+}
+
+message AutoAssignRequest {
+  string tenant_id = 1;
+  string dispatch_id = 2;
+}
+
+message CompleteDeliveryRequest {
+  string tenant_id = 1;
+  string dispatch_id = 2;
+  string pod_type = 3;
+  string pod_reference = 4;
+}
+
+message Dispatch {
+  string id = 1;
+  string tenant_id = 2;
+  string order_id = 3;
+  string status = 4;
+  string courier_principal_id = 5;
+}

@@ -1,0 +1,13 @@
+{
+  "name": "nexora-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "bootstrap:web": "pnpm install",
+    "lint:admin": "pnpm --filter admin_web lint",
+    "lint:super": "pnpm --filter super_admin_web lint",
+    "test:admin": "pnpm --filter admin_web test",
+    "build:admin": "pnpm --filter admin_web build",
+    "build:super": "pnpm --filter super_admin_web build"
+  }
+}

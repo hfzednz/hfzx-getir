@@ -1,0 +1,6 @@
+apiVersion: v2
+name: nexora
+description: NEXORA umbrella Helm chart for microservices
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

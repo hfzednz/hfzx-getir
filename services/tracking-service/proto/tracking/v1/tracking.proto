@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package tracking.v1;
+
+option go_package = "github.com/nexora/tracking-service/proto/tracking/v1;trackingv1";
+
+// TrackingService gRPC surface (stub — HTTP is primary in memory mode).
+service TrackingService {
+  rpc IngestLocation(IngestLocationRequest) returns (CourierLocation);
+  rpc GetLiveCourier(GetLiveCourierRequest) returns (CourierLocation);
+  rpc GetOrderTimeline(GetOrderTimelineRequest) returns (TimelineList);
+  rpc AppendTimeline(AppendTimelineRequest) returns (TimelineEvent);
+  rpc DetectArrival(DetectArrivalRequest) returns (ArrivalResult);
+  rpc ListNearby(ListNearbyRequest) returns (NearbyList);
+}
+
+message IngestLocationRequest {
+  string tenant_id = 1;
+  string courier_id = 2;
+  double lat = 3;
+  double lon = 4;
+  double accuracy_m = 5;
+  string order_id = 6;
+}
+
+message GetLiveCourierRequest {
+  string tenant_id = 1;
+  string courier_id = 2;
+}
+
+message GetOrderTimelineRequest {
+  string tenant_id = 1;
+  string order_id = 2;
+  int32 limit = 3;
+}
+
+message AppendTimelineRequest {
+  string tenant_id = 1;
+  string order_id = 2;
+  string courier_id = 3;
+  string type = 4;
+  string message = 5;
+}
+
+message DetectArrivalRequest {
+  string tenant_id = 1;
+  string courier_id = 2;
+  string order_id = 3;
+  double dropoff_lat = 4;
+  double dropoff_lon = 5;
+  double threshold_m = 6;
+}
+
+message ListNearbyRequest {
+  string tenant_id = 1;
+  double lat = 2;
+  double lon = 3;
+  double radius_m = 4;
+  int32 limit = 5;
+}
+
+message CourierLocation {
+  string tenant_id = 1;
+  string courier_id = 2;
+  double lat = 3;
+  double lon = 4;
+  double accuracy_m = 5;
+}
+
+message TimelineEvent {
+  string id = 1;
+  string order_id = 2;
+  string type = 3;
+  string message = 4;
+}
+
+message TimelineList {
+  repeated TimelineEvent items = 1;
+}
+
+message ArrivalResult {
+  bool arrived = 1;
+  double distance_meters = 2;
+  double threshold_meters = 3;
+}
+
+message NearbyList {
+  repeated CourierLocation items = 1;
+}

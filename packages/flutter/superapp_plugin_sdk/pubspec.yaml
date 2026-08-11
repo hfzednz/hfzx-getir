@@ -1,0 +1,8 @@
+name: superapp_plugin_sdk
+description: NEXORA Super App Plugin SDK — manifest helpers, permissions, extension hooks.
+version: 0.1.0
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter

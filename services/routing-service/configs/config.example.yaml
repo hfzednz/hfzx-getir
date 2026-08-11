@@ -1,0 +1,9 @@
+http_addr: ":8097"
+grpc_addr: ":9107"
+public_base_url: "http://localhost:8097"
+database_url: ""          # empty = in-memory dev mode
+redis_url: ""
+kafka_brokers: []
+rate_limit_per_minute: 240
+cors_allowed_origins:
+  - "*"

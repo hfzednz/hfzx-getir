@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Review Service
+  version: 1.0.0
+  description: Reviews, ratings, moderation, trust & reputation APIs
+servers:
+  - url: http://localhost:8103
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/reviews:
+    post:
+      summary: Create review (enters moderation)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReview"
+      responses:
+        "201":
+          description: Created
+  /v1/reviews/{id}:
+    get:
+      summary: Get review
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+    patch:
+      summary: Edit review
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+    delete:
+      summary: Soft-delete review (GDPR/KVKK)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+  /v1/reviews/ratings:
+    post:
+      summary: Submit standalone rating
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Created
+  /v1/reviews/moderation/queue:
+    get:
+      summary: Pending moderation queue
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: OK
+  /v1/reviews/moderation/{id}/decide:
+    post:
+      summary: Approve or reject review
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+  /v1/reviews/trust/{reviewerId}:
+    get:
+      summary: Reviewer trust score
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: reviewerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+  /v1/reviews/reputation/{targetType}/{targetId}:
+    get:
+      summary: Entity reputation
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: targetType
+          in: path
+          required: true
+          schema: { type: string }
+        - name: targetId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+  /v1/reviews/search:
+    get:
+      summary: Search published reviews
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string }
+  schemas:
+    CreateReview:
+      type: object
+      required: [authorId, targetType, targetId, body]
+      properties:
+        authorId: { type: string, format: uuid }
+        targetType: { type: string }
+        targetId: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        title: { type: string }
+        body: { type: string }
+        anonymous: { type: boolean }
+        ratingValue: { type: number }
+        scheme: { type: string }
+        quality:
+          type: object
+          additionalProperties: { type: number }
+        mediaRefs:
+          type: array
+          items: { type: string }

@@ -1,0 +1,15 @@
+{
+  "name": "order.placed",
+  "family": "order",
+  "version": 1,
+  "compatibility": "backward",
+  "jsonSchema": {
+    "type": "object",
+    "required": ["orderId", "amountMinor"],
+    "properties": {
+      "orderId": { "type": "string" },
+      "amountMinor": { "type": "number" },
+      "currency": { "type": "string" }
+    }
+  }
+}

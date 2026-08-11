@@ -1,0 +1,364 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:nexora_design/nexora_design.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../../shared/business_rules/order_rules.dart';
+import '../../../../shared/utils/idempotency.dart';
+import '../../domain/entities/orders_entity.dart';
+import '../providers/orders_providers.dart';
+import '../../../../di/analytics_providers.dart';
+import '../../../../shared/analytics/analytics_events.dart';
+
+class OrderDetailScreen extends ConsumerStatefulWidget {
+  const OrderDetailScreen({super.key, required this.orderId});
+
+  final String orderId;
+
+  @override
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
+  bool _busy = false;
+
+  Future<void> _runAction(Future<void> Function() action) async {
+    setState(() => _busy = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final orderAsync = ref.watch(orderDetailProvider(widget.orderId));
+
+    return Scaffold(
+      appBar: NxTopBar(title: 'Order ${widget.orderId}'),
+      body: orderAsync.when(
+        data: (order) => Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(NxSpacing.s4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  NxOrderCard(
+                    orderId: order.id,
+                    statusLabel: order.statusLabel,
+                    total: order.totalLabel,
+                    subtitle: order.etaMinutes != null
+                        ? 'ETA ~ ${order.etaMinutes} min'
+                        : null,
+                    imageUrls: order.items
+                        .map((i) => i.imageUrl ?? '')
+                        .where((u) => u.isNotEmpty)
+                        .toList(),
+                    extraItemCount: order.items.length > 4 ? order.items.length - 4 : 0,
+                  ),
+                  if (order.courier?.name != null) ...[
+                    const SizedBox(height: NxSpacing.s3),
+                    NxCard(
+                      child: ListTile(
+                        leading: const Icon(Icons.delivery_dining),
+                        title: Text(order.courier!.name ?? 'Courier'),
+                        subtitle: Text(order.courier!.vehicle ?? ''),
+                      ),
+                    ),
+                  ],
+                  if (order.timeline.isNotEmpty) ...[
+                    const SizedBox(height: NxSpacing.s3),
+                    NxCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(NxSpacing.s3),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Timeline', style: NxTypography.titleSm),
+                            const SizedBox(height: NxSpacing.s2),
+                            ...order.timeline.map(
+                              (e) => ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(e.label),
+                                subtitle: e.subtitle != null ? Text(e.subtitle!) : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (order.status == OrderLifecycleStatus.delivered &&
+                      order.hasProofOfDelivery) ...[
+                    const SizedBox(height: NxSpacing.s3),
+                    NxCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(NxSpacing.s3),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Proof of delivery', style: NxTypography.titleSm),
+                            const SizedBox(height: NxSpacing.s2),
+                            Wrap(
+                              spacing: NxSpacing.s2,
+                              runSpacing: NxSpacing.s2,
+                              children: [
+                                ...order.proofOfDeliveryPhotos.map(
+                                  (url) => GestureDetector(
+                                    onTap: () => launchUrl(Uri.parse(url)),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        url,
+                                        width: 88,
+                                        height: 88,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => const SizedBox(
+                                          width: 88,
+                                          height: 88,
+                                          child: ColoredBox(
+                                            color: Color(0x11000000),
+                                            child: Icon(Icons.broken_image),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (order.proofOfDeliveryUrl != null &&
+                                    order.proofOfDeliveryUrl!.isNotEmpty &&
+                                    !order.proofOfDeliveryPhotos
+                                        .contains(order.proofOfDeliveryUrl))
+                                  GestureDetector(
+                                    onTap: () => launchUrl(
+                                      Uri.parse(order.proofOfDeliveryUrl!),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        order.proofOfDeliveryUrl!,
+                                        width: 88,
+                                        height: 88,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => const SizedBox(
+                                          width: 88,
+                                          height: 88,
+                                          child: ColoredBox(
+                                            color: Color(0x11000000),
+                                            child: Icon(Icons.image),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: NxSpacing.s4),
+                  NxButton(
+                    label: 'Track order',
+                    expand: true,
+                    onPressed: () => context.push('/orders/${widget.orderId}/track'),
+                  ),
+                  const SizedBox(height: NxSpacing.s3),
+                  if (order.canCancel)
+                    NxButton(
+                      label: 'Cancel order',
+                      variant: NxButtonVariant.secondary,
+                      expand: true,
+                      onPressed: _busy
+                          ? null
+                          : () => _runAction(() => _cancelOrder(order)),
+                    ),
+                  if (order.canPartialCancel) ...[
+                    const SizedBox(height: NxSpacing.s3),
+                    NxButton(
+                      label: 'Partial cancel',
+                      variant: NxButtonVariant.secondary,
+                      expand: true,
+                      onPressed: _busy
+                          ? null
+                          : () => _runAction(() => _partialCancel(order)),
+                    ),
+                  ],
+                  if (order.cancellationPolicy.refundEligible) ...[
+                    const SizedBox(height: NxSpacing.s3),
+                    NxButton(
+                      label: 'Request refund',
+                      variant: NxButtonVariant.secondary,
+                      expand: true,
+                      onPressed: _busy
+                          ? null
+                          : () => _runAction(() => _requestRefund(order)),
+                    ),
+                  ],
+                  if (order.canReorder) ...[
+                    const SizedBox(height: NxSpacing.s3),
+                    NxButton(
+                      label: 'Reorder',
+                      expand: true,
+                      onPressed: _busy ? null : () => _runAction(() => _reorder(order)),
+                    ),
+                  ],
+                  const SizedBox(height: NxSpacing.s3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: NxButton(
+                          label: order.isFavorite ? 'Unfavorite' : 'Favorite',
+                          variant: NxButtonVariant.tertiary,
+                          onPressed: _busy
+                              ? null
+                              : () => _runAction(
+                                    () => _toggleFavorite(order),
+                                  ),
+                        ),
+                      ),
+                      const SizedBox(width: NxSpacing.s3),
+                      Expanded(
+                        child: NxButton(
+                          label: 'Invoice',
+                          variant: NxButtonVariant.tertiary,
+                          onPressed: order.invoiceUrl != null
+                              ? () => launchUrl(Uri.parse(order.invoiceUrl!))
+                              : () => _runAction(() => _openInvoice(order.id)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (order.receiptUrl != null || order.status.name == 'delivered') ...[
+                    const SizedBox(height: NxSpacing.s3),
+                    NxButton(
+                      label: 'Receipt',
+                      variant: NxButtonVariant.tertiary,
+                      expand: true,
+                      onPressed: order.receiptUrl != null
+                          ? () => launchUrl(Uri.parse(order.receiptUrl!))
+                          : () => _runAction(() => _openReceipt(order.id)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (_busy)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Color(0x33000000),
+                  child: Center(child: NxSpinner()),
+                ),
+              ),
+          ],
+        ),
+        loading: () => const Center(child: NxSpinner()),
+        error: (e, _) => Center(child: Text(e.toString())),
+      ),
+    );
+  }
+
+  Future<void> _cancelOrder(Order order) async {
+    final result = await ref.read(cancelOrderUseCaseProvider).call(
+          order: order,
+          idempotencyKey: Idempotency.generate(),
+        );
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) {
+        // ignore: unawaited_futures
+        ref.read(analyticsTrackerProvider).trackRaw(
+              eventName: AnalyticsEvents.orderCancelled,
+              props: {'order_id': order.id},
+            );
+        ref.invalidate(orderDetailProvider(widget.orderId));
+        NxToast.show(context, message: 'Order cancelled');
+      },
+      onFailure: (e) => NxToast.show(context, message: e.message),
+    );
+  }
+
+  Future<void> _partialCancel(Order order) async {
+    final activeLines = order.items
+        .where((i) => !i.cancelled)
+        .map((i) => i.id)
+        .toList();
+    if (activeLines.isEmpty) return;
+
+    final result = await ref.read(partialCancelOrderUseCaseProvider).call(
+          order: order,
+          lineIds: [activeLines.first],
+          idempotencyKey: Idempotency.generate(),
+        );
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) {
+        ref.invalidate(orderDetailProvider(widget.orderId));
+        NxToast.show(context, message: 'Items cancelled');
+      },
+      onFailure: (e) => NxToast.show(context, message: e.message),
+    );
+  }
+
+  Future<void> _requestRefund(Order order) async {
+    final result = await ref.read(requestRefundUseCaseProvider).call(
+          id: order.id,
+          idempotencyKey: Idempotency.generate(),
+        );
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) => NxToast.show(context, message: 'Refund requested'),
+      onFailure: (e) => NxToast.show(context, message: e.message),
+    );
+  }
+
+  Future<void> _reorder(Order order) async {
+    final result = await ref.read(reorderUseCaseProvider).call(
+          order: order,
+          idempotencyKey: Idempotency.generate(),
+        );
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) {
+        NxToast.show(context, message: 'Items added to cart');
+        context.push('/cart');
+      },
+      onFailure: (e) => NxToast.show(context, message: e.message),
+    );
+  }
+
+  Future<void> _toggleFavorite(Order order) async {
+    final result = await ref.read(markFavoriteOrderUseCaseProvider).call(
+          order.id,
+          favorite: !order.isFavorite,
+        );
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) => ref.invalidate(orderDetailProvider(widget.orderId)),
+      onFailure: (e) => NxToast.show(context, message: e.message),
+    );
+  }
+
+  Future<void> _openInvoice(String id) async {
+    final result = await ref.read(getOrderInvoiceUseCaseProvider).call(id);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (doc) => launchUrl(Uri.parse(doc.url)),
+      onFailure: (e) => NxToast.show(context, message: e.message),
+    );
+  }
+
+  Future<void> _openReceipt(String id) async {
+    final result = await ref.read(getOrderReceiptUseCaseProvider).call(id);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (doc) => launchUrl(Uri.parse(doc.url)),
+      onFailure: (e) => NxToast.show(context, message: e.message),
+    );
+  }
+}

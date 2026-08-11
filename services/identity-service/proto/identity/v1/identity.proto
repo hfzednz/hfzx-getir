@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package nexora.identity.v1;
+
+option go_package = "github.com/nexora/identity-service/gen/identity/v1;identityv1";
+
+// IdentityService is the internal PDP / session validation surface for gateways and BFFs.
+service IdentityService {
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+}
+
+message CheckPermissionRequest {
+  string principal_id = 1;
+  // Canonical resource:action permission string.
+  string permission = 2;
+  string tenant_id = 3;
+  string city_id = 4;
+  string warehouse_id = 5;
+}
+
+message CheckPermissionResponse {
+  bool allowed = 1;
+  string reason = 2;
+}
+
+message ValidateSessionRequest {
+  string session_id = 1;
+  string access_token = 2;
+}
+
+message ValidateSessionResponse {
+  bool valid = 1;
+  string principal_id = 2;
+  string tenant_id = 3;
+  repeated string roles = 4;
+  string reason = 5;
+}

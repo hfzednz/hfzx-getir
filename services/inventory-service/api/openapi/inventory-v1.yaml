@@ -1,0 +1,290 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Inventory Service API
+  version: 1.0.0
+  description: |
+    Stock & reservation SoT. Requires `X-Tenant-Id` on tenant-scoped routes.
+    Does not expose product titles, sell prices, or order state.
+servers:
+  - url: http://localhost:8083/v1/inventory
+    description: Local dev (default port 8083)
+tags:
+  - name: health
+  - name: warehouses
+  - name: stock
+  - name: reservations
+  - name: atp
+  - name: transfers
+  - name: counts
+  - name: lots
+  - name: returns
+  - name: forecast
+  - name: search
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      responses:
+        "200":
+          description: OK
+  /ready:
+    get:
+      tags: [health]
+      summary: Readiness probe
+      responses:
+        "200":
+          description: Ready
+  /warehouses:
+    get:
+      tags: [warehouses]
+      summary: List warehouses
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Warehouse page
+    post:
+      tags: [warehouses]
+      summary: Create warehouse
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, name]
+              properties:
+                code: { type: string }
+                name: { type: string }
+                timezone: { type: string, default: UTC }
+      responses:
+        "201":
+          description: Created
+  /stock/receive:
+    post:
+      tags: [stock]
+      summary: Receive stock (idempotent)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [warehouseId, variantId, qty]
+              properties:
+                warehouseId: { type: string, format: uuid }
+                variantId: { type: string, format: uuid }
+                skuCode: { type: string }
+                qty: { type: integer }
+                lotCode: { type: string }
+                idempotencyKey: { type: string }
+      responses:
+        "200":
+          description: Balance + movement
+  /reservations/soft:
+    post:
+      tags: [reservations]
+      summary: Soft reserve (cart hold)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lines, idempotencyKey]
+              properties:
+                externalRef: { type: string }
+                ttlSeconds: { type: integer }
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [warehouseId, variantId, qty]
+                    properties:
+                      warehouseId: { type: string, format: uuid }
+                      variantId: { type: string, format: uuid }
+                      qty: { type: integer }
+                      useFefo: { type: boolean }
+      responses:
+        "201":
+          description: Reservation created
+        "409":
+          $ref: "#/components/responses/Error"
+  /reservations/{id}/confirm-hard:
+    post:
+      tags: [reservations]
+      summary: Soft → Hard
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ReservationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Hard reservation
+  /reservations/{id}/release:
+    post:
+      tags: [reservations]
+      summary: Release hold
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ReservationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Released
+  /reservations/{id}/consume:
+    post:
+      tags: [reservations]
+      summary: Ship deduct (hard only)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ReservationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Consumed
+        "409":
+          $ref: "#/components/responses/Error"
+  /atp:
+    get:
+      tags: [atp]
+      summary: Query availability-to-promise
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: variantId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: warehouseId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: regionId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: ATP results
+  /transfers:
+    post:
+      tags: [transfers]
+      summary: Create transfer
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Created
+  /transfers/{id}/complete:
+    post:
+      tags: [transfers]
+      summary: Complete transfer (move stock)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Completed
+  /counts:
+    post:
+      tags: [counts]
+      summary: Start count session
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "201":
+          description: Started
+  /lots/near-expiry:
+    get:
+      tags: [lots]
+      summary: List near-expiry lots
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: withinDays
+          in: query
+          schema: { type: integer, default: 7 }
+      responses:
+        "200":
+          description: Lots
+  /lots/fefo-allocate:
+    post:
+      tags: [lots]
+      summary: FEFO allocate helper
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Allocations
+  /returns:
+    post:
+      tags: [returns]
+      summary: Receive return to stock
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Return received
+  /forecasts:
+    put:
+      tags: [forecast]
+      summary: Upsert forecast projection
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Upserted
+  /search:
+    get:
+      tags: [search]
+      summary: Search stock index
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Hits
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string }
+    ReservationId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Error:
+      description: NEXORA error envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string }
+                  message: { type: string }
+                  traceId: { type: string }
+                  retriable: { type: boolean }

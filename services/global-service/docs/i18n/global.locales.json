@@ -1,0 +1,10 @@
+{
+  "en": {
+    "country_inactive": "Country is not active",
+    "missing_translation": "Translation missing"
+  },
+  "tr": {
+    "country_inactive": "Ülke aktif değil",
+    "missing_translation": "Çeviri bulunamadı"
+  }
+}

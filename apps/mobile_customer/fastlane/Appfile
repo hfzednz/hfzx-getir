@@ -1,0 +1,3 @@
+app_identifier("com.hfzx.nexora.nexora_customer")
+package_name("com.hfzx.nexora.nexora_customer")
+json_key_data(ENV["SUPPLY_JSON_KEY_DATA"])

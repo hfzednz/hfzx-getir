@@ -1,0 +1,11 @@
+# Allure results directory convention
+# CI uploads qa/reports/allure-results → Allure report artifact
+results_dir: qa/reports/allure-results
+report_dir: qa/reports/allure-report
+categories:
+  - name: Product defects
+    matchedStatuses: [failed]
+  - name: Flaky
+    matchedStatuses: [broken]
+  - name: Infrastructure
+    messageRegex: ".*connection refused.*"

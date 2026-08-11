@@ -1,0 +1,26 @@
+# E2E journey stubs — implement against BFFs; no domain logic here
+journeys:
+  customer:
+    - browse_catalog
+    - add_to_cart
+    - checkout
+    - track_order
+  courier:
+    - go_online
+    - accept_duty
+    - complete_delivery
+  warehouse:
+    - receive_pick_list
+    - pack
+    - handoff
+  admin:
+    - open_ops_dashboard
+    - approve_refund
+  finance:
+    - view_settlement_batch
+  supplier:
+    - open_portal
+    - confirm_po
+  support:
+    - open_ticket
+    - resolve_sla

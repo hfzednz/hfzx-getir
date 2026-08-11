@@ -1,0 +1,10 @@
+services:
+  ai-platform-service:
+    build: .
+    ports: ["8106:8106"]
+    environment:
+      HTTP_ADDR: ":8106"
+      PYTHON_RUNTIME_URL: "http://ml-sidecar:8206"
+  ml-sidecar:
+    build: ./ml
+    ports: ["8206:8206"]

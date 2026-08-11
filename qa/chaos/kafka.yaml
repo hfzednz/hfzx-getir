@@ -1,0 +1,23 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: nexora-kafka-chaos
+  namespace: nexora-apps
+spec:
+  appinfo:
+    appns: nexora-apps
+    applabel: app=order-service
+    appkind: deployment
+  engineState: active
+  experiments:
+    - name: pod-network-loss
+      spec:
+        components:
+          env:
+            - name: NETWORK_INTERFACE
+              value: eth0
+            - name: TOTAL_CHAOS_DURATION
+              value: "60"
+            - name: NETWORK_PACKET_LOSS_PERCENTAGE
+              value: "100"
+# Validate: consumers recover; outbox backlog drains; SLO burn within budget.

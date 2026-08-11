@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "liveops.FeatureFlagUpdated.v1",
+  "type": "object",
+  "required": ["type", "aggregateId", "tenantId", "occurredAt"],
+  "properties": {
+    "type": { "const": "FeatureFlagUpdated" },
+    "key": { "type": "string" },
+    "version": { "type": "integer" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "tenantId": { "type": "string", "format": "uuid" },
+    "occurredAt": { "type": "string", "format": "date-time" }
+  }
+}

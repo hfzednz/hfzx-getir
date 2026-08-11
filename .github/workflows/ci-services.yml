@@ -1,0 +1,84 @@
+name: ci-services
+
+on:
+  pull_request:
+    paths:
+      - "services/**"
+      - "packages/proto/**"
+      - ".github/workflows/ci-services.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/**"
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.list.outputs.services }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: list
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          mapfile -t dirs < <(git diff --name-only "$BASE" HEAD | awk -F/ '/^services\// {print $2}' | sort -u)
+          echo "services=$(printf '%s\n' "${dirs[@]}" | jq -R -s -c 'split("\n")|map(select(length>0))')" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: detect
+    if: needs.detect.outputs.services != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect.outputs.services) }}
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+      - name: Test
+        run: |
+          if [ -f go.mod ]; then
+            go test ./...
+          else
+            echo "skip non-go service"
+          fi
+      # Full race coverage for all services lives in ci-acceptance.yml (CGO on ubuntu).
+      - name: Govulncheck
+        run: |
+          if [ -f go.mod ]; then
+            go install golang.org/x/vuln/cmd/govulncheck@latest
+            govulncheck ./... || true
+          fi
+
+  docker:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        working-directory: services/${{ matrix.service }}
+        run: |
+          if [ -f Dockerfile ]; then
+            docker build -t ghcr.io/nexora/${{ matrix.service }}:${{ github.sha }} .
+          fi

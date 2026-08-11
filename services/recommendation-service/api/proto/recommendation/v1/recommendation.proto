@@ -1,0 +1,38 @@
+syntax = "proto3";
+package nexora.recommendation.v1;
+option go_package = "github.com/nexora/recommendation-service/api/proto/recommendation/v1;recov1";
+
+service RecommendationService {
+  rpc Recommend (RecommendRequest) returns (RecommendResponse);
+  rpc IngestSignal (SignalRequest) returns (SignalResponse);
+}
+
+message RecommendRequest {
+  string tenant_id = 1;
+  string user_id = 2;
+  string product_id = 3;
+  string strategy = 4;
+  int32 limit = 5;
+}
+
+message RecommendItem {
+  string product_id = 1;
+  double score = 2;
+  string reason = 3;
+}
+
+message RecommendResponse {
+  string rail_id = 1;
+  repeated RecommendItem items = 2;
+}
+
+message SignalRequest {
+  string tenant_id = 1;
+  string user_id = 2;
+  string product_id = 3;
+  string kind = 4;
+}
+
+message SignalResponse {
+  string signal_id = 1;
+}

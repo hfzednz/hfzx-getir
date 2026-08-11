@@ -1,0 +1,9 @@
+# WCAG AA checks (Playwright axe / Flutter a11y audits)
+standard: WCAG2.2-AA
+checks:
+  - contrast
+  - keyboard_navigation
+  - focus_visible
+  - screen_reader_labels
+  - localization_rtl_ltr
+fail_on: [critical, serious]

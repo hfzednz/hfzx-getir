@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexora
+      POSTGRES_DB: finance_ledger
+    ports:
+      - "5440:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d finance_ledger"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6387:6379"
+
+  finance-ledger-service:
+    build: .
+    ports:
+      - "8091:8091"
+    environment:
+      HTTP_ADDR: ":8091"
+      GRPC_ADDR: ":9091"
+      # Leave DATABASE_URL empty for in-memory dev mode
+      REDIS_URL: redis://redis:6379
+      CORS_ALLOWED_ORIGINS: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  pgdata:

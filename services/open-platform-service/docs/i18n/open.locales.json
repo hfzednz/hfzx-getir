@@ -1,0 +1,10 @@
+{
+  "en": {
+    "api_key_created": "API key created",
+    "webhook_delivered": "Webhook delivered"
+  },
+  "tr": {
+    "api_key_created": "API anahtarı oluşturuldu",
+    "webhook_delivered": "Webhook teslim edildi"
+  }
+}

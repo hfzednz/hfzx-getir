@@ -1,0 +1,10 @@
+{
+  "en": {
+    "deployment_failed": "Deployment failed",
+    "rollback_triggered": "Rollback triggered"
+  },
+  "tr": {
+    "deployment_failed": "Dağıtım başarısız",
+    "rollback_triggered": "Geri alma tetiklendi"
+  }
+}

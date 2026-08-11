@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "supplier.SellerOnboarded.v1",
+  "type": "object",
+  "required": ["type", "aggregateId", "tenantId", "occurredAt"],
+  "properties": {
+    "type": { "const": "SellerOnboarded" },
+    "storeName": { "type": "string" },
+    "aggregateId": { "type": "string", "format": "uuid" },
+    "tenantId": { "type": "string", "format": "uuid" },
+    "occurredAt": { "type": "string", "format": "date-time" }
+  }
+}

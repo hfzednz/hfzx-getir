@@ -1,0 +1,13 @@
+http:
+  addr: ":8099"
+  publicBaseUrl: "http://localhost:8099"
+grpc:
+  addr: ":9109"
+database:
+  url: "" # empty → in-memory repos
+redis:
+  url: ""
+kafka:
+  brokers: []
+rateLimitPerMinute: 240
+corsAllowedOrigins: ["*"]

@@ -1,0 +1,10 @@
+{
+  "superapp.store": "Eklenti Mağazası",
+  "superapp.install": "Yükle",
+  "superapp.update": "Güncelle",
+  "superapp.remove": "Kaldır",
+  "superapp.permissions": "İzinler",
+  "superapp.widgets": "Widget'lar",
+  "superapp.search": "Modül ara",
+  "superapp.launch": "Mini uygulamayı aç"
+}

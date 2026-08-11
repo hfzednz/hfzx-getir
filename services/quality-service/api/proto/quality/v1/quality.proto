@@ -1,0 +1,8 @@
+syntax = "proto3";
+package nexora.quality.v1;
+option go_package = "github.com/nexora/quality-service/api/proto/quality/v1;qualityv1";
+service QualityService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+message HealthRequest {}
+message HealthResponse { string status = 1; }

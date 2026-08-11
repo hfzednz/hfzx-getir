@@ -1,0 +1,10 @@
+{
+  "superapp.store": "Plugin Store",
+  "superapp.install": "Install",
+  "superapp.update": "Update",
+  "superapp.remove": "Remove",
+  "superapp.permissions": "Permissions",
+  "superapp.widgets": "Widgets",
+  "superapp.search": "Search modules",
+  "superapp.launch": "Open mini app"
+}

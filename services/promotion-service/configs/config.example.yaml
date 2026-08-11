@@ -1,0 +1,14 @@
+# promotion-service example config (env equivalents)
+
+http_addr: ":8094"
+grpc_addr: ":9094"
+public_base_url: "http://localhost:8094"
+
+# Leave empty for in-memory repositories
+database_url: ""
+
+redis_url: "redis://localhost:6394"
+kafka_brokers: []
+
+rate_limit_per_minute: 240
+cors_allowed_origins: ["*"]

@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package promotion.v1;
+
+option go_package = "github.com/nexora/promotion-service/proto/promotion/v1;promotionv1";
+
+// Money fields are integer minor units. Catalog ids are opaque strings.
+
+service PromotionService {
+  rpc CreateCampaign(CreateCampaignRequest) returns (Campaign);
+  rpc ActivateCampaign(CampaignIdRequest) returns (Campaign);
+  rpc PauseCampaign(CampaignIdRequest) returns (Campaign);
+  rpc ExpireCampaign(CampaignIdRequest) returns (Campaign);
+  rpc CreatePromotion(CreatePromotionRequest) returns (Promotion);
+  rpc GenerateCoupon(GenerateCouponRequest) returns (Coupon);
+  rpc RedeemCoupon(RedeemCouponRequest) returns (CouponRedemption);
+  rpc IssueVoucher(IssueVoucherRequest) returns (Voucher);
+  rpc RedeemVoucher(RedeemVoucherRequest) returns (VoucherRedemption);
+  rpc Evaluate(EvaluateRequest) returns (EvaluateResponse);
+  rpc Simulate(EvaluateRequest) returns (SimulateResponse);
+}
+
+message CampaignIdRequest {
+  string tenant_id = 1;
+  string campaign_id = 2;
+}
+
+message CreateCampaignRequest {
+  string tenant_id = 1;
+  string name = 2;
+  string description = 3;
+  string starts_at = 4;
+  string ends_at = 5;
+}
+
+message Campaign {
+  string id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  string status = 4;
+  string starts_at = 5;
+  string ends_at = 6;
+}
+
+message CreatePromotionRequest {
+  string tenant_id = 1;
+  string campaign_id = 2;
+  string name = 3;
+  string type = 4;
+  int32 percent_off = 5;
+  int64 fixed_off_minor = 6;
+  int32 buy_qty = 7;
+  int32 get_qty = 8;
+  int32 priority = 9;
+  string stack_group = 10;
+  bool stackable = 11;
+  int32 per_user_limit = 12;
+  repeated string exclude_promotion_ids = 13;
+}
+
+message Promotion {
+  string id = 1;
+  string campaign_id = 2;
+  string name = 3;
+  string type = 4;
+  int32 priority = 5;
+}
+
+message GenerateCouponRequest {
+  string tenant_id = 1;
+  string promotion_id = 2;
+  string code = 3;
+  string kind = 4;
+  int32 max_redemptions = 5;
+}
+
+message Coupon {
+  string id = 1;
+  string code = 2;
+  string kind = 3;
+  string promotion_id = 4;
+}
+
+message RedeemCouponRequest {
+  string tenant_id = 1;
+  string code = 2;
+  string principal_id = 3;
+  string idempotency_key = 4;
+  int64 discount_minor = 5;
+  string currency = 6;
+}
+
+message CouponRedemption {
+  string id = 1;
+  string coupon_id = 2;
+  int64 discount_minor = 3;
+  string currency = 4;
+}
+
+message IssueVoucherRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string code = 3;
+  int64 value_minor = 4;
+  string currency = 5;
+}
+
+message Voucher {
+  string id = 1;
+  string code = 2;
+  string status = 3;
+  int64 value_minor = 4;
+  int64 remaining_minor = 5;
+  string currency = 6;
+}
+
+message RedeemVoucherRequest {
+  string tenant_id = 1;
+  string code = 2;
+  string principal_id = 3;
+  string idempotency_key = 4;
+  int64 amount_minor = 5;
+  string currency = 6;
+}
+
+message VoucherRedemption {
+  string id = 1;
+  string voucher_id = 2;
+  int64 amount_minor = 3;
+  string currency = 4;
+}
+
+message CartLine {
+  string line_id = 1;
+  string variant_id = 2;
+  string category_id = 3;
+  string brand_id = 4;
+  int32 quantity = 5;
+  int64 unit_price_minor = 6;
+}
+
+message EvaluateRequest {
+  string tenant_id = 1;
+  string principal_id = 2;
+  string currency = 3;
+  repeated CartLine lines = 4;
+  repeated string coupon_codes = 5;
+  int64 shipping_minor = 6;
+  repeated string segment_ids = 7;
+}
+
+message DiscountLine {
+  string promotion_id = 1;
+  string type = 2;
+  int64 amount_minor = 3;
+  string currency = 4;
+  int32 priority = 5;
+}
+
+message EvaluateResponse {
+  repeated DiscountLine discounts = 1;
+  int64 total_discount_minor = 2;
+  int64 shipping_discount_minor = 3;
+  string currency = 4;
+}
+
+message SimulateResponse {
+  string simulation_id = 1;
+  EvaluateResponse result = 2;
+}

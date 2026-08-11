@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: NEXORA settlement-service
+  version: 1.0.0
+  description: Settlement batches, dual-control approval, payouts, reconciliation. Money as int64 minor units.
+servers:
+  - url: http://localhost:8092
+paths:
+  /v1/settlements/batches:
+    post:
+      summary: CreateBatch
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currency, periodStart, periodEnd]
+              properties:
+                currency: { type: string, minLength: 3, maxLength: 3 }
+                periodStart: { type: string, format: date-time }
+                periodEnd: { type: string, format: date-time }
+                description: { type: string }
+                actorId: { type: string, format: uuid }
+      responses:
+        '201': { description: Batch created }
+    get:
+      summary: List
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { description: Batch list }
+  /v1/settlements/batches/{id}/lines:
+    post:
+      summary: AddLine
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payeeType, payeeRef, amountMinor]
+              properties:
+                payeeType: { type: string, enum: [courier, supplier, merchant, partner] }
+                payeeRef: { type: string, description: Opaque payee id }
+                amountMinor: { type: integer, format: int64 }
+                externalRef: { type: string }
+      responses:
+        '200': { description: Line added }
+  /v1/settlements/batches/{id}/submit:
+    post:
+      summary: Submit
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/UserId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Submitted for approval }
+  /v1/settlements/batches/{id}/approve:
+    post:
+      summary: Approve (dual-control)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/UserId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Approved }
+        '403': { description: Same actor as submitter }
+  /v1/settlements/batches/{id}/execute:
+    post:
+      summary: ExecutePayouts
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Payouts executed }
+  /v1/settlements/batches/{id}/reconcile:
+    post:
+      summary: ReconcileProviderReport
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reportedMinor]
+              properties:
+                providerRef: { type: string }
+                reportedMinor: { type: integer, format: int64 }
+      responses:
+        '200': { description: Reconciliation result }
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    UserId:
+      name: X-Nexora-User
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string }

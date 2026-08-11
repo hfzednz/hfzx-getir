@@ -1,0 +1,35 @@
+default_platform(:android)
+
+platform :android do
+  desc "Upload to Play internal testing"
+  lane :internal do
+    upload_to_play_store(
+      track: "internal",
+      aab: "build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Upload to Play closed testing"
+  lane :closed do
+    upload_to_play_store(track: "alpha", aab: "build/app/outputs/bundle/release/app-release.aab", skip_upload_apk: true)
+  end
+
+  desc "Upload to Play open testing"
+  lane :open do
+    upload_to_play_store(track: "beta", aab: "build/app/outputs/bundle/release/app-release.aab", skip_upload_apk: true)
+  end
+
+  desc "Staged production rollout (10%)"
+  lane :production do
+    upload_to_play_store(
+      track: "production",
+      aab: "build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      rollout: "0.1"
+    )
+  end
+end

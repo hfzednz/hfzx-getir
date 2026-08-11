@@ -1,0 +1,12 @@
+# API smoke checklist (executed by CI shell / future runner)
+# - GET identity /health
+# - GET checkout /health
+# - GET payment /health
+# - GET bff-customer /health
+# - GET quality /health
+services:
+  - identity-service:8081
+  - checkout-service:8087
+  - payment-service:8089
+  - bff-customer:8111
+  - quality-service:8118

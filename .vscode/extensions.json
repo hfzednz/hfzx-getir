@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "Dart-Code.dart-code",
+    "golang.go",
+    "hashicorp.terraform",
+    "ms-azuretools.vscode-docker",
+    "esbenp.prettier-vscode"
+  ]
+}

@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: NEXORA Wallet Service
+  version: 1.0.0
+  description: |
+    Customer wallets with cash/refund/promo/cashback/gift accounts.
+    Available = balance - held. Money is integer minor units.
+servers:
+  - url: http://localhost:8090
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1/wallets:
+    post:
+      summary: Get or create wallet for principal
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/NexoraUser"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                principalId: { type: string, format: uuid }
+                currency: { type: string }
+      responses:
+        "201":
+          description: Wallet
+  /v1/wallets/{id}:
+    get:
+      summary: Get wallet + accounts
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/WalletId"
+      responses:
+        "200":
+          description: Wallet view
+  /v1/wallets/{id}/credit:
+    post:
+      summary: Credit account
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/WalletId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Credited
+  /v1/wallets/{id}/debit:
+    post:
+      summary: Debit available balance
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/WalletId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Debited
+  /v1/wallets/{id}/hold:
+    post:
+      summary: Hold available funds
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/WalletId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Hold created
+  /v1/wallets/holds/{holdId}/release:
+    post:
+      summary: Release hold
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: holdId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Released
+  /v1/wallets/{id}/transfer:
+    post:
+      summary: Transfer between accounts/wallets
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/WalletId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Transferred
+  /v1/wallets/{id}/history:
+    get:
+      summary: Entry history
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/WalletId"
+      responses:
+        "200":
+          description: Entries
+  /v1/wallets/{id}/admin/adjust:
+    post:
+      summary: Audited admin adjust
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/WalletId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Adjusted
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    NexoraUser:
+      name: X-Nexora-User
+      in: header
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema: { type: string }
+    WalletId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }

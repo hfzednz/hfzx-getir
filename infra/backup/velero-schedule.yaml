@@ -1,0 +1,16 @@
+# Velero-compatible backup schedule contract (apply after Velero install).
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: nexora-daily
+  namespace: nexora-system
+spec:
+  schedule: "0 1 * * *"
+  template:
+    includedNamespaces:
+      - nexora-apps
+      - nexora-data
+    ttl: 720h
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default

@@ -1,0 +1,9 @@
+# Flutter integration_test entry (customer app)
+# Run from apps/mobile_customer when present:
+#   flutter test integration_test/smoke_test.dart
+# This file documents the contract expected by qa/suites — do not embed product logic here.
+name: customer_app_smoke
+steps:
+  - launch_app
+  - expect_home
+  - open_search

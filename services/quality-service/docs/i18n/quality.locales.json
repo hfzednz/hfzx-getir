@@ -1,0 +1,10 @@
+{
+  "en": {
+    "quality_gate_failed": "Quality gate failed",
+    "certification_issued": "Certification issued"
+  },
+  "tr": {
+    "quality_gate_failed": "Kalite kapısı başarısız",
+    "certification_issued": "Sertifika yayınlandı"
+  }
+}

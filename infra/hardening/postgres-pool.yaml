@@ -1,0 +1,11 @@
+# Postgres pool defaults (apply via app config / PgBouncer — do not redesign services)
+pool:
+  maxOpenConns: 50
+  maxIdleConns: 25
+  connMaxLifetime: 30m
+  connMaxIdleTime: 5m
+pgbouncer:
+  pool_mode: transaction
+  default_pool_size: 40
+  max_client_conn: 2000
+  server_reset_query: DISCARD ALL
