@@ -31,7 +31,16 @@ trap cleanup EXIT
 
 echo "==> infra up"
 docker compose -p "$PROJECT" -f "$COMPOSE" up -d postgres redis kafka
-docker compose -p "$PROJECT" -f "$COMPOSE" exec -T postgres pg_isready -U nexora -d nexora
+
+PG=(docker compose -p "$PROJECT" -f "$COMPOSE" exec -T postgres)
+echo "==> wait postgres"
+for _ in $(seq 1 60); do
+  if "${PG[@]}" pg_isready -U nexora -d nexora >/dev/null 2>&1; then
+    break
+  fi
+  sleep 2
+done
+"${PG[@]}" pg_isready -U nexora -d nexora
 
 # Ensure network exists (compose creates ${PROJECT}_default)
 NET="$(docker compose -p "$PROJECT" -f "$COMPOSE" ps -q postgres | xargs -I{} docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' {})"
