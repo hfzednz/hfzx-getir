@@ -194,6 +194,78 @@ func TestConcurrentSoftReservesNoOversell(t *testing.T) {
 	}
 }
 
+func TestConcurrentSoftReserves100Vs10(t *testing.T) {
+	d, _ := testDeps(t)
+	ctx := context.Background()
+	tenant, wh, variant := uuid.New(), uuid.New(), uuid.New()
+	seedStock(t, d, tenant, wh, variant, 10)
+
+	var okCount, failCount atomic.Int64
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := d.SoftReserve(ctx, app.SoftReserveCmd{
+				TenantID: tenant, IdempotencyKey: "c100-" + uuid.NewString(),
+				Lines: []app.SoftReserveLine{{WarehouseID: wh, VariantID: variant, Qty: 1}},
+			})
+			if err == nil {
+				okCount.Add(1)
+			} else {
+				failCount.Add(1)
+			}
+		}()
+	}
+	wg.Wait()
+	if okCount.Load() != 10 {
+		t.Fatalf("want exactly 10 successful reserves of 1, got %d", okCount.Load())
+	}
+	if failCount.Load() != 90 {
+		t.Fatalf("want 90 failed reserves, got %d", failCount.Load())
+	}
+	bal, _ := d.Balances.GetByKey(ctx, ports.BalanceKey{
+		TenantID: tenant, WarehouseID: wh, VariantID: variant,
+	})
+	if bal.Available() != 0 || bal.Reserved != 10 {
+		t.Fatalf("want reserved=10 available=0 got reserved=%d available=%d", bal.Reserved, bal.Available())
+	}
+	if bal.Available() < 0 {
+		t.Fatalf("negative inventory: available=%d", bal.Available())
+	}
+}
+
+func TestSoftReserveIdempotent(t *testing.T) {
+	d, _ := testDeps(t)
+	ctx := context.Background()
+	tenant, wh, variant := uuid.New(), uuid.New(), uuid.New()
+	seedStock(t, d, tenant, wh, variant, 20)
+
+	a, err := d.SoftReserve(ctx, app.SoftReserveCmd{
+		TenantID: tenant, IdempotencyKey: "same-soft-key",
+		Lines: []app.SoftReserveLine{{WarehouseID: wh, VariantID: variant, Qty: 4}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := d.SoftReserve(ctx, app.SoftReserveCmd{
+		TenantID: tenant, IdempotencyKey: "same-soft-key",
+		Lines: []app.SoftReserveLine{{WarehouseID: wh, VariantID: variant, Qty: 4}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.ID != b.ID {
+		t.Fatalf("duplicate key created two reservations %s vs %s", a.ID, b.ID)
+	}
+	bal, _ := d.Balances.GetByKey(ctx, ports.BalanceKey{
+		TenantID: tenant, WarehouseID: wh, VariantID: variant,
+	})
+	if bal.Available() != 16 || bal.Reserved != 4 {
+		t.Fatalf("want available=16 reserved=4 got available=%d reserved=%d", bal.Available(), bal.Reserved)
+	}
+}
+
 func TestFEFOPicksEarlierLot(t *testing.T) {
 	d, clock := testDeps(t)
 	ctx := context.Background()

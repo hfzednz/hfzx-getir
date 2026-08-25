@@ -170,3 +170,46 @@ func TestAccountBalanceFromLines(t *testing.T) {
 		t.Fatalf("cash balance=%d want 3000", bal.BalanceMinor)
 	}
 }
+
+func TestPostJournalIdempotent(t *testing.T) {
+	deps, _ := testDeps(t)
+	ctx := context.Background()
+	tenant := uuid.New()
+	cash, err := deps.EnsureAccount(ctx, app.EnsureAccountInput{
+		TenantID: tenant, Code: "1000", Name: "Cash", Type: domain.AccountTypeAsset, Currency: "TRY",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rev, err := deps.EnsureAccount(ctx, app.EnsureAccountInput{
+		TenantID: tenant, Code: "4000", Name: "Revenue", Type: domain.AccountTypeRevenue, Currency: "TRY",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	in := app.PostJournalInput{
+		TenantID: tenant, Currency: "TRY", Reference: "pay-dup", IdempotencyKey: "journal-dup-1",
+		Lines: []app.JournalLineInput{
+			{AccountID: cash.ID, DebitMinor: 10000},
+			{AccountID: rev.ID, CreditMinor: 10000},
+		},
+	}
+	a, err := deps.PostJournal(ctx, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := deps.PostJournal(ctx, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.ID != b.ID {
+		t.Fatalf("duplicate journal ids %s vs %s", a.ID, b.ID)
+	}
+	bal, err := deps.GetBalance(ctx, app.GetBalanceInput{TenantID: tenant, AccountID: cash.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bal.BalanceMinor != 10000 {
+		t.Fatalf("duplicate post created money: cash=%d want 10000", bal.BalanceMinor)
+	}
+}

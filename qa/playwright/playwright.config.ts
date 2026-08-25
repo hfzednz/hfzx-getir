@@ -5,8 +5,24 @@ export default defineConfig({
   timeout: 60_000,
   retries: 1,
   use: {
-    baseURL: process.env.ADMIN_BASE || 'http://localhost:8114',
     trace: 'on-first-retry',
   },
   reporter: [['list'], ['junit', { outputFile: '../reports/playwright-junit.xml' }], ['html', { open: 'never' }]],
+  projects: [
+    {
+      name: 'api',
+      testMatch: /customer\.(health|negative|journey)\.spec\.ts|admin\.health\.spec\.ts/,
+      use: {
+        baseURL: process.env.ADMIN_BASE || 'http://localhost:8114',
+      },
+    },
+    {
+      name: 'ui',
+      testMatch: /admin\.(login|a11y)\.spec\.ts/,
+      use: {
+        baseURL: process.env.ADMIN_WEB_BASE || 'http://127.0.0.1:3100',
+        browserName: 'chromium',
+      },
+    },
+  ],
 });

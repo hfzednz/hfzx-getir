@@ -1,0 +1,55 @@
+name: ci-release-candidate
+
+# Prompt 57 — main/dispatch only. Expensive load/UI/recovery must not block every PR.
+# PR smoke remains ci-acceptance.yml.
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-release-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  rc-journeys-k6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Full journeys + idempotency + k6 + ZAP
+        env:
+          RC_FULL: "1"
+        run: bash scripts/ci/e2e-smoke.sh
+
+  rc-ui-a11y:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Admin web login journey + a11y
+        run: bash scripts/ci/ui-e2e.sh
+
+  rc-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Redis/Kafka restart + Postgres integrity
+        run: bash scripts/ci/recovery-smoke.sh

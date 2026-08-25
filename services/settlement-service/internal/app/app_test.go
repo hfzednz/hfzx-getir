@@ -149,3 +149,27 @@ func TestReconcileDetectsMismatch(t *testing.T) {
 		t.Fatalf("delta=%d", res.Mismatch.DeltaMinor)
 	}
 }
+
+func TestCreateBatchIdempotent(t *testing.T) {
+	deps, _, _ := testDeps(t)
+	ctx := context.Background()
+	tenant := uuid.New()
+	actor := uuid.New()
+	in := app.CreateBatchInput{
+		TenantID: tenant, Currency: "TRY",
+		PeriodStart: time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC),
+		PeriodEnd:   time.Date(2026, 8, 7, 0, 0, 0, 0, time.UTC),
+		ActorID:     actor, IdempotencyKey: "settle-dup-1",
+	}
+	a, err := deps.CreateBatch(ctx, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := deps.CreateBatch(ctx, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.ID != b.ID {
+		t.Fatalf("duplicate settlement batches %s vs %s", a.ID, b.ID)
+	}
+}

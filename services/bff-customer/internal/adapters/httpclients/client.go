@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/nexora/bff-customer/internal/domain"
+	"github.com/nexora/bff-customer/internal/reqctx"
 )
 
 // Base is a shared HTTP caller with tenant header propagation.
@@ -73,6 +74,12 @@ func (b Base) do(ctx context.Context, method, path, tenantID string, reqBody any
 	}
 	if tenantID != "" {
 		req.Header.Set("X-Tenant-Id", tenantID)
+	}
+	if rid := reqctx.RequestID(ctx); rid != "" {
+		req.Header.Set("X-Request-Id", rid)
+	}
+	if uid := reqctx.UserID(ctx); uid != "" {
+		req.Header.Set("X-Nexora-User", uid)
 	}
 	resp, err := b.HTTP.Do(req)
 	if err != nil {

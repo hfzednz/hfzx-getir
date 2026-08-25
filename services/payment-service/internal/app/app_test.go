@@ -126,6 +126,38 @@ func TestRefundPartial(t *testing.T) {
 	}
 }
 
+func TestIdempotentRefund(t *testing.T) {
+	env := testDeps(t)
+	ctx := context.Background()
+	intent := createAuth(t, env, "ref-idem", 8000)
+	intent, err := env.Deps.Capture(ctx, app.CaptureInput{
+		TenantID: env.Tenant, IntentID: intent.ID, IdempotencyKey: "ref-idem-cap",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r1, intent, err := env.Deps.Refund(ctx, app.RefundInput{
+		TenantID: env.Tenant, IntentID: intent.ID, AmountMinor: 3000,
+		Reason: "dup", IdempotencyKey: "ref-idem-r",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r2, intent, err := env.Deps.Refund(ctx, app.RefundInput{
+		TenantID: env.Tenant, IntentID: intent.ID, AmountMinor: 3000,
+		Reason: "dup", IdempotencyKey: "ref-idem-r",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r1.ID != r2.ID {
+		t.Fatalf("duplicate refund ids %s vs %s", r1.ID, r2.ID)
+	}
+	if intent.RefundedMinor != 3000 {
+		t.Fatalf("refunded twice: refunded=%d", intent.RefundedMinor)
+	}
+}
+
 func TestIdempotentAuthorize(t *testing.T) {
 	env := testDeps(t)
 	ctx := context.Background()

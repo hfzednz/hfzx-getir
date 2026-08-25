@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nexora/bff-customer/internal/app"
 	"github.com/nexora/bff-customer/internal/domain"
+	"github.com/nexora/bff-customer/internal/reqctx"
 )
 
 type Handler struct{ Deps *app.Deps }
@@ -25,10 +27,26 @@ func NewServer(addr string, deps *app.Deps) *http.Server {
 	mux.HandleFunc("POST "+base+"/cart/items", h.addCart)
 	mux.HandleFunc("POST "+base+"/checkout/preview", h.preview)
 	mux.HandleFunc("POST "+base+"/checkout/place", h.place)
+	mux.HandleFunc("GET "+base+"/orders/{id}", h.getOrder)
 	mux.HandleFunc("GET "+base+"/orders/{id}/track", h.track)
 	mux.HandleFunc("POST "+base+"/support/tickets", h.ticket)
 	mux.HandleFunc("POST "+base+"/reviews", h.review)
-	return &http.Server{Addr: addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	return &http.Server{Addr: addr, Handler: requestIDMiddleware(mux), ReadHeaderTimeout: 5 * time.Second}
+}
+
+func requestIDMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := r.Header.Get("X-Request-Id")
+		if id == "" {
+			id = uuid.NewString()
+		}
+		w.Header().Set("X-Request-Id", id)
+		ctx := reqctx.WithRequestID(r.Context(), id)
+		if uid := r.Header.Get("X-Nexora-User"); uid != "" {
+			ctx = reqctx.WithUserID(ctx, uid)
+		}
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
@@ -113,8 +131,14 @@ func (h *Handler) addCart(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) preview(w http.ResponseWriter, r *http.Request) {
-	var body struct{ CartID string }
+	var body struct {
+		CartID      string `json:"cartId"`
+		PrincipalID string `json:"principalId"`
+	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
+	if body.PrincipalID != "" {
+		r = r.WithContext(reqctx.WithUserID(r.Context(), body.PrincipalID))
+	}
 	p, err := h.Deps.PreviewCheckout(r.Context(), tenant(r), body.CartID)
 	if err != nil {
 		writeErr(w, err)
@@ -125,17 +149,34 @@ func (h *Handler) preview(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) place(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		CartID         string `json:"cartId"`
-		PaymentMethod  string `json:"paymentMethod"`
-		SessionID      string `json:"sessionId"`
+		CartID        string `json:"cartId"`
+		PaymentMethod string `json:"paymentMethod"`
+		SessionID     string `json:"sessionId"`
+		PrincipalID   string `json:"principalId"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
+	if body.PrincipalID != "" {
+		r = r.WithContext(reqctx.WithUserID(r.Context(), body.PrincipalID))
+	}
 	id, err := h.Deps.PlaceOrder(r.Context(), tenant(r), body.CartID, body.PaymentMethod, body.SessionID)
 	if err != nil {
 		writeErr(w, err)
 		return
 	}
 	writeJSON(w, 201, map[string]string{"orderId": id})
+}
+
+func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
+	if h.Deps.Orders == nil {
+		writeErr(w, domain.ErrUpstream)
+		return
+	}
+	out, err := h.Deps.Orders.Get(r.Context(), tenant(r), r.PathValue("id"))
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	writeJSON(w, 200, out)
 }
 
 func (h *Handler) track(w http.ResponseWriter, r *http.Request) {

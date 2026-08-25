@@ -6,6 +6,7 @@ import (
 
 	"github.com/nexora/bff-customer/internal/app/ports"
 	"github.com/nexora/bff-customer/internal/domain"
+	"github.com/nexora/bff-customer/internal/reqctx"
 )
 
 // Identity implements ports.IdentityClient against identity-service.
@@ -163,9 +164,14 @@ func NewCheckout(checkoutURL, paymentURL string) *Checkout {
 
 func (c *Checkout) Preview(ctx context.Context, tenantID, cartID string) (domain.CheckoutPreview, error) {
 	var sess map[string]any
-	if err := c.post(ctx, "/v1/checkout/sessions", tenantID, map[string]any{
+	body := map[string]any{
 		"cartId": cartID, "currency": "TRY",
-	}, &sess); err != nil {
+		"idempotencyKey": "bff-preview-" + cartID,
+	}
+	if uid := reqctx.UserID(ctx); uid != "" {
+		body["principalId"] = uid
+	}
+	if err := c.post(ctx, "/v1/checkout/sessions", tenantID, body, &sess); err != nil {
 		return domain.CheckoutPreview{}, err
 	}
 	return previewFromSession(cartID, sess), nil
@@ -176,9 +182,14 @@ func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, s
 	currency := "TRY"
 	if sessionID == "" {
 		var sess map[string]any
-		if err := c.post(ctx, "/v1/checkout/sessions", tenantID, map[string]any{
+		body := map[string]any{
 			"cartId": cartID, "currency": "TRY",
-		}, &sess); err != nil {
+			"idempotencyKey": "bff-place-" + cartID,
+		}
+		if uid := reqctx.UserID(ctx); uid != "" {
+			body["principalId"] = uid
+		}
+		if err := c.post(ctx, "/v1/checkout/sessions", tenantID, body, &sess); err != nil {
 			return "", err
 		}
 		sessionID = asString(sess["id"])
@@ -208,6 +219,7 @@ func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, s
 	var done map[string]any
 	if err := c.post(ctx, "/v1/checkout/sessions/"+url.PathEscape(sessionID)+"/complete", tenantID, map[string]any{
 		"placeOrder": true, "paymentMethod": paymentMethod,
+		"idempotencyKey": "bff-complete-" + sessionID,
 	}, &done); err != nil {
 		return "", err
 	}
