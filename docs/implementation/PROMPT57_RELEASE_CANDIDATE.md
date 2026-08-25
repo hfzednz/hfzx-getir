@@ -65,6 +65,7 @@ Fill **Result** only from Ubuntu logs. Until then: pending.
 |---|---|---|
 | https://github.com/hfzednz/hfzx-getir/actions/runs/32900991522 | FAIL (partial) | `rc-recovery` PASS. `setup-node@v5` failed on journeys/UI (automatic npm cache with no root lockfile). Fixed with `package-manager-cache: false`. |
 | https://github.com/hfzednz/hfzx-getir/actions/runs/32905683949 | FAIL (partial) | All RC HTTP journeys PASS including ledger+settlement. k6 on `--network host` crossed checks/http_req_failed (~36% failed). Next: attach k6 to the e2e Docker network and cap VUs at 10 for the shared runner. |
+| https://github.com/hfzednz/hfzx-getir/actions/runs/32907110359 | FAIL (partial) | `rc-ui-a11y` + `rc-recovery` PASS. All RC HTTP journeys PASS. k6 on e2e Docker network @ 10 VU still 27.55% `http_req_failed` (p95 517µs — fast 4xx/5xx, not saturation). Root cause: location-service default 240 req/min; BFF `GET /home` POSTs serviceability on every call from one BFF IP. Fix: e2e `RATE_LIMIT_PER_MINUTE=0` (quota off in disposable harness; k6 SLO unchanged). |
 
 ## Final status
 

@@ -17,7 +17,10 @@ import { check, sleep, group } from 'k6';
  *   stress   15s @ 10 VU
  *
  * 12 in-memory services share a 2 vCPU GHA runner; home fans out to location.
- * Higher VU counts produced ~36% HTTP failures in run 32905683949 and are not a fair SLO.
+ * location-service default RATE_LIMIT_PER_MINUTE=240 is disabled in e2e-smoke.sh
+ * (one BFF source IP; 240/min would fail this profile as a quota, not a latency SLO).
+ * Higher VU counts on --network host produced ~36% HTTP failures in run 32905683949
+ * before the rate-limit diagnosis; VU stay capped at 10 for the shared runner.
  */
 export const options = {
   scenarios: {
@@ -60,6 +63,9 @@ export default function () {
   group('home', () => {
     const home = http.get(`${BASE}/v1/customer/home?lat=41.0&lng=29.0`, params);
     check(home, { 'home 200': (r) => r.status === 200 });
+    if (home.status !== 200 && __ITER < 2) {
+      console.warn(`home status=${home.status} body=${String(home.body).slice(0, 160)}`);
+    }
   });
   sleep(0.3);
 }

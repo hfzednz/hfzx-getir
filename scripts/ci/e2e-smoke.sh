@@ -60,11 +60,14 @@ run_svc() {
   local s="$1"
   shift
   docker rm -f "nexora-e2e-$s" >/dev/null 2>&1 || true
+  # RATE_LIMIT_PER_MINUTE=0 disables in-memory IP quotas (location default 240/min).
+  # k6 home traffic is one BFF IP; the 240/min cap is a product control, not a latency SLO.
   docker run -d --name "nexora-e2e-$s" --network "$NET" --network-alias "$s" \
     -e HTTP_ADDR=:8080 \
     -e DATABASE_URL= \
     -e REDIS_URL= \
     -e KAFKA_BROKERS= \
+    -e RATE_LIMIT_PER_MINUTE=0 \
     "$@" \
     "nexora/${s}:e2e" >/dev/null
 }
@@ -475,7 +478,9 @@ PY
   docker run --rm --network "$NET" \
     -e BFF_BASE=http://bff-customer:8080 \
     -e TENANT_ID="$TENANT" \
-    -v "$ROOT/qa/k6:/scripts" grafana/k6:latest run /scripts/rc_bff.js
+    -v "$ROOT/qa/k6:/scripts" grafana/k6:latest run \
+    --summary-trend-stats="avg,min,med,p(50),p(95),p(99),max" \
+    /scripts/rc_bff.js
   echo "OK k6"
 fi
 
