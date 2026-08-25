@@ -1,6 +1,6 @@
 module github.com/nexora/identity-service
 
-go 1.23.0
+go 1.25.0
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -21,7 +21,7 @@ require (
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
 )
