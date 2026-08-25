@@ -458,9 +458,9 @@ b=json.load(open("/tmp/e2e-j2.json"))
 assert a.get("id") and a.get("id")==b.get("id"), (a,b)
 print("journal", a.get("id"), "debit", a.get("debitTotal"))
 PY
-  http_json /tmp/e2e-set1.json "http://${SET_IP}:8080/v1/settlement/batches" \
+  http_json /tmp/e2e-set1.json "http://${SET_IP}:8080/v1/settlements/batches" \
     -d '{"currency":"TRY","periodStart":"2026-08-01T00:00:00Z","periodEnd":"2026-08-07T00:00:00Z","idempotencyKey":"rc-set-1","actorId":"'"${PRINCIPAL}"'"}'
-  http_json /tmp/e2e-set2.json "http://${SET_IP}:8080/v1/settlement/batches" \
+  http_json /tmp/e2e-set2.json "http://${SET_IP}:8080/v1/settlements/batches" \
     -d '{"currency":"TRY","periodStart":"2026-08-01T00:00:00Z","periodEnd":"2026-08-07T00:00:00Z","idempotencyKey":"rc-set-1","actorId":"'"${PRINCIPAL}"'"}'
   python3 - <<'PY'
 import json

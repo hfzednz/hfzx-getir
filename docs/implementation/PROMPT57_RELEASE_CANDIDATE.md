@@ -64,7 +64,7 @@ Fill **Result** only from Ubuntu logs. Until then: pending.
 | Run | Result | Notes |
 |---|---|---|
 | https://github.com/hfzednz/hfzx-getir/actions/runs/32900991522 | FAIL (partial) | `rc-recovery` PASS. `setup-node@v5` failed on journeys/UI (automatic npm cache with no root lockfile). Fixed with `package-manager-cache: false`. |
-| https://github.com/hfzednz/hfzx-getir/actions/runs/32903553720 | FAIL (partial) | UI/recovery PASS. Checkout, OMS, payment capture+duplicate refund PASS. Inventory python compared `id` but reservation DTO uses `ID`. |
+| https://github.com/hfzednz/hfzx-getir/actions/runs/32904663353 | FAIL (partial) | Inventory/ledger PASS. Settlement POST used `/v1/settlement/batches`; real route is `/v1/settlements/batches`. |
 
 ## Final status
 
