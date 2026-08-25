@@ -6,6 +6,8 @@ export NEXT_TELEMETRY_DISABLED=1
 PORT=3100
 export ADMIN_WEB_BASE="http://127.0.0.1:${PORT}"
 
+cd "$ROOT/packages/web/ui"
+npm install --no-fund --no-audit
 cd "$ROOT/apps/admin_web"
 npm ci --no-fund --no-audit
 npm run build

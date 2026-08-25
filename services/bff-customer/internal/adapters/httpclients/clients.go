@@ -201,10 +201,7 @@ func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, s
 	}
 	amount := asInt64(quote["totalMinor"])
 	if c.Payment.BaseURL != "" {
-		payload := map[string]any{"method": paymentMethod, "currency": currency}
-		if amount > 0 {
-			payload["amountMinor"] = amount
-		}
+		payload := map[string]any{"currency": currency, "amountMinor": amount}
 		var elig map[string]any
 		if err := c.Payment.post(ctx, "/v1/payments/eligibility", tenantID, payload, &elig); err != nil {
 			return "", err
