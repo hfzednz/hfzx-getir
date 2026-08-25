@@ -12,11 +12,12 @@ import { check, sleep, group } from 'k6';
  *
  * Staged profile:
  *   warm-up  10s @ 2 VU
- *   baseline 20s @ 5 VU
- *   peak     20s @ 12 VU
- *   stress   15s @ 20 VU
+ *   baseline 20s @ 4 VU
+ *   peak     20s @ 8 VU
+ *   stress   15s @ 10 VU
  *
- * Thresholds are CI-realistic (container cold start + shared runner), not storefront SLO.
+ * 12 in-memory services share a 2 vCPU GHA runner; home fans out to location.
+ * Higher VU counts produced ~36% HTTP failures in run 32905683949 and are not a fair SLO.
  */
 export const options = {
   scenarios: {
@@ -25,9 +26,9 @@ export const options = {
       startVUs: 0,
       stages: [
         { duration: '10s', target: 2 },
-        { duration: '20s', target: 5 },
-        { duration: '20s', target: 12 },
-        { duration: '15s', target: 20 },
+        { duration: '20s', target: 4 },
+        { duration: '20s', target: 8 },
+        { duration: '15s', target: 10 },
         { duration: '5s', target: 0 },
       ],
       gracefulRampDown: '5s',

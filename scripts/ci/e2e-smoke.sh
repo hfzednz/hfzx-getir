@@ -472,7 +472,9 @@ PY
   echo "OK finance_settlement"
 
   echo "==> k6 staged load (GHA-scale)"
-  docker run --rm --network host -e BFF_BASE=http://127.0.0.1:8111 \
+  docker run --rm --network "$NET" \
+    -e BFF_BASE=http://bff-customer:8080 \
+    -e TENANT_ID="$TENANT" \
     -v "$ROOT/qa/k6:/scripts" grafana/k6:latest run /scripts/rc_bff.js
   echo "OK k6"
 fi
