@@ -64,7 +64,7 @@ Fill **Result** only from Ubuntu logs. Until then: pending.
 | Run | Result | Notes |
 |---|---|---|
 | https://github.com/hfzednz/hfzx-getir/actions/runs/32900991522 | FAIL (partial) | `rc-recovery` PASS. `setup-node@v5` failed on journeys/UI (automatic npm cache with no root lockfile). Fixed with `package-manager-cache: false`. |
-| https://github.com/hfzednz/hfzx-getir/actions/runs/32901244234 | FAIL (partial) | Recovery PASS. UI: nested `@nexora/ui` missing `clsx`. Journeys: payment eligibility 400 because BFF sent unknown JSON field `method`. |
+| https://github.com/hfzednz/hfzx-getir/actions/runs/32902628153 | FAIL (partial) | UI a11y PASS, recovery PASS. Checkout place + duplicate PASS. OMS HTTP create 400: line JSON tags are exported Go names (`SKUCode`/`Qty`), not camelCase. |
 
 ## Final status
 

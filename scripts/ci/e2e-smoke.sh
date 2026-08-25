@@ -336,7 +336,7 @@ PY
 
   echo "==> RC order create + history + detail + duplicate create"
   http_json /tmp/e2e-ord.json "http://${ORD_IP}:8080/v1/orders" \
-    -d "{\"customerPrincipalId\":\"${PRINCIPAL}\",\"type\":\"instant\",\"currency\":\"TRY\",\"idempotencyKey\":\"rc-order-1\",\"lines\":[{\"skuCode\":\"E2E-MILK-1\",\"titleSnapshot\":\"Milk\",\"qty\":1,\"unitPriceMinor\":1500}]}"
+    -d "{\"customerPrincipalId\":\"${PRINCIPAL}\",\"type\":\"instant\",\"currency\":\"TRY\",\"idempotencyKey\":\"rc-order-1\",\"lines\":[{\"SKUCode\":\"E2E-MILK-1\",\"TitleSnapshot\":\"Milk\",\"Qty\":1,\"UnitPriceMinor\":1500,\"VariantID\":\"44444444-4444-4444-4444-444444444444\"}]}"
   OMS_ID="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-ord.json"))
@@ -345,7 +345,7 @@ print(o.get("id") or o.get("ID") or "")
 PY
 )"
   http_json /tmp/e2e-ord2.json "http://${ORD_IP}:8080/v1/orders" \
-    -d "{\"customerPrincipalId\":\"${PRINCIPAL}\",\"type\":\"instant\",\"currency\":\"TRY\",\"idempotencyKey\":\"rc-order-1\",\"lines\":[{\"skuCode\":\"E2E-MILK-1\",\"titleSnapshot\":\"Milk\",\"qty\":1,\"unitPriceMinor\":1500}]}"
+    -d "{\"customerPrincipalId\":\"${PRINCIPAL}\",\"type\":\"instant\",\"currency\":\"TRY\",\"idempotencyKey\":\"rc-order-1\",\"lines\":[{\"SKUCode\":\"E2E-MILK-1\",\"TitleSnapshot\":\"Milk\",\"Qty\":1,\"UnitPriceMinor\":1500,\"VariantID\":\"44444444-4444-4444-4444-444444444444\"}]}"
   OMS_ID2="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-ord2.json"))
