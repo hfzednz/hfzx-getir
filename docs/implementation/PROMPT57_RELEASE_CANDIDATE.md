@@ -61,7 +61,9 @@ Fill **Result** only from Ubuntu logs. Until then: pending.
 
 ## Failures / fixes / reruns
 
-*(filled from real CI)*
+| Run | Result | Notes |
+|---|---|---|
+| https://github.com/hfzednz/hfzx-getir/actions/runs/32900991522 | FAIL (partial) | `rc-recovery` PASS. `setup-node@v5` failed on journeys/UI (automatic npm cache with no root lockfile). Fixed with `package-manager-cache: false`. |
 
 ## Final status
 

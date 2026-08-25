@@ -24,6 +24,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          package-manager-cache: false
       - name: chmod CI scripts
         run: chmod +x scripts/ci/*.sh
       - name: Full journeys + idempotency + k6 + ZAP
@@ -39,6 +40,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          package-manager-cache: false
       - name: chmod CI scripts
         run: chmod +x scripts/ci/*.sh
       - name: Admin web login journey + a11y
