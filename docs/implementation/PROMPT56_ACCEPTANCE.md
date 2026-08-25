@@ -80,9 +80,9 @@ Same SHA also ran **ci-quality** successfully: https://github.com/hfzednz/hfzx-g
 | Redis | **PASS** | same job (Redis PING + SET/GET smoke) |
 | Kafka | **PASS** | same job (broker ready + topic smoke) |
 | startup | **PASS** | `service-startup-smoke` success |
-| E2E | **BLOCKED** | No Playwright/E2E job in `ci-acceptance.yml`; tests were not executed |
-| security | **BLOCKED** | No ZAP/security job in `ci-acceptance.yml`; `nightly-perf-security` is schedule-only and did not run |
+| E2E | **PASS** | closed by Prompt 56B — run `32893474966` job `e2e-smoke` |
+| security | **PASS** | closed by Prompt 56B — run `32893474966` job `security-sanity` |
 
 ## Honesty
 
-Gates marked **PASS** were observed as GitHub Actions `conclusion=success` on Ubuntu for run `32133592912`. E2E and security remain **BLOCKED** because those jobs did not execute.
+Gates marked **PASS** on the 56A run were observed as GitHub Actions `conclusion=success` on Ubuntu for run `32133592912`. E2E and security were later executed and passed on run `32893474966` (see [`PROMPT56B_ACCEPTANCE.md`](./PROMPT56B_ACCEPTANCE.md)).
