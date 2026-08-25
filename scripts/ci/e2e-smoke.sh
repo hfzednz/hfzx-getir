@@ -399,7 +399,7 @@ PY
   WH_ID="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-wh.json"))
-print(d.get("id") or (d.get("warehouse") or {}).get("id") or "")
+print(d.get("id") or d.get("ID") or (d.get("warehouse") or {}).get("id") or (d.get("warehouse") or {}).get("ID") or "")
 PY
 )"
   if [[ -z "$WH_ID" ]]; then WH_ID="$WH"; fi
@@ -411,11 +411,22 @@ PY
     -d "{\"idempotencyKey\":\"rc-soft-1\",\"lines\":[{\"warehouseId\":\"${WH_ID}\",\"variantId\":\"${VAR}\",\"skuCode\":\"E2E-MILK-1\",\"qty\":2}]}"
   python3 - <<'PY'
 import json
+def oid(d):
+    if not isinstance(d, dict):
+        return ""
+    for k in ("id", "ID"):
+        if d.get(k):
+            return str(d[k])
+    for wrap in ("reservation", "warehouse"):
+        w = d.get(wrap) or {}
+        for k in ("id", "ID"):
+            if isinstance(w, dict) and w.get(k):
+                return str(w[k])
+    return ""
 a=json.load(open("/tmp/e2e-res.json"))
 b=json.load(open("/tmp/e2e-res2.json"))
-aid=a.get("id") or (a.get("reservation") or {}).get("id")
-bid=b.get("id") or (b.get("reservation") or {}).get("id")
-assert aid and str(aid)==str(bid), (a,b)
+aid, bid = oid(a), oid(b)
+assert aid and aid==bid, (a,b)
 print("reservation", aid)
 PY
   echo "OK inventory"
