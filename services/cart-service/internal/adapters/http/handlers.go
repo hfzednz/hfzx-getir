@@ -193,6 +193,8 @@ func (h *Handler) addLine(w http.ResponseWriter, r *http.Request) {
 		Notes           string             `json:"notes"`
 		Addons          []domain.LineAddon `json:"addons"`
 		ReplacementPref string             `json:"replacementPref"`
+		SKU             string             `json:"sku"`
+		UnitMinor       int64              `json:"unitMinor"`
 	}
 	if err := decodeJSON(r, &body); err != nil {
 		writeErr(w, r, domain.ErrInvalidArgument)
