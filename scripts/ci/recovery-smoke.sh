@@ -11,6 +11,38 @@ cleanup() {
 }
 trap cleanup EXIT
 
+wait_redis() {
+  echo "==> wait redis"
+  for _ in $(seq 1 30); do
+    if docker compose -p "$PROJECT" -f "$COMPOSE" exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
+      echo "OK redis"
+      return 0
+    fi
+    sleep 2
+  done
+  echo "FAIL redis not ready"
+  docker compose -p "$PROJECT" -f "$COMPOSE" ps
+  return 1
+}
+
+wait_kafka() {
+  echo "==> wait kafka broker API"
+  for _ in $(seq 1 60); do
+    if docker compose -p "$PROJECT" -f "$COMPOSE" exec -T kafka \
+        bash -lc 'command -v kafka-broker-api-versions.sh >/dev/null && kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1' \
+      || docker compose -p "$PROJECT" -f "$COMPOSE" exec -T kafka \
+        bash -lc 'test -x /opt/bitnami/kafka/bin/kafka-broker-api-versions.sh && /opt/bitnami/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1'; then
+      echo "OK kafka broker API"
+      return 0
+    fi
+    sleep 3
+  done
+  echo "FAIL kafka broker not ready"
+  docker compose -p "$PROJECT" -f "$COMPOSE" ps
+  docker compose -p "$PROJECT" -f "$COMPOSE" logs kafka | tail -n 80
+  return 1
+}
+
 echo "==> infra up"
 docker compose -p "$PROJECT" -f "$COMPOSE" up -d postgres redis kafka
 
@@ -24,31 +56,18 @@ for _ in $(seq 1 60); do
 done
 "${PG[@]}" pg_isready -U nexora -d nexora
 
-echo "==> redis ping"
-docker compose -p "$PROJECT" -f "$COMPOSE" exec -T redis redis-cli ping | grep -q PONG
+wait_redis
 
 echo "==> restart redis"
 docker compose -p "$PROJECT" -f "$COMPOSE" restart redis
-for _ in $(seq 1 30); do
-  if docker compose -p "$PROJECT" -f "$COMPOSE" exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
-    echo "OK redis after restart"
-    break
-  fi
-  sleep 2
-done
-docker compose -p "$PROJECT" -f "$COMPOSE" exec -T redis redis-cli ping | grep -q PONG
+wait_redis
 
 echo "==> postgres still ready after redis restart"
 "${PG[@]}" pg_isready -U nexora -d nexora
 
 echo "==> restart kafka"
 docker compose -p "$PROJECT" -f "$COMPOSE" restart kafka
-sleep 8
-docker compose -p "$PROJECT" -f "$COMPOSE" ps kafka | grep -qi "running\|up" || {
-  echo "FAIL kafka not running after restart"
-  docker compose -p "$PROJECT" -f "$COMPOSE" ps
-  exit 1
-}
+wait_kafka
 "${PG[@]}" pg_isready -U nexora -d nexora
 echo "OK postgres data plane intact after kafka restart"
 
