@@ -18,13 +18,18 @@ export default defineConfig({
       },
     },
     {
-      name: 'ui',
-      testMatch: /admin\.(login|a11y)\.spec\.ts|customer\.web\.login\.spec\.ts/,
+      name: 'ui-admin',
+      testMatch: /admin\.(login|a11y)\.spec\.ts/,
       use: {
-        baseURL:
-          process.env.CUSTOMER_WEB_BASE ||
-          process.env.ADMIN_WEB_BASE ||
-          'http://127.0.0.1:3100',
+        baseURL: process.env.ADMIN_WEB_BASE || 'http://127.0.0.1:3100',
+        browserName: 'chromium',
+      },
+    },
+    {
+      name: 'ui-customer',
+      testMatch: /customer\.web\.login\.spec\.ts/,
+      use: {
+        baseURL: process.env.CUSTOMER_WEB_BASE || 'http://127.0.0.1:3000',
         browserName: 'chromium',
       },
     },

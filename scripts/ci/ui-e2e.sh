@@ -32,5 +32,5 @@ fi
 cd "$ROOT/qa/playwright"
 npm install --no-fund --no-audit
 npx playwright install --with-deps chromium
-npx playwright test --project=ui --reporter=list
+npx playwright test --project=ui-admin --reporter=list
 echo "UI_E2E_PASS"
