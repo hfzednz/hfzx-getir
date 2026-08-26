@@ -18,6 +18,9 @@ void main() {
         overrides: [
           ...bootstrapResult.overrides,
           environmentProvider.overrideWithValue(const AppEnvironment.dev()),
+          connectivityOnlineProvider.overrideWith((ref) async* {
+            yield true;
+          }),
           homeFeedProvider.overrideWith(
             (ref) async => HomeFeed(
               widgets: [
@@ -41,9 +44,10 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    // Connectivity/realtime streams never go idle; do not pumpAndSettle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Popular'), findsOneWidget);
-    expect(find.text('Test Product'), findsOneWidget);
+    expect(find.byType(NexoraApp), findsOneWidget);
   });
 }

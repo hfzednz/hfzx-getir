@@ -49,6 +49,7 @@ android {
         release {
             // R8/minify stays off until consumer ProGuard rules are reviewed.
             isMinifyEnabled = false
+            isShrinkResources = false
             signingConfig =
                 if (signingConfigs.findByName("release") != null) {
                     signingConfigs.getByName("release")

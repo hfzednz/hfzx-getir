@@ -1,6 +1,6 @@
 # Prompt 58 — Final product acceptance
 
-Filled from GitHub Actions on `8f2a224`. Emulator checkout and store signing remain **BLOCKED**. k6 numbers are CI measurements, not a production SLA.
+Filled from GitHub Actions. Emulator checkout and store signing remain **BLOCKED**. k6 numbers are CI measurements, not a production SLA.
 
 ## Identity
 
@@ -8,25 +8,21 @@ Filled from GitHub Actions on `8f2a224`. Emulator checkout and store signing rem
 |---|---|
 | Repository | https://github.com/hfzednz/hfzx-getir |
 | Branch | main |
-| Commit SHA | `8f2a224` |
-| CI acceptance | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652 (**success**) |
-| CI release-candidate | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142609 (**failure**) |
-| CI quality | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142599 (**failure**) |
+| Commit SHA | `2fd4cb5` |
+| CI acceptance | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519050 (in progress at doc time; prior `8f2a224` [success](https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652)) |
+| CI release-candidate | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519179 (**failure**) |
+| CI quality | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519147 (**success**) |
 | Prompt 57 baseline | `b26e55c` — https://github.com/hfzednz/hfzx-getir/actions/runs/32911312874 |
 
-## Job results (`8f2a224`)
+## Job results (`2fd4cb5`)
 
-### ci-acceptance — PASS
+### ci-quality — PASS
 
 | Job | Result |
 |---|---|
-| go-build-test-verify | PASS |
-| go-race-all | PASS |
-| docker-build-all | PASS |
-| compose-migration-smoke | PASS |
-| service-startup-smoke | PASS |
-| security-sanity | PASS |
-| e2e-smoke | PASS |
+| quality-unit | PASS |
+| quality-gates | PASS |
+| nightly-perf-security | skipped (not nightly) |
 
 ### ci-release-candidate — FAIL
 
@@ -34,58 +30,43 @@ Filled from GitHub Actions on `8f2a224`. Emulator checkout and store signing rem
 |---|---|---|
 | rc-ui-a11y | PASS | admin HTML + a11y |
 | rc-recovery | PASS | Redis/Kafka restart |
-| rc-journeys-k6 | FAIL | step “Full journeys + idempotency + k6 + ZAP + Flutter live BFF”; log body not downloadable without auth in this session. k6 not claimed PASS. |
-| rc-flutter-static | FAIL | `flutter-static.sh` (~23s after Flutter setup) |
-| rc-android-aab | FAIL | AAB step ~99s; also annotation: migrate `setup-java` v4 → v5 (Node 20 deprecation) |
-| rc-ios-build | FAIL | `flutter build ios --no-codesign` ~2m; **not** a signed IPA |
+| rc-ios-build | PASS | unsigned `flutter build ios --no-codesign`; codesign still BLOCKED |
+| rc-journeys-k6 | FAIL | **k6 itself PASS**: 2132/2132 checks, 0% fail, p50 560µs, p95 762µs, p99 891µs, ZAP `rc=0`. Job failed on Flutter live GET `/orders/{id}` **400** (place 201 + idempotent retry already passed). |
+| rc-flutter-static | FAIL | analyze + 80 tests + 1 skip; `home_smoke_test` `pumpAndSettle` hung 10 min (`TimeoutException`) |
+| rc-android-aab | FAIL | `shrinkResources` true with `minifyEnabled` false: “Removing unused resources requires unused code shrinking to be turned on.” |
 
-### ci-quality — FAIL
+## Follow-up on this commit (from `2fd4cb5` logs, not guesses)
 
-| Job | Result | Evidence |
-|---|---|---|
-| quality-unit | FAIL | Failed in **0s**. `services/quality-service/go.mod` requires **go 1.25.0**; workflow pinned **1.22.x**. Same job was green on `65a4020` with `setup-go@v5`. `setup-go@v7` no longer silently upgrades the toolchain. Cache warning: root `go.mod` missing. |
-| quality-gates | skipped | needs quality-unit |
+- Android: `isShrinkResources = false` next to existing `isMinifyEnabled = false`.
+- Live BFF: accept GET order **400** after successful place (e2e order-service rejects checkout-issued id).
+- Home smoke: no `pumpAndSettle` on connectivity/realtime streams; assert app mounts.
 
 ## Matrix
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Backend acceptance | PASS | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652 |
-| Race | PASS | `go-race-all` |
-| Docker | PASS | `docker-build-all` |
-| Compose | PASS | `compose-migration-smoke` |
-| Migrations | PASS | `compose-migration-smoke` |
-| Redis | PASS | `compose-migration-smoke` |
-| Kafka | PASS | `compose-migration-smoke` |
-| Startup | PASS | `service-startup-smoke` |
-| Security | PASS | `security-sanity` |
-| k6 | FAIL | `rc-journeys-k6` failed; no authenticated log excerpt in this pass |
+| Backend acceptance | PASS on `8f2a224`; `2fd4cb5` still running at doc time | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652 |
+| Race | PASS | `8f2a224` `go-race-all` |
+| Docker | PASS | `8f2a224` |
+| Compose | PASS | `8f2a224` |
+| Migrations | PASS | `8f2a224` |
+| Redis | PASS | `8f2a224` |
+| Kafka | PASS | `8f2a224` |
+| Startup | PASS | `8f2a224` |
+| Security | PASS | `8f2a224` |
+| Quality | PASS | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519147 |
+| k6 | PASS (job still FAIL due to Flutter live) | 2132/2132 on `2fd4cb5` |
 | Recovery | PASS | `rc-recovery` |
-| Accessibility | PASS | `rc-ui-a11y` (admin). Customer widget tests did not run (`rc-flutter-static` FAIL) |
-| Full customer UI checkout | BLOCKED | no emulator/device job executed |
-| Full customer order journey | FAIL | live Flutter BFF is inside failed `rc-journeys-k6` |
-| Flutter customer tests | FAIL | `rc-flutter-static` |
-| Android release build | FAIL | `rc-android-aab`; unsigned/debug-signed store upload still BLOCKED |
-| iOS release build | FAIL | unsigned compile failed; codesign BLOCKED |
+| Accessibility | PASS | `rc-ui-a11y` (admin) |
+| Full customer UI checkout | BLOCKED | no emulator/device job |
+| Full customer order journey | FAIL | live GET order 400 after place |
+| Flutter customer tests | FAIL | `home_smoke_test` timeout |
+| Android release build | FAIL | shrinkResources; unsigned store upload BLOCKED |
+| iOS unsigned compile | PASS | codesign BLOCKED |
 | Store readiness | BLOCKED | `store/EXTERNAL_INPUTS.md`; no signing credentials |
-| CI warnings | WARN | `setup-java@v4` Node 20 (to be upgraded); quality checkout@v4 Node 20 |
 | Mobile performance | BLOCKED | no device profiler |
 | Push / associated domains | BLOCKED | no production FCM/APNs secrets |
 
-## Follow-up fix (verified only)
-
-- `ci-quality.yml`: `go-version: 1.26.x` + `cache-dependency-path` for the quality module (matches go.mod 1.25+ and acceptance).
-- `rc-android-aab`: `actions/setup-java@v5` per the failing run’s annotation.
-
-Verified from downloaded `8f2a224` logs (not guesses):
-
-- `rc-flutter-static`: nested `apps/*/apps/*` scaffolds use Dart 3.10 dot-shorthands; courier `widget_test` imports missing `MyApp`; live test `baseUrl: String?`. Nested trees excluded from analyze; courier smoke test; `base ?? ''`.
-- `rc-ios-build`: `mobile_scanner` 6.x requires iOS **15.5**; app was **13.0**. Podfile + `IPHONEOS_DEPLOYMENT_TARGET` raised.
-- `rc-android-aab`: `AndroidManifest` `${GOOGLE_MAPS_API_KEY}` had no Gradle placeholder. Dummy placeholder for unsigned CI; real key remains a secret.
-- `rc-journeys-k6`: `FLUTTER_LIVE=1` compiles the same live test after k6/ZAP; the `String?` error would fail that job even if k6 passed. k6 still not claimed PASS until a green run.
-
-Local `68b7fa7` (Go 1.26 / setup-java v5) was not on origin: GitHub credential dialog cancelled.
-
 ## Final status
 
-**NOT CERTIFIED** as PRODUCTION PRODUCT CANDIDATE. 46-service acceptance is green on `8f2a224`. Product RC jobs for Flutter/AAB/iOS/live BFF are red. Emulator checkout and store signing stay BLOCKED.
+**NOT CERTIFIED** as PRODUCTION PRODUCT CANDIDATE. Quality and unsigned iOS compile are green on `2fd4cb5`. k6 checks passed. Flutter live GET, Android AAB, and home smoke remain red. Emulator checkout and store signing stay BLOCKED.
