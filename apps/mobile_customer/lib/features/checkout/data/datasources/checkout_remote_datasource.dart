@@ -1,5 +1,6 @@
 import 'package:nexora_core/nexora_core.dart';
 
+import '../../domain/checkout_bff_defaults.dart';
 import '../../domain/entities/checkout_entity.dart';
 import '../models/checkout_model.dart';
 
@@ -7,25 +8,58 @@ class CheckoutRemoteDataSource {
   const CheckoutRemoteDataSource(this._client);
   final ApiClient _client;
 
-  static const _sessionsPath = '/checkout/sessions';
-  static const _confirmPath = '/checkout/confirm';
-  static const _quotePath = '/checkout/quote';
+  static const _previewPath = '/checkout/preview';
+  static const _placePath = '/checkout/place';
+  static const _ordersPath = '/orders';
 
   CheckoutSession _parseSession(dynamic json) =>
       CheckoutSessionModel.fromJson(json as Map<String, dynamic>).toEntity();
 
+  Map<String, dynamic> _bffBody(Map<String, dynamic> body) {
+    final payment = body['payment'];
+    final paymentType = body['paymentMethod'] ??
+        (payment is Map ? payment['type'] : null) ??
+        'card';
+    return {
+      'cartId': (body['cartId'] ?? body['cart_id'] ?? CheckoutBffDefaults.cartId).toString(),
+      'principalId':
+          (body['principalId'] ?? body['principal_id'] ?? CheckoutBffDefaults.principalId)
+              .toString(),
+      'paymentMethod': paymentType.toString(),
+      if (body['sessionId'] != null || body['session_id'] != null)
+        'sessionId': (body['sessionId'] ?? body['session_id']).toString(),
+    };
+  }
+
   Future<Result<CheckoutSession>> fetch({String? id}) async {
-    final path = id != null ? '$_sessionsPath/$id' : _sessionsPath;
-    return _client.get<CheckoutSession>(path, parser: (json) => _parseSession(json));
+    if (id == null || id.isEmpty) {
+      return const Failure<CheckoutSession>(
+        NexoraValidationException(
+          code: NexoraErrorCode.validationFailed,
+          message: 'Order id required',
+        ),
+      );
+    }
+    return _client.get<CheckoutSession>(
+      '$_ordersPath/$id',
+      parser: _parseSession,
+    );
   }
 
   Future<Result<List<CheckoutSession>>> fetchList({Map<String, dynamic>? params}) async {
     return _client.get<List<CheckoutSession>>(
-      _sessionsPath,
+      _ordersPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
-          .map((e) => CheckoutSessionModel.fromJson(e as Map<String, dynamic>).toEntity())
-          .toList(),
+      parser: (json) {
+        final items = json is Map
+            ? (json['items'] ?? json['Items'] ?? json['orders'] ?? [])
+            : json;
+        if (items is! List) return <CheckoutSession>[];
+        return items
+            .whereType<Map>()
+            .map((e) => CheckoutSession.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      },
     );
   }
 
@@ -34,18 +68,30 @@ class CheckoutRemoteDataSource {
     String? idempotencyKey,
   }) async {
     return _client.post<CheckoutSession>(
-      _confirmPath,
-      data: body,
+      _placePath,
+      data: _bffBody(body),
       idempotencyKey: idempotencyKey,
-      parser: (json) => _parseSession(json),
+      parser: (json) {
+        final map = Map<String, dynamic>.from(json as Map);
+        final orderId = map['orderId']?.toString() ?? map['order_id']?.toString();
+        if (orderId != null && orderId.isNotEmpty) {
+          return CheckoutSession(
+            id: orderId,
+            orderId: orderId,
+            status: 'placed',
+          );
+        }
+        return _parseSession(map);
+      },
     );
   }
 
   Future<Result<CheckoutQuote>> getQuote({required Map<String, dynamic> body}) async {
     return _client.post<CheckoutQuote>(
-      _quotePath,
-      data: body,
-      parser: (json) => CheckoutQuoteModel.fromJson(json as Map<String, dynamic>).toEntity(),
+      _previewPath,
+      data: _bffBody(body),
+      parser: (json) =>
+          CheckoutQuote.fromJson(Map<String, dynamic>.from(json as Map)),
     );
   }
 
@@ -54,9 +100,17 @@ class CheckoutRemoteDataSource {
     required Map<String, dynamic> body,
   }) async {
     return _client.post<CheckoutSession>(
-      '$_quotePath/$quoteId/verify',
-      data: body,
-      parser: (json) => _parseSession(json),
+      _previewPath,
+      data: _bffBody(body),
+      parser: (json) {
+        final map = Map<String, dynamic>.from(json as Map);
+        final quote = CheckoutQuote.fromJson({...map, 'quote_id': quoteId});
+        return CheckoutSession(
+          id: quote.quoteId ?? quoteId,
+          status: 'quoted',
+          quote: quote,
+        );
+      },
     );
   }
 }

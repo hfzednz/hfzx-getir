@@ -16,6 +16,7 @@ export 'src/network/interceptors/auth_interceptor.dart';
 export 'src/network/interceptors/city_header_interceptor.dart';
 export 'src/network/interceptors/idempotency_interceptor.dart';
 export 'src/network/interceptors/logging_interceptor.dart';
+export 'src/network/interceptors/tenant_header_interceptor.dart';
 export 'src/realtime/realtime_client.dart';
 export 'src/security/device_integrity.dart';
 export 'src/storage/preferences_store.dart';

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # E2E smoke: in-memory identity/catalog/cart/location + BFFs, customer journeys, Playwright, ZAP.
 # Set RC_FULL=1 to also boot checkout/payment/order/inventory/finance/settlement and run k6.
+# Set FLUTTER_LIVE=1 (requires Flutter SDK) to run apps/mobile_customer/test/live against the BFF.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 NET="nexora-e2e"
@@ -501,6 +502,20 @@ if [[ "$zap_rc" -eq 0 || "$zap_rc" -eq 2 ]]; then
 else
   echo "FAIL zap-baseline rc=$zap_rc"
   exit 1
+fi
+
+if [[ "${FLUTTER_LIVE:-}" == "1" ]]; then
+  echo "==> Flutter live BFF checkout (no emulator)"
+  if ! command -v flutter >/dev/null 2>&1; then
+    echo "FAIL flutter binary missing (install via flutter-action in this job)"
+    exit 1
+  fi
+  (
+    cd "$ROOT/apps/mobile_customer"
+    flutter pub get
+    CUSTOMER_BASE="$CUST" flutter test test/live --reporter expanded
+  )
+  echo "OK flutter-live-bff"
 fi
 
 echo "E2E_SMOKE_PASS"

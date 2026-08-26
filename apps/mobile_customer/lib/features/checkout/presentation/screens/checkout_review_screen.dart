@@ -326,7 +326,9 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
                   const SizedBox(height: NxSpacing.s3),
                 ],
                 NxButton(
+                  key: const ValueKey('place-order'),
                   label: l10n.placeOrder,
+                  semanticLabel: 'Place order',
                   expand: true,
                   loading: checkout.isLoading,
                   onPressed: checkout.isLoading ? null : _placeOrder,

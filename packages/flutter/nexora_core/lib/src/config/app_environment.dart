@@ -18,13 +18,50 @@ class AppEnvironment {
         .where((pin) => pin.isNotEmpty)
         .toList(growable: false);
 
+    var name = Env.name;
+    var baseUrl = Env.baseUrl;
+    var wsUrl = Env.wsUrl;
+    if (name == 'prod' && baseUrl.contains('dev.nexora.local')) {
+      baseUrl = 'https://api.nexora.io/v1';
+      wsUrl = 'wss://realtime.nexora.io/v1';
+    } else if (name == 'staging' && baseUrl.contains('dev.nexora.local')) {
+      baseUrl = 'https://api.staging.nexora.io/v1';
+      wsUrl = 'wss://realtime.staging.nexora.io/v1';
+    }
+
     return AppEnvironment(
-      name: Env.name,
-      baseUrl: Env.baseUrl,
-      wsUrl: Env.wsUrl,
+      name: name,
+      baseUrl: baseUrl,
+      wsUrl: wsUrl,
       defaultLanguage: Env.defaultLanguage,
       certificatePins: pins,
     );
+  }
+
+  AppEnvironment copyWith({
+    String? name,
+    String? baseUrl,
+    String? wsUrl,
+    String? defaultLanguage,
+    List<String>? certificatePins,
+  }) {
+    return AppEnvironment(
+      name: name ?? this.name,
+      baseUrl: baseUrl ?? this.baseUrl,
+      wsUrl: wsUrl ?? this.wsUrl,
+      defaultLanguage: defaultLanguage ?? this.defaultLanguage,
+      certificatePins: certificatePins ?? this.certificatePins,
+    );
+  }
+
+  /// Customer BFF is mounted at `/v1/customer`.
+  AppEnvironment get forCustomerBff {
+    final trimmed = baseUrl.replaceAll(RegExp(r'/+$'), '');
+    if (trimmed.endsWith('/v1/customer')) return this;
+    if (trimmed.endsWith('/v1')) {
+      return copyWith(baseUrl: '$trimmed/customer');
+    }
+    return this;
   }
 
   /// Named presets for tests and local overrides.

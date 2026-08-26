@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
 
 import '../config/app_environment.dart';
+import '../config/env.dart';
+import '../config/nexora_headers.dart';
 import '../errors/dio_error_mapper.dart';
 import '../errors/nexora_exception.dart';
 import '../errors/result.dart';
@@ -11,6 +13,7 @@ import 'interceptors/auth_interceptor.dart';
 import 'interceptors/city_header_interceptor.dart';
 import 'interceptors/idempotency_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
+import 'interceptors/tenant_header_interceptor.dart';
 import '../storage/secure_token_store.dart';
 
 export 'interceptors/auth_interceptor.dart'
@@ -25,6 +28,7 @@ class ApiClientConfig {
     this.sendTimeout = const Duration(seconds: 30),
     this.languageProvider,
     this.cityIdProvider,
+    this.tenantIdProvider,
     this.enableLogging = true,
   });
 
@@ -34,6 +38,7 @@ class ApiClientConfig {
   final Duration sendTimeout;
   final String Function()? languageProvider;
   final String? Function()? cityIdProvider;
+  final String Function()? tenantIdProvider;
   final bool enableLogging;
 }
 
@@ -61,6 +66,7 @@ class ApiClient {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json; charset=utf-8',
+          NexoraHeaders.tenantId: Env.tenantId,
         },
         validateStatus: (status) => status != null && status < 500,
       ),
@@ -72,6 +78,12 @@ class ApiClient {
       AcceptLanguageInterceptor(
         languageProvider: config.languageProvider ??
             () => config.environment.defaultLanguage,
+      ),
+    );
+
+    dio.interceptors.add(
+      TenantHeaderInterceptor(
+        tenantIdProvider: config.tenantIdProvider ?? () => Env.tenantId,
       ),
     );
 

@@ -21,15 +21,20 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
           package-manager-cache: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
       - name: chmod CI scripts
         run: chmod +x scripts/ci/*.sh
-      - name: Full journeys + idempotency + k6 + ZAP
+      - name: Full journeys + idempotency + k6 + ZAP + Flutter live BFF
         env:
           RC_FULL: "1"
+          FLUTTER_LIVE: "1"
         run: bash scripts/ci/e2e-smoke.sh
 
   rc-ui-a11y:
@@ -37,7 +42,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
           package-manager-cache: false
@@ -55,3 +60,60 @@ jobs:
         run: chmod +x scripts/ci/*.sh
       - name: Redis/Kafka restart + Postgres integrity
         run: bash scripts/ci/recovery-smoke.sh
+
+  rc-flutter-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Flutter pub get / analyze / test (3 apps)
+        run: bash scripts/ci/flutter-static.sh
+
+  rc-android-aab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Customer Android App Bundle (debug-signed if no keystore secrets)
+        run: bash scripts/ci/android-release-customer.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: customer-release-aab
+          path: apps/mobile_customer/build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+  rc-ios-build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Customer iOS unsigned release compile
+        working-directory: apps/mobile_customer
+        run: |
+          flutter pub get
+          flutter build ios --release --no-codesign \
+            --dart-define=NEXORA_ENV=prod \
+            --dart-define=ENV=prod \
+            --dart-define=NEXORA_BASE_URL=https://api.nexora.io/v1
+          echo "OK ios-unsigned (codesign + App Store Connect remain BLOCKED without org certs)"
+

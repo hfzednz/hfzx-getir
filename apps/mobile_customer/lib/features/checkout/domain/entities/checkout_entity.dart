@@ -97,16 +97,40 @@ class CheckoutQuote extends Equatable {
   final DateTime? expiresAt;
 
   factory CheckoutQuote.fromJson(Map<String, dynamic> json) => CheckoutQuote(
-        subtotalMinor: (json['subtotal_minor'] as num?)?.toInt() ?? 0,
-        deliveryFeeMinor: (json['delivery_fee_minor'] as num?)?.toInt() ?? 0,
-        discountMinor: (json['discount_minor'] as num?)?.toInt() ?? 0,
-        taxMinor: (json['tax_minor'] as num?)?.toInt() ?? 0,
-        totalMinor: (json['total_minor'] as num?)?.toInt() ?? 0,
-        currency: json['currency']?.toString() ?? 'TRY',
-        quoteId: json['quote_id']?.toString(),
-        expiresAt: json['expires_at'] != null
-            ? DateTime.tryParse(json['expires_at'].toString())
-            : null,
+        subtotalMinor: _jsonInt(json, const [
+          'subtotal_minor',
+          'subtotalMinor',
+          'SubtotalMinor',
+        ]),
+        deliveryFeeMinor: _jsonInt(json, const [
+          'delivery_fee_minor',
+          'deliveryFeeMinor',
+          'DeliveryFeeMinor',
+        ]),
+        discountMinor: _jsonInt(json, const [
+          'discount_minor',
+          'discountMinor',
+          'DiscountMinor',
+        ]),
+        taxMinor: _jsonInt(json, const [
+          'tax_minor',
+          'taxMinor',
+          'TaxMinor',
+        ]),
+        totalMinor: _jsonInt(json, const [
+          'total_minor',
+          'totalMinor',
+          'TotalMinor',
+        ]),
+        currency: _jsonString(json, const ['currency', 'Currency']) ?? 'TRY',
+        quoteId: _jsonString(json, const [
+          'quote_id',
+          'quoteId',
+          'sessionId',
+          'SessionID',
+          'session_id',
+        ]),
+        expiresAt: _jsonDate(json, const ['expires_at', 'expiresAt']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -188,19 +212,21 @@ class CheckoutSession extends Equatable {
   final String? paymentIntentId;
 
   factory CheckoutSession.fromJson(Map<String, dynamic> json) => CheckoutSession(
-        id: json['id']?.toString() ?? '',
-        orderId: json['order_id']?.toString(),
-        status: json['status']?.toString() ?? 'pending',
-        quote: json['quote'] != null
+        id: _jsonString(json, const ['id', 'sessionId', 'SessionID', 'orderId']) ?? '',
+        orderId: _jsonString(json, const ['order_id', 'orderId', 'OrderID']),
+        status: _jsonString(json, const ['status', 'Status']) ?? 'pending',
+        quote: json['quote'] is Map<String, dynamic>
             ? CheckoutQuote.fromJson(json['quote'] as Map<String, dynamic>)
-            : null,
+            : (json['SessionID'] != null || json['sessionId'] != null || json['TotalMinor'] != null
+                ? CheckoutQuote.fromJson(json)
+                : null),
         substitutionPreference:
             substitutionPreferenceFromJson(json['substitution_preference']?.toString()),
         outOfStockRule: outOfStockRuleFromJson(json['out_of_stock_rule']?.toString()),
         invoiceFields: json['invoice_fields'] != null
             ? CompanyInvoiceFields.fromJson(json['invoice_fields'] as Map<String, dynamic>)
             : null,
-        paymentIntentId: json['payment_intent_id']?.toString(),
+        paymentIntentId: _jsonString(json, const ['payment_intent_id', 'paymentIntentId']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -225,4 +251,26 @@ class CheckoutSession extends Equatable {
         invoiceFields,
         paymentIntentId,
       ];
+}
+
+String? _jsonString(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final v = json[key];
+    if (v != null && v.toString().isNotEmpty) return v.toString();
+  }
+  return null;
+}
+
+int _jsonInt(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final v = json[key];
+    if (v is num) return v.toInt();
+    if (v != null) return int.tryParse(v.toString()) ?? 0;
+  }
+  return 0;
+}
+
+DateTime? _jsonDate(Map<String, dynamic> json, List<String> keys) {
+  final raw = _jsonString(json, keys);
+  return raw == null ? null : DateTime.tryParse(raw);
 }

@@ -154,11 +154,47 @@ class HomeFeed extends Equatable {
 
   final List<HomeWidgetConfig> widgets;
 
-  factory HomeFeed.fromJson(Map<String, dynamic> json) => HomeFeed(
-        widgets: (json['widgets'] as List<dynamic>? ?? [])
+  factory HomeFeed.fromJson(Map<String, dynamic> json) {
+    final widgetsRaw = json['widgets'] as List<dynamic>? ?? [];
+    if (widgetsRaw.isNotEmpty) {
+      return HomeFeed(
+        widgets: widgetsRaw
             .map((e) => HomeWidgetConfig.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
+    }
+    final productsRaw = json['Products'] ?? json['products'] ?? json['hits'];
+    final products = <HomeProduct>[];
+    if (productsRaw is List) {
+      for (final item in productsRaw) {
+        if (item is Map) {
+          final m = Map<String, dynamic>.from(item);
+          products.add(
+            HomeProduct(
+              id: (m['productId'] ?? m['id'] ?? m['sku'] ?? '').toString(),
+              title: (m['name'] ?? m['title'] ?? m['sku'] ?? 'Item').toString(),
+              priceMinor: (m['priceMinor'] as num?)?.toInt() ??
+                  (m['price_minor'] as num?)?.toInt() ??
+                  0,
+            ),
+          );
+        }
+      }
+    }
+    if (products.isEmpty) {
+      return const HomeFeed();
+    }
+    return HomeFeed(
+      widgets: [
+        HomeWidgetConfig(
+          id: 'bff-home',
+          type: HomeWidgetType.trending,
+          title: 'Popular',
+          items: products,
+        ),
+      ],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'widgets': widgets.map((e) => e.toJson()).toList(),

@@ -1,8 +1,14 @@
 /// Compile-time environment constants (Dart `--dart-define` / `--dart-define-from-file`).
 abstract final class Env {
+  /// `NEXORA_ENV` wins; `ENV` is accepted so CD `--dart-define=ENV=prod` maps.
   static const name = String.fromEnvironment(
     'NEXORA_ENV',
-    defaultValue: 'dev',
+    defaultValue: String.fromEnvironment('ENV', defaultValue: 'dev'),
+  );
+
+  static const tenantId = String.fromEnvironment(
+    'NEXORA_TENANT_ID',
+    defaultValue: '11111111-1111-1111-1111-111111111111',
   );
 
   static const baseUrl = String.fromEnvironment(

@@ -57,6 +57,18 @@ void main() {
       expect(body.containsKey('scheduled_at'), isFalse);
     });
 
+    test('CheckoutQuote.fromJson reads BFF PascalCase preview', () {
+      final quote = CheckoutQuote.fromJson({
+        'SessionID': 'sess-1',
+        'SubtotalMinor': 1500,
+        'DiscountMinor': 0,
+        'TotalMinor': 1500,
+        'Currency': 'TRY',
+      });
+      expect(quote.quoteId, 'sess-1');
+      expect(quote.totalMinor, 1500);
+    });
+
     test('CheckoutQuote.fromJson parses minor units', () {
       final quote = CheckoutQuote.fromJson({
         'subtotal_minor': 2500,

@@ -6,7 +6,7 @@ import 'package:nexora_core/nexora_core.dart';
 import '../features/cart/data/local/app_database.dart';
 
 final environmentProvider = Provider<AppEnvironment>((ref) {
-  return AppEnvironment.fromEnv();
+  return AppEnvironment.fromEnv().forCustomerBff;
 });
 
 final tokenStoreProvider = Provider<SecureTokenStore>((ref) {

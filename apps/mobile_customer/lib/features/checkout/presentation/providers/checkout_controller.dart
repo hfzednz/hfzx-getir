@@ -10,6 +10,7 @@ import '../../../../shared/business_rules/payment_rules.dart';
 import '../../../addresses/domain/entities/addresses_entity.dart';
 import '../../../addresses/presentation/providers/addresses_providers.dart';
 import '../../domain/entities/checkout_entity.dart';
+import '../../domain/checkout_bff_defaults.dart';
 import 'checkout_providers.dart'
     show
         confirmCheckoutUseCaseProvider,
@@ -261,9 +262,11 @@ class CheckoutController extends Notifier<CheckoutState> {
     await refreshQuote();
   }
 
-  Map<String, dynamic> buildCheckoutBody() {
+    Map<String, dynamic> buildCheckoutBody() {
     final s = state;
     return {
+      'cartId': CheckoutBffDefaults.cartId,
+      'principalId': CheckoutBffDefaults.principalId,
       if (s.addressId != null) 'address_id': s.addressId,
       'payment': {
         'type': s.paymentType,
