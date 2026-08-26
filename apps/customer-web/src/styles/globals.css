@@ -1,0 +1,34 @@
+@import "@nexora/ui/styles.css";
+
+:root {
+  --nx-brand: #5c35ff;
+  --nx-brand-dark: #4526d9;
+  --nx-surface: #fafafa;
+  --nx-customer-header: #5c35ff;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--nx-surface);
+}
+
+.nx-customer-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 6%);
+}
+
+@media (min-width: 768px) {
+  .nx-customer-shell {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .nx-customer-shell {
+    max-width: 960px;
+  }
+}

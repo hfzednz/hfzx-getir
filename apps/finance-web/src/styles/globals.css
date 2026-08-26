@@ -1,0 +1,2 @@
+@import "@nexora/ui/styles.css";
+body { min-height: 100dvh; background: #0f172a; color: #f8fafc; max-width: 480px; margin: 0 auto; }
