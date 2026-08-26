@@ -77,7 +77,14 @@ Filled from GitHub Actions on `8f2a224`. Emulator checkout and store signing rem
 - `ci-quality.yml`: `go-version: 1.26.x` + `cache-dependency-path` for the quality module (matches go.mod 1.25+ and acceptance).
 - `rc-android-aab`: `actions/setup-java@v5` per the failing run’s annotation.
 
-Flutter/Android/iOS/journeys script changes wait on **job log text**, not guesses.
+Verified from downloaded `8f2a224` logs (not guesses):
+
+- `rc-flutter-static`: nested `apps/*/apps/*` scaffolds use Dart 3.10 dot-shorthands; courier `widget_test` imports missing `MyApp`; live test `baseUrl: String?`. Nested trees excluded from analyze; courier smoke test; `base ?? ''`.
+- `rc-ios-build`: `mobile_scanner` 6.x requires iOS **15.5**; app was **13.0**. Podfile + `IPHONEOS_DEPLOYMENT_TARGET` raised.
+- `rc-android-aab`: `AndroidManifest` `${GOOGLE_MAPS_API_KEY}` had no Gradle placeholder. Dummy placeholder for unsigned CI; real key remains a secret.
+- `rc-journeys-k6`: `FLUTTER_LIVE=1` compiles the same live test after k6/ZAP; the `String?` error would fail that job even if k6 passed. k6 still not claimed PASS until a green run.
+
+Local `68b7fa7` (Go 1.26 / setup-java v5) was not on origin: GitHub credential dialog cancelled.
 
 ## Final status
 

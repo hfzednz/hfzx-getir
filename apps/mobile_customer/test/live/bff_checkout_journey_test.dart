@@ -11,7 +11,7 @@ void main() {
   test('live BFF home → cart → preview → place → order (idempotent retry)', () async {
     final dio = Dio(
       BaseOptions(
-        baseUrl: base,
+        baseUrl: base ?? '',
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': '11111111-1111-1111-1111-111111111111',

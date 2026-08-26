@@ -20,6 +20,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // CI/unsigned builds: real Maps keys stay in ANDROID_MAPS / GOOGLE_MAPS_API_KEY secrets.
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] =
+            System.getenv("GOOGLE_MAPS_API_KEY")
+                ?: "AIzaSyCI-UNSIGNED-PLACEHOLDER"
     }
 
     val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
