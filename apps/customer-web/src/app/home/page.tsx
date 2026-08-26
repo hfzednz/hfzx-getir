@@ -24,20 +24,14 @@ export default function HomePage() {
     },
   });
 
-  const demoProducts = [
-    { sku: "22222222-2222-2222-2222-222222222222", name: "Fresh Milk 1L", unitMinor: 1500 },
-    { sku: "44444444-4444-4444-4444-444444444444", name: "Organic Eggs 12pk", unitMinor: 2200 },
-    { sku: "demo-bread", name: "Sourdough Bread", unitMinor: 850 },
-  ];
-
-  const products = data?.products?.length ? data.products : demoProducts;
+  const products = data?.products ?? [];
 
   return (
     <div className="space-y-6">
       <section>
         <p className="text-xs uppercase tracking-wide text-neutral-500">Deliver to</p>
         <p className="font-medium">{addressLabel}</p>
-        {!data?.serviceable && data ? (
+        {data && !data.serviceable ? (
           <p className="text-sm text-amber-700">Area may be outside service zone.</p>
         ) : null}
       </section>
@@ -61,6 +55,9 @@ export default function HomePage() {
           <p className="text-sm text-red-600" role="alert">
             {error instanceof Error ? error.message : "Failed to load home"}
           </p>
+        ) : null}
+        {!isLoading && !error && products.length === 0 ? (
+          <p className="text-sm text-neutral-500">No products in this area. Try search or another location.</p>
         ) : null}
         <ul className="grid gap-3 sm:grid-cols-2">
           {products.map((p) => {

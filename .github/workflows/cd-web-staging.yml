@@ -1,0 +1,33 @@
+name: cd-web-staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: vercel-preview|docs-only
+        required: true
+        default: docs-only
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check deployment credentials
+        run: |
+          if [[ "${{ inputs.deploy_target }}" == "vercel-preview" ]]; then
+            if [[ -z "${{ secrets.VERCEL_TOKEN }}" ]]; then
+              echo "BLOCKED: VERCEL_TOKEN secret required for public staging deployment"
+              exit 1
+            fi
+            echo "VERCEL_TOKEN present — deploy customer-web preview (manual vercel CLI step)"
+            npm i -g vercel@latest
+            cd apps/customer-web
+            npm ci
+            vercel deploy --token "${{ secrets.VERCEL_TOKEN }}" --yes
+          else
+            echo "docs-only: no deployment executed. Configure VERCEL_TOKEN and re-run with vercel-preview."
+          fi

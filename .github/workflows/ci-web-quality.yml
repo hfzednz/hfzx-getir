@@ -29,7 +29,7 @@ jobs:
 
   customer-web-e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: web-static
     steps:
       - uses: actions/checkout@v5
@@ -37,21 +37,6 @@ jobs:
         with:
           node-version: "20"
       - name: chmod scripts
-        run: chmod +x scripts/ci/*.sh
-      - name: Customer web smoke (build + start + curl)
-        run: |
-          set -euo pipefail
-          cd packages/web/core && npm install --no-fund --no-audit
-          cd ../../web/ui && npm install --no-fund --no-audit
-          cd ../../../apps/customer-web
-          npm ci --no-fund --no-audit 2>/dev/null || npm install --no-fund --no-audit
-          npm run build
-          npm run start -- -p 3000 &
-          pid=$!
-          for i in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:3000/login >/dev/null 2>&1 && break
-            sleep 2
-          done
-          curl -fsS http://127.0.0.1:3000/login | grep -qi nexora
-          kill $pid
-          echo "CUSTOMER_WEB_SMOKE_PASS"
+        run: chmod +x scripts/ci/*.sh scripts/staging/*.sh
+      - name: Web E2E (Docker stack + Playwright)
+        run: bash scripts/ci/web-e2e.sh

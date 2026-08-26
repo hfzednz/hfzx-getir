@@ -4,6 +4,10 @@ export function tenantId(): string {
   return process.env.NEXT_PUBLIC_TENANT_ID ?? DEFAULT_TENANT_ID;
 }
 
+export function identityUrl(): string {
+  return (process.env.NEXT_PUBLIC_IDENTITY_URL ?? "http://localhost:8081").replace(/\/$/, "");
+}
+
 export function bffUrl(kind: "customer" | "admin" | "courier" | "warehouse"): string {
   const keys: Record<typeof kind, string> = {
     customer: "NEXT_PUBLIC_BFF_CUSTOMER_URL",
@@ -28,8 +32,8 @@ export function serviceUrl(kind: "finance" | "settlement" | "supplier" | "realti
     realtime: "NEXT_PUBLIC_REALTIME_URL",
   } as const;
   const defaults = {
-    finance: "http://localhost:8090",
-    settlement: "http://localhost:8091",
+    finance: "http://localhost:8091",
+    settlement: "http://localhost:8092",
     supplier: "http://localhost:8117",
     realtime: "http://localhost:8115",
   } as const;

@@ -1,25 +1,27 @@
-# Web platform acceptance matrix (Prompt 65)
+# Web platform acceptance matrix (Prompt 65–66)
 
-Commit: see `main` after Prompt 65 push.
+Commit: Prompt 65 `cdda568`; Prompt 66 changes pending push (real OTP, web E2E).
 
 ## Summary
 
-| Final state | **STATE B** — implemented; external deployment required |
-|-------------|--------------------------------------------------------|
+| Final state | **STATE B** — technically complete; external deployment required |
+|-------------|-------------------------------------------------------------------|
+
+Prompt 66: real identity/BFF OTP on role apps, shared `@nexora/web-core` auth, tenant isolation Playwright tests, `scripts/ci/web-e2e.sh`, `cd-web-staging.yml`. See `WEB_ROLE_MATRIX.md`.
 
 ## Role acceptance matrix
 
 | Role | UI | Auth | RBAC (UI) | Core flow | E2E | Responsive | Security |
 |------|----|------|-----------|-----------|-----|------------|----------|
 | customer | **PASS** (customer-web) | OTP wired to BFF | customer session | browse/cart/checkout/order | CI smoke + BFF journeys | mobile-first shell | tenant header; no secrets in client |
-| courier | **PASS** (shell) | demo + duty API | courier role | duty toggle | manual | mobile-first dark UI | BFF only |
-| picker/packer/dispatcher | **PASS** (warehouse-web) | demo | warehouse roles | pick/pack/ready | manual | tablet/mobile | task ID scoped |
-| supplier/seller | **PASS** (shell) | demo | supplier | portal health | manual | desktop | supplier-service |
-| finance_analyst | **PASS** (shell) | demo | finance | ledger journals GET | manual | desktop | finance-service |
-| support_agent | **PASS** (shell) | demo | support | admin BFF health | manual | desktop | admin BFF |
-| city_ops | **PASS** (operations-web) | demo | city_ops | admin BFF health | manual | desktop | admin BFF |
-| admin | **PASS** (existing admin_web) | demo login | 52 permissions | orders/dashboard partial live | Playwright admin | responsive | PermissionGate |
-| super_admin | **PASS** (existing super_admin_web) | demo login | platform roles | tenants/flags mock | not automated | responsive | dual-control docs |
+| courier | **PASS** (courier-web) | OTP via identity | courier session | duty toggle + offers | CI web-e2e | mobile-first dark UI | BFF only |
+| picker/packer/dispatcher | **PASS** (warehouse-web) | OTP via identity | warehouse session | pick/pack/ready | CI web-e2e | tablet/mobile | task ID scoped |
+| supplier/seller | **PASS** (supplier-web) | OTP via identity | supplier session | suppliers + POs | CI web-e2e | desktop | supplier-service |
+| finance_analyst | **PASS** (finance-web) | OTP via identity | finance session | ledger journals GET | CI web-e2e | desktop | finance-service |
+| support_agent | **PASS** (support-web) | OTP via identity | support session | bff-admin orders | CI web-e2e | desktop | admin BFF (minimal) |
+| city_ops | **PASS** (operations-web) | OTP via identity | ops session | bff-admin dashboard | CI web-e2e | desktop | admin BFF (minimal) |
+| admin | **PARTIAL** (admin_web) | demo login (unchanged) | 52 permissions UI | orders/dashboard partial live | Playwright admin | responsive | PermissionGate |
+| super_admin | **PARTIAL** (super_admin_web) | demo login (unchanged) | platform roles UI | tenants/flags mock | not automated | responsive | dual-control docs |
 
 ## Customer web route map
 
