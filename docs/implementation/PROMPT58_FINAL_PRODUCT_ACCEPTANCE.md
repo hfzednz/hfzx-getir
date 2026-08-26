@@ -1,8 +1,6 @@
 # Prompt 58 — Final product acceptance
 
-Status at commit time: **gates added; fill Result only after Ubuntu/macOS GitHub Actions on this commit.** Do not treat local Windows output as PASS.
-
-Customer entrypoint is the **Flutter** app `apps/mobile_customer` (`nexora_customer`). There is no customer Next.js storefront (`admin_web` / `super_admin_web` are ops only).
+Filled from GitHub Actions on `8f2a224`. Emulator checkout and store signing remain **BLOCKED**. k6 numbers are CI measurements, not a production SLA.
 
 ## Identity
 
@@ -10,60 +8,77 @@ Customer entrypoint is the **Flutter** app `apps/mobile_customer` (`nexora_custo
 |---|---|
 | Repository | https://github.com/hfzednz/hfzx-getir |
 | Branch | main |
-| Commit SHA | *(filled after push)* |
-| CI acceptance | *(filled after run)* |
-| CI release-candidate | *(filled after run)* |
+| Commit SHA | `8f2a224` |
+| CI acceptance | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652 (**success**) |
+| CI release-candidate | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142609 (**failure**) |
+| CI quality | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142599 (**failure**) |
 | Prompt 57 baseline | `b26e55c` — https://github.com/hfzednz/hfzx-getir/actions/runs/32911312874 |
 
-## Flutter inventory
+## Job results (`8f2a224`)
 
-| App | Path | applicationId / bundle | Version |
-|---|---|---|---|
-| Customer | `apps/mobile_customer` | Android `com.hfzx.nexora.nexora_customer` / iOS `com.hfzx.nexora.nexoraCustomer` | `1.0.0+1` |
-| Courier | `apps/mobile_courier` | `com.nexora.nexora_courier` / `com.nexora.nexoraCourier` | `1.0.0+1` |
-| Warehouse | `apps/mobile_warehouse` | `io.nexora.nexora_warehouse` / `io.nexora.nexoraWarehouse` | `1.0.0+1` |
+### ci-acceptance — PASS
 
-SDK constraint: Dart `^3.5.0`, Flutter `>=3.24.0`. Nested `apps/*/apps/*` trees are accidental `flutter create` scaffolds, not shipping apps.
+| Job | Result |
+|---|---|
+| go-build-test-verify | PASS |
+| go-race-all | PASS |
+| docker-build-all | PASS |
+| compose-migration-smoke | PASS |
+| service-startup-smoke | PASS |
+| security-sanity | PASS |
+| e2e-smoke | PASS |
 
-CD `--dart-define=ENV=prod` is now accepted as `NEXORA_ENV`. Customer `ApiClient` uses `/v1/customer` and sends `X-Tenant-Id`.
+### ci-release-candidate — FAIL
 
-## Honesty
+| Job | Result | Notes |
+|---|---|---|
+| rc-ui-a11y | PASS | admin HTML + a11y |
+| rc-recovery | PASS | Redis/Kafka restart |
+| rc-journeys-k6 | FAIL | step “Full journeys + idempotency + k6 + ZAP + Flutter live BFF”; log body not downloadable without auth in this session. k6 not claimed PASS. |
+| rc-flutter-static | FAIL | `flutter-static.sh` (~23s after Flutter setup) |
+| rc-android-aab | FAIL | AAB step ~99s; also annotation: migrate `setup-java` v4 → v5 (Node 20 deprecation) |
+| rc-ios-build | FAIL | `flutter build ios --no-codesign` ~2m; **not** a signed IPA |
 
-- In-memory checkout still uses seeded cart `33333333-3333-3333-3333-333333333333`.
-- Full Flutter **emulator** checkout (OPEN APP → every screen) is **not** in GHA (no emulator job). Live gate is `test/live/bff_checkout_journey_test.dart` against the real BFF plus widget failure UI tests.
-- k6 numbers remain CI/environment measurements, not production SLA.
-- Store listing copy in `store/` is draft. Privacy policy / accounts / screenshots are **EXTERNAL INPUTS** (`store/EXTERNAL_INPUTS.md`).
-- Android AAB without Play upload key is debug-signed. iOS job is `--no-codesign`.
-- Do not claim App Store / Play approval.
+### ci-quality — FAIL
+
+| Job | Result | Evidence |
+|---|---|---|
+| quality-unit | FAIL | Failed in **0s**. `services/quality-service/go.mod` requires **go 1.25.0**; workflow pinned **1.22.x**. Same job was green on `65a4020` with `setup-go@v5`. `setup-go@v7` no longer silently upgrades the toolchain. Cache warning: root `go.mod` missing. |
+| quality-gates | skipped | needs quality-unit |
 
 ## Matrix
 
-Fill after the Prompt 58 GHA run.
-
 | Gate | Result | Evidence |
 |---|---|---|
-| Backend acceptance | pending | `ci-acceptance` |
-| Race | pending | CI |
-| Docker | pending | CI |
-| Compose | pending | CI |
-| Migrations | pending | CI |
-| Redis | pending | CI |
-| Kafka | pending | CI |
-| Startup | pending | CI |
-| Security | pending | CI |
-| k6 | pending | `rc-journeys-k6` (not production SLA) |
-| Recovery | pending | `rc-recovery` |
-| Accessibility | pending | admin `rc-ui-a11y` + customer widget error states |
-| Full customer UI checkout | BLOCKED | no GHA emulator; splash `integration_test` only |
-| Full customer order journey | pending | HTTP `RC_FULL` + Flutter `test/live` when `FLUTTER_LIVE=1` |
-| Flutter customer tests | pending | `rc-flutter-static` |
-| Android release build | pending | `rc-android-aab` (signing secrets optional) |
-| iOS release build | pending | `rc-ios-build` unsigned; codesign BLOCKED |
-| Store readiness | BLOCKED | metadata present; legal URLs / accounts missing |
-| CI warnings | pending | setup-go@v7, setup-node@v6, setup-buildx@v4 |
-| Mobile performance | BLOCKED | no device profiler in CI |
-| Push / associated domains | BLOCKED | no production FCM/APNs secrets in repo |
+| Backend acceptance | PASS | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652 |
+| Race | PASS | `go-race-all` |
+| Docker | PASS | `docker-build-all` |
+| Compose | PASS | `compose-migration-smoke` |
+| Migrations | PASS | `compose-migration-smoke` |
+| Redis | PASS | `compose-migration-smoke` |
+| Kafka | PASS | `compose-migration-smoke` |
+| Startup | PASS | `service-startup-smoke` |
+| Security | PASS | `security-sanity` |
+| k6 | FAIL | `rc-journeys-k6` failed; no authenticated log excerpt in this pass |
+| Recovery | PASS | `rc-recovery` |
+| Accessibility | PASS | `rc-ui-a11y` (admin). Customer widget tests did not run (`rc-flutter-static` FAIL) |
+| Full customer UI checkout | BLOCKED | no emulator/device job executed |
+| Full customer order journey | FAIL | live Flutter BFF is inside failed `rc-journeys-k6` |
+| Flutter customer tests | FAIL | `rc-flutter-static` |
+| Android release build | FAIL | `rc-android-aab`; unsigned/debug-signed store upload still BLOCKED |
+| iOS release build | FAIL | unsigned compile failed; codesign BLOCKED |
+| Store readiness | BLOCKED | `store/EXTERNAL_INPUTS.md`; no signing credentials |
+| CI warnings | WARN | `setup-java@v4` Node 20 (to be upgraded); quality checkout@v4 Node 20 |
+| Mobile performance | BLOCKED | no device profiler |
+| Push / associated domains | BLOCKED | no production FCM/APNs secrets |
+
+## Follow-up fix (verified only)
+
+- `ci-quality.yml`: `go-version: 1.26.x` + `cache-dependency-path` for the quality module (matches go.mod 1.25+ and acceptance).
+- `rc-android-aab`: `actions/setup-java@v5` per the failing run’s annotation.
+
+Flutter/Android/iOS/journeys script changes wait on **job log text**, not guesses.
 
 ## Final status
 
-**NOT CERTIFIED** as PRODUCTION PRODUCT CANDIDATE until this matrix is updated from a real `ci-release-candidate` + `ci-acceptance` run on the Prompt 58 commit.
+**NOT CERTIFIED** as PRODUCTION PRODUCT CANDIDATE. 46-service acceptance is green on `8f2a224`. Product RC jobs for Flutter/AAB/iOS/live BFF are red. Emulator checkout and store signing stay BLOCKED.

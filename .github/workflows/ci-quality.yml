@@ -16,10 +16,13 @@ jobs:
   quality-unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v7
         with:
-          go-version: "1.22.x"
+          go-version: "1.26.x"
+          cache-dependency-path: |
+            services/quality-service/go.sum
+            tools/integration-cert/go.sum
       - name: Quality service tests
         working-directory: services/quality-service
         run: go test ./...
@@ -31,10 +34,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality-unit
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v7
         with:
-          go-version: "1.22.x"
+          go-version: "1.26.x"
+          cache-dependency-path: |
+            services/quality-service/go.sum
+            tools/integration-cert/go.sum
       - name: Lint k6 scripts present
         run: test -f qa/k6/checkout_load.js && test -f qa/strategy/TEST_STRATEGY.md
       - name: Chaos manifests present
