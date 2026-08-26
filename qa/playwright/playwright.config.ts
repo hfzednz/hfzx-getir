@@ -12,7 +12,7 @@ export default defineConfig({
     {
       name: 'api',
       testMatch:
-        /customer\.(health|negative|journey)\.spec\.ts|admin\.health\.spec\.ts|tenant\.isolation\.spec\.ts/,
+        /customer\.(health|negative|journey)\.spec\.ts|admin\.health\.spec\.ts|tenant\.isolation\.spec\.ts|multi-role\.journey\.spec\.ts/,
       use: {
         baseURL: process.env.ADMIN_BASE || 'http://localhost:8114',
       },

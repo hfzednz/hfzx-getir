@@ -1,4 +1,5 @@
 import { apiClient } from "@/shared/api/client";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import type { CourierDetail, CourierListItem, CourierListResponse } from "./types";
 
 function delay(ms = 220): Promise<void> {
@@ -234,7 +235,8 @@ export async function fetchCouriers(
   try {
     const q = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
     return await apiClient<CourierListResponse>(`/admin/couriers${q}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     const items = cityId
       ? MOCK_LIST.filter((c) => c.cityId === cityId || cityId === "city_ist")
@@ -251,7 +253,8 @@ export async function fetchCouriers(
 export async function fetchCourierDetail(id: string): Promise<CourierDetail> {
   try {
     return await apiClient<CourierDetail>(`/admin/couriers/${id}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     return mockDetail(id);
   }

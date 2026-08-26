@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { OrgSnapshot, PlatformPerson } from "./types";
 
@@ -144,6 +145,7 @@ export async function fetchOrgSnapshot(): Promise<OrgSnapshot> {
   try {
     return await apiClient<OrgSnapshot>(platformPath("/org"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockSnapshot();

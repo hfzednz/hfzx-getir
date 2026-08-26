@@ -30,7 +30,7 @@ echo "==> playwright"
 cd "$ROOT/qa/playwright"
 npm install --no-fund --no-audit
 npx playwright install --with-deps chromium
-npx playwright test tests/customer.web.login.spec.ts tests/tenant.isolation.spec.ts --project=api --reporter=list
+npx playwright test tests/customer.web.login.spec.ts tests/tenant.isolation.spec.ts tests/multi-role.journey.spec.ts --project=api --reporter=list
 npx playwright test tests/customer.web.login.spec.ts --project=ui-customer --reporter=list
 
 echo "WEB_E2E_PASS"

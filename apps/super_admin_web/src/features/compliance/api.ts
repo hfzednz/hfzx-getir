@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   ComplianceSnapshot,
@@ -176,6 +177,7 @@ export async function fetchCompliance(): Promise<ComplianceSnapshot> {
   try {
     return await apiClient<ComplianceSnapshot>(platformPath("/compliance"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return snapshot();
@@ -195,6 +197,7 @@ export async function advancePrivacyRequest(input: {
       { method: "PATCH", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockRequests.findIndex((r) => r.id === input.requestId);
@@ -225,6 +228,7 @@ export async function createPrivacyRequest(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const dueDays = input.type === "delete" || input.type === "export" ? 30 : 45;
@@ -256,6 +260,7 @@ export async function updateRetention(
       { method: "PATCH", body: patch, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockRetention.findIndex((r) => r.id === policyId);

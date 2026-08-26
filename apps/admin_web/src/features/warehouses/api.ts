@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient } from "@/shared/api/client";
 import type {
   WarehouseDetail,
@@ -193,7 +194,8 @@ export async function fetchWarehouses(
   try {
     const q = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
     return await apiClient<WarehouseListResponse>(`/admin/warehouses${q}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     const items = cityId
       ? MOCK_LIST.filter((w) => w.cityId === cityId)
@@ -209,7 +211,8 @@ export async function fetchWarehouses(
 export async function fetchWarehouseDetail(id: string): Promise<WarehouseDetail> {
   try {
     return await apiClient<WarehouseDetail>(`/admin/warehouses/${id}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     return mockDetail(id);
   }

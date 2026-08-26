@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { InfraSnapshot } from "./types";
 
@@ -430,6 +431,7 @@ export async function fetchInfraSnapshot(): Promise<InfraSnapshot> {
   try {
     return await apiClient<InfraSnapshot>(platformPath("/infra"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await new Promise((r) => setTimeout(r, 200));
       return mockSnapshot();

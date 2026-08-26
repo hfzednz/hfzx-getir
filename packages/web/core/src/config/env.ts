@@ -24,18 +24,20 @@ export function bffUrl(kind: "customer" | "admin" | "courier" | "warehouse"): st
   return (process.env[keys[kind]] ?? defaults[kind]).replace(/\/$/, "");
 }
 
-export function serviceUrl(kind: "finance" | "settlement" | "supplier" | "realtime"): string {
+export function serviceUrl(kind: "finance" | "settlement" | "supplier" | "realtime" | "platform"): string {
   const keys = {
     finance: "NEXT_PUBLIC_FINANCE_URL",
     settlement: "NEXT_PUBLIC_SETTLEMENT_URL",
     supplier: "NEXT_PUBLIC_SUPPLIER_URL",
     realtime: "NEXT_PUBLIC_REALTIME_URL",
+    platform: "NEXT_PUBLIC_PLATFORM_OPS_URL",
   } as const;
   const defaults = {
     finance: "http://localhost:8091",
     settlement: "http://localhost:8092",
     supplier: "http://localhost:8117",
     realtime: "http://localhost:8115",
+    platform: "http://localhost:8110",
   } as const;
   return (process.env[keys[kind]] ?? defaults[kind]).replace(/\/$/, "");
 }

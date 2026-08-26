@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   CompaniesListResponse,
@@ -126,6 +127,7 @@ export async function fetchCompanies(): Promise<CompaniesListResponse> {
   try {
     return await apiClient<CompaniesListResponse>(platformPath("/companies"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return {
@@ -142,6 +144,7 @@ export async function fetchCompany(id: string): Promise<CompanyDetail> {
   try {
     return await apiClient<CompanyDetail>(platformPath(`/companies/${id}`));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockDetail(id);
@@ -160,6 +163,7 @@ export async function createCompany(
       idempotent: true,
     });
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const created: CompanyListItem = {
@@ -190,6 +194,7 @@ export async function updateCompany(
       idempotent: true,
     });
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = MOCK_COMPANIES.findIndex((c) => c.id === id);
@@ -221,6 +226,7 @@ export async function deleteCompany(id: string): Promise<void> {
       idempotent: true,
     });
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = MOCK_COMPANIES.findIndex((c) => c.id === id);

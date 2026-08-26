@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   CreateTenantInput,
@@ -167,6 +168,7 @@ export async function fetchTenants(): Promise<TenantsListResponse> {
   try {
     return await apiClient<TenantsListResponse>(platformPath("/tenants"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return listResponse();
@@ -179,6 +181,7 @@ export async function fetchTenant(id: string): Promise<TenantDetail> {
   try {
     return await apiClient<TenantDetail>(platformPath(`/tenants/${id}`));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockDetail(id);
@@ -197,6 +200,7 @@ export async function createTenant(
       idempotent: true,
     });
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const created: TenantListItem = {
@@ -227,6 +231,7 @@ export async function updateTenantIsolation(
       { method: "PATCH", body: { isolationMode }, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = MOCK_TENANTS.findIndex((t) => t.id === id);
@@ -252,6 +257,7 @@ export async function proposeTenantAction(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const tenant = MOCK_TENANTS.find((t) => t.id === input.tenantId);
@@ -284,6 +290,7 @@ export async function resolveTenantProposal(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockProposals.findIndex((p) => p.id === input.proposalId);

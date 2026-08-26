@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   AuthProvider,
@@ -264,6 +265,7 @@ export async function fetchSecurity(): Promise<SecuritySnapshot> {
   try {
     return await apiClient<SecuritySnapshot>(platformPath("/security"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return snapshot();
@@ -281,6 +283,7 @@ export async function acknowledgeThreat(
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockThreats.findIndex((t) => t.id === threatId);
@@ -301,6 +304,7 @@ export async function revokeSession(
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockSessions.findIndex((s) => s.id === sessionId);
@@ -319,6 +323,7 @@ export async function toggleGeoRule(ruleId: string): Promise<GeoIpRule> {
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockRules.findIndex((r) => r.id === ruleId);
@@ -339,6 +344,7 @@ export async function toggleProvider(
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockProviders.findIndex((p) => p.id === providerId);
@@ -362,6 +368,7 @@ export async function togglePolicy(
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockPolicies.findIndex((p) => p.id === policyId);

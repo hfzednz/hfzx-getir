@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { DatabasesSnapshot } from "./types";
 
@@ -258,6 +259,7 @@ export async function fetchDatabasesSnapshot(): Promise<DatabasesSnapshot> {
   try {
     return await apiClient<DatabasesSnapshot>(platformPath("/databases"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await new Promise((r) => setTimeout(r, 200));
       return mockSnapshot();

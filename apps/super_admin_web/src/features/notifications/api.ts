@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { NotificationsSnapshot, NotificationProvider } from "./types";
 
@@ -230,6 +231,7 @@ export async function fetchNotifications(): Promise<NotificationsSnapshot> {
       platformPath("/notifications"),
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockSnapshot();
@@ -248,6 +250,7 @@ export async function setProviderStatus(input: {
       { method: "PATCH", body: { status: input.status }, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockProviders.findIndex((p) => p.id === input.providerId);

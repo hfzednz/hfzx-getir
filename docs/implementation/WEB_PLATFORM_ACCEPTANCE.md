@@ -20,8 +20,8 @@ Prompt 66: real identity/BFF OTP on role apps, shared `@nexora/web-core` auth, t
 | finance_analyst | **PASS** (finance-web) | OTP via identity | finance session | ledger journals GET | CI web-e2e | desktop | finance-service |
 | support_agent | **PASS** (support-web) | OTP via identity | support session | bff-admin orders | CI web-e2e | desktop | admin BFF (minimal) |
 | city_ops | **PASS** (operations-web) | OTP via identity | ops session | bff-admin dashboard | CI web-e2e | desktop | admin BFF (minimal) |
-| admin | **PARTIAL** (admin_web) | demo login (unchanged) | 52 permissions UI | orders/dashboard partial live | Playwright admin | responsive | PermissionGate |
-| super_admin | **PARTIAL** (super_admin_web) | demo login (unchanged) | platform roles UI | tenants/flags mock | not automated | responsive | dual-control docs |
+| admin | **PARTIAL** (admin_web) | **OTP via identity** | 52 permissions UI | orders/dashboard live | Playwright admin | responsive | PermissionGate |
+| super_admin | **PARTIAL** (super_admin_web) | **OTP via identity** | platform roles UI | platform stats live | not automated | responsive | dual-control docs |
 
 ## Customer web route map
 

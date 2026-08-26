@@ -1,5 +1,7 @@
 import type { ApiErrorBody } from "@/shared/types/common";
 import { createIdempotencyKey } from "@/shared/lib/idempotency";
+import { tenantId } from "@nexora/web-core";
+import { useAuthStore } from "@/shared/auth/auth-store";
 
 const DEFAULT_BASE = "http://localhost:8114/v1";
 
@@ -72,6 +74,14 @@ export async function apiClient<T>(
   }
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    const sessionToken = useAuthStore.getState().session?.accessToken;
+    if (sessionToken) {
+      headers.set("Authorization", `Bearer ${sessionToken}`);
+    }
+  }
+  if (!headers.has("X-Tenant-Id")) {
+    headers.set("X-Tenant-Id", tenantId());
   }
 
   const key = idempotencyKey ?? (idempotent ? createIdempotencyKey() : undefined);

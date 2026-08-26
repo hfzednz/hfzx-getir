@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient } from "@/shared/api/client";
 import type { InventorySnapshot, InventoryStockRow } from "./types";
 
@@ -176,7 +177,8 @@ export async function fetchInventorySnapshot(
   try {
     const q = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
     return await apiClient<InventorySnapshot>(`/admin/inventory${q}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     return mockSnapshot(cityId);
   }

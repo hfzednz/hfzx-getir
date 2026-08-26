@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { GatewaySnapshot } from "./types";
 
@@ -276,6 +277,7 @@ export async function fetchGatewaySnapshot(): Promise<GatewaySnapshot> {
   try {
     return await apiClient<GatewaySnapshot>(platformPath("/gateway"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await new Promise((r) => setTimeout(r, 200));
       return mockSnapshot();

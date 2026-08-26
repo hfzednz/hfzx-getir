@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient } from "@/shared/api/client";
 import type { DeliverySnapshot, DeliveryZoneDetail, DeliveryZoneListItem } from "./types";
 
@@ -201,7 +202,8 @@ export async function fetchDeliverySnapshot(
   try {
     const q = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
     return await apiClient<DeliverySnapshot>(`/admin/delivery${q}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     return mockSnapshot(cityId);
   }
@@ -213,7 +215,8 @@ export async function fetchDeliveryZones(
   try {
     const q = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
     return await apiClient(`/admin/delivery/zones${q}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     const items = cityId
       ? MOCK_ZONES.filter((z) => z.cityId === cityId)
@@ -227,7 +230,8 @@ export async function fetchDeliveryZoneDetail(
 ): Promise<DeliveryZoneDetail> {
   try {
     return await apiClient<DeliveryZoneDetail>(`/admin/delivery/zones/${id}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     return mockZoneDetail(id);
   }

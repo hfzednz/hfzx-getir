@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   ExportFormat,
@@ -120,6 +121,7 @@ export async function fetchReports(): Promise<ReportsSnapshot> {
   try {
     return await apiClient<ReportsSnapshot>(platformPath("/reports"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockSnapshot();
@@ -138,6 +140,7 @@ export async function exportReport(input: {
       { method: "POST", body: { format: input.format }, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay(320);
       const built = buildPreview(input.reportId, input.format);

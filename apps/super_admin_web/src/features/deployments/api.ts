@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   DeploymentRecord,
@@ -250,6 +251,7 @@ export async function fetchDeployments(): Promise<DeploymentsSnapshot> {
   try {
     return await apiClient<DeploymentsSnapshot>(platformPath("/deployments"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockSnapshot();
@@ -268,6 +270,7 @@ export async function promoteCanary(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockDeployments.findIndex((d) => d.id === input.deploymentId);
@@ -295,6 +298,7 @@ export async function rollbackDeployment(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockDeployments.findIndex((d) => d.id === input.deploymentId);
@@ -327,6 +331,7 @@ export async function proposeSecretRotate(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const proposal: SecretRotateProposal = {
@@ -358,6 +363,7 @@ export async function resolveSecretRotate(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockSecretProposals.findIndex((p) => p.id === input.proposalId);

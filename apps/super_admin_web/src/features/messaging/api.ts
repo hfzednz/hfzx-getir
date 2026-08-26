@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { MessagingSnapshot } from "./types";
 
@@ -229,6 +230,7 @@ export async function fetchMessagingSnapshot(): Promise<MessagingSnapshot> {
   try {
     return await apiClient<MessagingSnapshot>(platformPath("/messaging"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await new Promise((r) => setTimeout(r, 200));
       return mockSnapshot();

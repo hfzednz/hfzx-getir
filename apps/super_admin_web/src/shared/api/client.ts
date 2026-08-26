@@ -1,7 +1,9 @@
 import type { ApiErrorBody } from "@/shared/types/common";
 import { createIdempotencyKey } from "@/shared/lib/idempotency";
+import { tenantId } from "@nexora/web-core";
+import { useAuthStore } from "@/shared/auth/auth-store";
 
-const DEFAULT_BASE = "http://localhost:8084/v1";
+const DEFAULT_BASE = "http://localhost:8110/v1";
 
 export class ApiError extends Error {
   readonly code: string;
@@ -28,7 +30,9 @@ export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
 
 function getBaseUrl(): string {
   return (
-    process.env.NEXT_PUBLIC_BFF_ADMIN_URL?.replace(/\/$/, "") ?? DEFAULT_BASE
+    process.env.NEXT_PUBLIC_PLATFORM_OPS_URL?.replace(/\/$/, "") ??
+    process.env.NEXT_PUBLIC_BFF_ADMIN_URL?.replace(/\/$/, "") ??
+    DEFAULT_BASE
   );
 }
 
@@ -81,6 +85,14 @@ export async function apiClient<T>(
   }
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    const sessionToken = useAuthStore.getState().session?.accessToken;
+    if (sessionToken) {
+      headers.set("Authorization", `Bearer ${sessionToken}`);
+    }
+  }
+  if (!headers.has("X-Tenant-Id")) {
+    headers.set("X-Tenant-Id", tenantId());
   }
 
   const key = idempotencyKey ?? (idempotent ? createIdempotencyKey() : undefined);

@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { MonitoringSnapshot } from "./types";
 
@@ -174,6 +175,7 @@ export async function fetchMonitoring(): Promise<MonitoringSnapshot> {
   try {
     return await apiClient<MonitoringSnapshot>(platformPath("/monitoring"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockSnapshot();

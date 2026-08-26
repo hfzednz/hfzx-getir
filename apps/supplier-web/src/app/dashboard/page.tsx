@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const session = useSession((s) => s.session);
   const logout = useSession((s) => s.logout);
   const [suppliers, setSuppliers] = useState<unknown[]>([]);
+  const [sellers, setSellers] = useState<unknown[]>([]);
   const [pos, setPos] = useState<unknown[]>([]);
   const [error, setError] = useState("");
 
@@ -21,8 +22,15 @@ export default function DashboardPage() {
       try {
         const s = await supplierApi().request<unknown[]>("/v1/supplier/suppliers");
         const p = await supplierApi().request<unknown[]>("/v1/supplier/purchase-orders");
+        let sellers: unknown[] = [];
+        try {
+          sellers = await supplierApi().request<unknown[]>("/v1/supplier/sellers");
+        } catch {
+          sellers = [];
+        }
         setSuppliers(Array.isArray(s) ? s : []);
         setPos(Array.isArray(p) ? p : []);
+        setSellers(Array.isArray(sellers) ? sellers : []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Load failed");
       }
@@ -38,6 +46,9 @@ export default function DashboardPage() {
       {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
       <section className="rounded-xl border p-4">
         <h2 className="font-medium">Suppliers ({suppliers.length})</h2>
+      </section>
+      <section className="rounded-xl border p-4">
+        <h2 className="font-medium">Marketplace sellers ({sellers.length})</h2>
       </section>
       <section className="rounded-xl border p-4">
         <h2 className="font-medium">Purchase orders ({pos.length})</h2>

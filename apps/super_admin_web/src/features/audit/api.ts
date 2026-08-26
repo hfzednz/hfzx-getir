@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { AuditSnapshot } from "./types";
 
@@ -124,6 +125,7 @@ export async function fetchAudit(params?: {
     const qs = params?.q ? `?q=${encodeURIComponent(params.q)}` : "";
     return await apiClient<AuditSnapshot>(platformPath(`/audit${qs}`));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const snap = mockSnapshot();

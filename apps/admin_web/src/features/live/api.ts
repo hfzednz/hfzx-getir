@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient } from "@/shared/api/client";
 import type { LiveOpsSnapshot } from "./types";
 
@@ -296,7 +297,8 @@ export async function fetchLiveSnapshot(
   try {
     const qs = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
     return await apiClient<LiveOpsSnapshot>(`/admin/live/snapshot${qs}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await new Promise((r) => setTimeout(r, 180));
     return buildMockLiveSnapshot(cityId, "polling");
   }

@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   LicenseOverrideProposal,
@@ -243,6 +244,7 @@ export async function fetchLicenses(): Promise<LicensesSnapshot> {
   try {
     return await apiClient<LicensesSnapshot>(platformPath("/licenses"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return snapshot();
@@ -258,6 +260,7 @@ export async function renewLicense(licenseId: string): Promise<TenantLicense> {
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockLicenses.findIndex((l) => l.id === licenseId);
@@ -286,6 +289,7 @@ export async function proposeLicenseOverride(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const lic = mockLicenses.find((l) => l.id === input.licenseId);
@@ -319,6 +323,7 @@ export async function resolveLicenseProposal(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockProposals.findIndex((p) => p.id === input.proposalId);

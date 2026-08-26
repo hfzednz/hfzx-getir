@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   FeatureFlag,
@@ -164,6 +165,7 @@ export async function fetchFlags(): Promise<FlagsSnapshot> {
   try {
     return await apiClient<FlagsSnapshot>(platformPath("/flags"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return snapshot();
@@ -180,6 +182,7 @@ export async function upsertFlag(input: UpsertFlagInput): Promise<FeatureFlag> {
       idempotent: true,
     });
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const created: FeatureFlag = {
@@ -215,6 +218,7 @@ export async function updateFlagRollout(
       { method: "PATCH", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockFlags.findIndex((f) => f.id === input.flagId);
@@ -241,6 +245,7 @@ export async function toggleFeatureFlag(
       { method: "POST", body: { enabled }, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockFlags.findIndex((f) => f.id === flagId);
@@ -268,6 +273,7 @@ export async function emergencyRollback(flagId: string): Promise<FeatureFlag> {
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockFlags.findIndex((f) => f.id === flagId);
@@ -298,6 +304,7 @@ export async function proposeKillSwitch(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const flag = mockFlags.find((f) => f.id === input.flagId);
@@ -335,6 +342,7 @@ export async function resolveKillSwitchProposal(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockProposals.findIndex((p) => p.id === input.proposalId);

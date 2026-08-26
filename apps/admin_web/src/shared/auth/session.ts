@@ -9,4 +9,5 @@ export interface AdminSession {
   permissions: string[];
   cityIds: Id[];
   mfaVerified: boolean;
+  accessToken?: string;
 }

@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { ObservabilitySnapshot } from "./types";
 
@@ -245,6 +246,7 @@ export async function fetchObservabilitySnapshot(): Promise<ObservabilitySnapsho
       platformPath("/observability"),
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await new Promise((r) => setTimeout(r, 200));
       return mockSnapshot();

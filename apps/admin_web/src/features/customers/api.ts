@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient } from "@/shared/api/client";
 import type { Paginated } from "@/shared/types/common";
 import type {
@@ -293,7 +294,8 @@ export async function fetchCustomers(
     return await apiClient<Paginated<CustomerListItem>>(
       `/admin/customers${qs ? `?${qs}` : ""}`,
     );
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await new Promise((r) => setTimeout(r, 200));
     return buildMockCustomerList(filters);
   }
@@ -304,7 +306,8 @@ export async function fetchCustomerProfile(
 ): Promise<CustomerProfile> {
   try {
     return await apiClient<CustomerProfile>(`/admin/customers/${customerId}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await new Promise((r) => setTimeout(r, 180));
     const mock = buildMockCustomerProfile(customerId);
     if (!mock) throw new Error(`Customer ${customerId} not found`);
@@ -324,7 +327,8 @@ export async function applyCustomerAdjustment(
         idempotent: true,
       },
     );
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await new Promise((r) => setTimeout(r, 220));
     return {
       customerId: input.customerId,

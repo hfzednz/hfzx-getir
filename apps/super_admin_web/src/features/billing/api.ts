@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type { BillingSnapshot, PlatformInvoice } from "./types";
 
@@ -208,6 +209,7 @@ export async function fetchBilling(): Promise<BillingSnapshot> {
   try {
     return await apiClient<BillingSnapshot>(platformPath("/billing"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockSnapshot();
@@ -225,6 +227,7 @@ export async function markInvoicePaid(
       { method: "POST", body: {}, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const snap = mockSnapshot();

@@ -9,4 +9,5 @@ export interface PlatformSession {
   permissions: string[];
   mfaVerified: boolean;
   webauthnVerified: boolean;
+  accessToken?: string;
 }

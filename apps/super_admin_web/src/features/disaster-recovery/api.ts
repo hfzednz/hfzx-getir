@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   DisasterRecoverySnapshot,
@@ -309,6 +310,7 @@ export async function fetchDisasterRecovery(): Promise<DisasterRecoverySnapshot>
       platformPath("/disaster-recovery"),
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockSnapshot();
@@ -330,6 +332,7 @@ export async function proposeDrFailover(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const proposal: DrFailoverProposal = {
@@ -361,6 +364,7 @@ export async function resolveDrFailover(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const idx = mockProposals.findIndex((p) => p.id === input.proposalId);
@@ -388,6 +392,7 @@ export async function startRestore(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const job: RestoreJob = {
@@ -420,6 +425,7 @@ export async function runSimulation(input: {
       { method: "POST", body: input, idempotent: true },
     );
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       const sim: DrSimulation = {

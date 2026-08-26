@@ -1,4 +1,4 @@
-# Web role matrix (Prompt 66)
+# Web role matrix (Prompt 66–67)
 
 Evidence-backed mapping from identity seed, BFFs, and service APIs.
 
@@ -15,8 +15,8 @@ Evidence-backed mapping from identity seed, BFFs, and service APIs.
 | city_ops | identity seed | tenant/city | `operations-web` | `/login` `/dashboard` | admin:read (UI) | `bff-admin` dashboard | ops overview | **Integrated** (admin BFF minimal) |
 | support_agent | identity seed | tenant | `support-web` | `/login` `/dashboard` | support:read/write | `bff-admin` orders | lookup orders | **Integrated** (partial) |
 | finance_analyst | identity seed | tenant | `finance-web` | `/login` `/dashboard` | finance:read | `finance-ledger-service` | journals, ledger | **Integrated** |
-| admin | identity seed | tenant | `admin_web` | `/dashboard` `/orders` … | admin:* | `bff-admin` + mocks | full ops UI | **Partial** (many mocks) |
-| super_admin | identity seed | global | `super_admin_web` | `/tenants` `/flags` … | platform:* | mock/platform | tenant governance | **Partial** (mock-heavy) |
+| admin | identity seed | tenant | `admin_web` | `/dashboard` `/orders` … | admin:* | `bff-admin` (5 routes) | dashboard, orders | **Real OTP** — extended UI needs backend |
+| super_admin | identity seed | global | `super_admin_web` | `/tenants` `/flags` … | platform:* | `platform-ops-service` | stats, deployments | **Real OTP** — most screens need backend |
 | service_account | identity seed | machine | — | — | — | internal | automation | **N/A web** |
 
 ## Authentication
@@ -25,7 +25,8 @@ Evidence-backed mapping from identity seed, BFFs, and service APIs.
 |-----|--------|----------|
 | customer-web | OTP via BFF | `POST /v1/customer/auth/otp/*` |
 | All staff role apps | OTP via identity | `POST /v1/identity/auth/otp/*` |
-| admin_web / super_admin_web | Demo login (pending identity wire) | local store |
+| admin_web | OTP via identity | Real OTP |
+| super_admin_web | OTP via identity | Real OTP |
 
 ## Tenant isolation
 
@@ -35,10 +36,10 @@ Evidence-backed mapping from identity seed, BFFs, and service APIs.
 
 ## Known gaps
 
-1. `admin_web` / `super_admin_web` — majority mock APIs; `bff-admin` has 6 live routes.
+1. Extended admin/super-admin UI modules lack backend routes (mock fallback disabled by default).
 2. Public staging URLs — blocked without `VERCEL_TOKEN` + public BFF host.
-3. Multi-role E2E chain — requires persistent staging DB + full service mesh.
-4. Realtime SSE — customer tracking uses polling until gateway WebSocket exists.
+3. Full browser multi-role E2E — API journey only; warehouse needs task ID env.
+4. Realtime SSE client wired; publishers from order-service not fully integrated.
 
 ---
 

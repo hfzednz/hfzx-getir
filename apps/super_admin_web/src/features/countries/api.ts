@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient, ApiError, platformPath } from "@/shared/api/client";
 import type {
   CountriesListResponse,
@@ -187,6 +188,7 @@ export async function fetchCountries(): Promise<CountriesListResponse> {
   try {
     return await apiClient<CountriesListResponse>(platformPath("/countries"));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return {
@@ -203,6 +205,7 @@ export async function fetchCountry(id: string): Promise<CountryDetail> {
   try {
     return await apiClient<CountryDetail>(platformPath(`/countries/${id}`));
   } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     if (err instanceof ApiError || err instanceof TypeError) {
       await delay();
       return mockDetail(id);

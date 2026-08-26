@@ -1,3 +1,4 @@
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
 import { apiClient } from "@/shared/api/client";
 import type {
   ProductDetail,
@@ -205,7 +206,8 @@ export async function fetchProducts(
   try {
     const q = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
     return await apiClient<ProductListResponse>(`/admin/catalog/products${q}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     return {
       items: MOCK_LIST,
@@ -220,7 +222,8 @@ export async function fetchProducts(
 export async function fetchProductDetail(id: string): Promise<ProductDetail> {
   try {
     return await apiClient<ProductDetail>(`/admin/catalog/products/${id}`);
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay();
     return mockDetail(id);
   }
@@ -234,7 +237,8 @@ export async function previewProductImport(
       "/admin/catalog/products/import/preview",
       { method: "POST", body: { fileName }, idempotent: true },
     );
-  } catch {
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
     await delay(400);
     return {
       fileName,
