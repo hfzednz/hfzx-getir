@@ -1,0 +1,52 @@
+name: cd-staging-android
+
+# Manual staging APK/AAB for physical phone testing. Does not deploy backend.
+on:
+  workflow_dispatch:
+    inputs:
+      staging_api_url:
+        description: Public HTTPS customer BFF base URL (e.g. https://api-staging.example.com/v1)
+        required: true
+      staging_ws_url:
+        description: Optional WebSocket URL (defaults from API host)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  staging-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: chmod CI scripts
+        run: chmod +x scripts/ci/*.sh
+      - name: Build staging APK + AAB (debug-signed if no keystore)
+        env:
+          NEXORA_STAGING_BASE_URL: ${{ inputs.staging_api_url }}
+          NEXORA_STAGING_WS_URL: ${{ inputs.staging_ws_url }}
+          ANDROID_KEYSTORE_PATH: ${{ secrets.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bash scripts/ci/android-staging-customer.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: customer-staging-apk
+          path: apps/mobile_customer/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: customer-staging-aab
+          path: apps/mobile_customer/build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error
