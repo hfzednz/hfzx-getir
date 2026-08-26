@@ -14,7 +14,7 @@ All technically executable CI gates pass on the current `main` lineage. Applicat
 |---|---|
 | Repository | https://github.com/hfzednz/hfzx-getir |
 | Branch | `main` |
-| Final commit | `03acae28620cf415d42c702d2a4029a2ea309fac` |
+| Final commit | `23c1225ddbf2c921396db7035ac6fcdafb879346` |
 | Recovery fix commit | `4420cf7530a9372d08abddb7b2b049f094ee177c` |
 | Customer app | `apps/mobile_customer` (`nexora_customer` v1.0.0+1) |
 | Android applicationId | `com.hfzx.nexora.nexora_customer` |
@@ -27,13 +27,13 @@ Stale outage runs `32984528739` / `32984586382` are **invalid** (queued, 0 jobs)
 
 | Workflow | Run ID | SHA | Result | URL |
 |---|---|---|---|---|
-| ci-quality | 33005846960 | `03acae2` | **success** | https://github.com/hfzednz/hfzx-getir/actions/runs/33005846960 |
-| ci-acceptance | 33005846946 | `03acae2` | **success** | https://github.com/hfzednz/hfzx-getir/actions/runs/33005846946 |
-| ci-release-candidate | 33005846965 | `03acae2` | **success** | https://github.com/hfzednz/hfzx-getir/actions/runs/33005846965 |
+| ci-quality | 33010925889 | `23c1225` | **success** | https://github.com/hfzednz/hfzx-getir/actions/runs/33010925889 |
+| ci-acceptance | 33010925875 | `23c1225` | **success** | https://github.com/hfzednz/hfzx-getir/actions/runs/33010925875 |
+| ci-release-candidate | 33010925982 | `23c1225` | **success** | https://github.com/hfzednz/hfzx-getir/actions/runs/33010925982 |
 
-Prior full pass on `3181791` (same application code; docs-only delta): Quality `33002304454`, Acceptance `33002304601`, RC `33002304473`.
+Prior full pass on `03acae2` (same application code): Quality `33005846960`, Acceptance `33005846946`, RC `33005846965`. Earlier lineage: `3181791` → Quality `33002304454`, Acceptance `33002304601`, RC `33002304473`.
 
-### ci-quality jobs (`33005846960`)
+### ci-quality jobs (`33010925889`)
 
 | Job | Result |
 |---|---|
@@ -41,7 +41,7 @@ Prior full pass on `3181791` (same application code; docs-only delta): Quality `
 | quality-gates | PASS |
 | nightly-perf-security | SKIPPED (not schedule) |
 
-### ci-acceptance jobs (`33005846946`)
+### ci-acceptance jobs (`33010925875`)
 
 | Job | Result |
 |---|---|
@@ -53,7 +53,7 @@ Prior full pass on `3181791` (same application code; docs-only delta): Quality `
 | security-sanity | PASS (secret scan, govulncheck) |
 | service-startup-smoke | PASS (12 core services health + SIGTERM) |
 
-### ci-release-candidate jobs (`33005846965`)
+### ci-release-candidate jobs (`33010925982`)
 
 | Job | Result | Notes |
 |---|---|---|
@@ -66,7 +66,7 @@ Prior full pass on `3181791` (same application code; docs-only delta): Quality `
 
 **Artifact:** `customer-release-aab` from RC run (debug-signed when keystore secrets unset). **Not** Play/App Store production signing.
 
-### rc-recovery evidence (fresh, `33005846965`)
+### rc-recovery evidence (fresh, `33010925982`)
 
 Job validates on Ubuntu: Postgres ready → Redis restart + OK → Postgres intact → Kafka restart → broker API OK → Postgres intact → **`RECOVERY_SMOKE_PASS`**. Fix from `4420cf7` (Kafka broker API wait) confirmed.
 
@@ -194,7 +194,7 @@ Supported via `NEXORA_DEFAULT_LANGUAGE` and ARB/l10n in apps. Full locale matrix
 
 | Domain | Gate | Result | Evidence |
 |---|---|---|---|
-| Backend | 46/46 tests | **PASS** | Acceptance `33005846946` |
+| Backend | 46/46 tests | **PASS** | Acceptance `33010925875` |
 | Backend | 46/46 builds | **PASS** | Acceptance |
 | Backend | go mod verify | **PASS** | Acceptance |
 | Backend | Race | **PASS** | Acceptance |
