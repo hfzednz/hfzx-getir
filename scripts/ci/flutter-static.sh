@@ -12,7 +12,7 @@ run_app() {
     cd "$ROOT/$dir"
     flutter pub get
     flutter analyze --no-fatal-infos --no-fatal-warnings
-    flutter test --reporter compact
+    flutter test --reporter compact --timeout 30s
   )
 }
 

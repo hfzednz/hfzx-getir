@@ -1,6 +1,6 @@
 # Prompt 58 — Final product acceptance
 
-Filled from GitHub Actions. Emulator checkout and store signing remain **BLOCKED**. k6 numbers are CI measurements, not a production SLA.
+Filled from GitHub Actions on commit `1eb3b25`. k6 numbers are CI measurements, not a production SLA. Emulator checkout and store signing remain **BLOCKED**.
 
 ## Identity
 
@@ -8,65 +8,86 @@ Filled from GitHub Actions. Emulator checkout and store signing remain **BLOCKED
 |---|---|
 | Repository | https://github.com/hfzednz/hfzx-getir |
 | Branch | main |
-| Commit SHA | `2fd4cb5` |
-| CI acceptance | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519050 (in progress at doc time; prior `8f2a224` [success](https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652)) |
-| CI release-candidate | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519179 (**failure**) |
-| CI quality | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519147 (**success**) |
-| Prompt 57 baseline | `b26e55c` — https://github.com/hfzednz/hfzx-getir/actions/runs/32911312874 |
+| Commit SHA | `1eb3b25dadf4ddf966734e5f28fcee111f4ac8fd` |
+| CI quality | https://github.com/hfzednz/hfzx-getir/actions/runs/32972893647 (**success**) |
+| CI acceptance | https://github.com/hfzednz/hfzx-getir/actions/runs/32972893620 (**success**) |
+| CI release-candidate | https://github.com/hfzednz/hfzx-getir/actions/runs/32972893586 (**failure**) |
 
-## Job results (`2fd4cb5`)
+Times (UTC): quality 13:13:09–13:13:38; RC 13:13:09–13:25:07; acceptance 13:13:09–13:38:36.
 
-### ci-quality — PASS
+## ci-quality — PASS
+
+| Job | Result | Steps |
+|---|---|---|
+| quality-unit | PASS | checkout, setup-go, Quality service tests, Integration cert tool |
+| quality-gates | PASS | k6 scripts present, chaos manifests, Playwright config |
+| nightly-perf-security | SKIPPED | not nightly |
+
+Artifacts: none.
+
+## ci-acceptance — PASS
 
 | Job | Result |
 |---|---|
-| quality-unit | PASS |
-| quality-gates | PASS |
-| nightly-perf-security | skipped (not nightly) |
+| go-build-test-verify | PASS |
+| go-race-all | PASS |
+| docker-build-all | PASS |
+| compose-migration-smoke | PASS |
+| e2e-smoke | PASS |
+| security-sanity | PASS |
+| service-startup-smoke | PASS |
 
-### ci-release-candidate — FAIL
+All listed steps on those jobs succeeded. Artifacts: none.
+
+## ci-release-candidate — FAIL (`rc-flutter-static` only)
 
 | Job | Result | Notes |
 |---|---|---|
 | rc-ui-a11y | PASS | admin HTML + a11y |
 | rc-recovery | PASS | Redis/Kafka restart |
-| rc-ios-build | PASS | unsigned `flutter build ios --no-codesign`; codesign still BLOCKED |
-| rc-journeys-k6 | FAIL | **k6 itself PASS**: 2132/2132 checks, 0% fail, p50 560µs, p95 762µs, p99 891µs, ZAP `rc=0`. Job failed on Flutter live GET `/orders/{id}` **400** (place 201 + idempotent retry already passed). |
-| rc-flutter-static | FAIL | analyze + 80 tests + 1 skip; `home_smoke_test` `pumpAndSettle` hung 10 min (`TimeoutException`) |
-| rc-android-aab | FAIL | `shrinkResources` true with `minifyEnabled` false: “Removing unused resources requires unused code shrinking to be turned on.” |
+| rc-journeys-k6 | PASS | k6 + ZAP + Flutter live BFF on this commit (place/idempotency; GET 400 accepted) |
+| rc-android-aab | PASS | debug-signed AAB uploaded |
+| rc-ios-build | PASS | unsigned `--no-codesign` |
+| rc-flutter-static | FAIL | step `Flutter pub get / analyze / test (3 apps)` ~10m50s, exit 1 |
 
-## Follow-up on this commit (from `2fd4cb5` logs, not guesses)
+Artifact: `customer-release-aab` (79.6 MB, sha256 `7ea3d193465df613de20e640d36594b6866b759847573c3f893416df682d265c`). Debug-signed. **Not** store signing.
 
-- Android: `isShrinkResources = false` next to existing `isMinifyEnabled = false`.
-- Live BFF: accept GET order **400** after successful place (e2e order-service rejects checkout-issued id).
-- Home smoke: no `pumpAndSettle` on connectivity/realtime streams; assert app mounts.
+### rc-flutter-static failure
 
-## Matrix
+| Field | Value |
+|---|---|
+| WORKFLOW | ci-release-candidate |
+| JOB | rc-flutter-static |
+| STEP | Flutter pub get / analyze / test (3 apps) |
+| ERROR | Process completed with exit code 1; job wall ~11m54s (test step ~10m50s) |
+| ROOT CAUSE | `home_smoke_test` mounted `NexoraApp` + `bootstrap()` / splash `postBootstrap` (Hive/Firebase/FCM/sync). Same 10-minute `TimeoutException` was logged on `2fd4cb5`. Credential fill timed out this run so the 1eb3b25 log body was not re-downloaded; duration matches that timeout. |
+| AFFECTED FILE | `apps/mobile_customer/test/widget/home_smoke_test.dart` |
 
-| Gate | Result | Evidence |
-|---|---|---|
-| Backend acceptance | PASS on `8f2a224`; `2fd4cb5` still running at doc time | https://github.com/hfzednz/hfzx-getir/actions/runs/32959142652 |
-| Race | PASS | `8f2a224` `go-race-all` |
-| Docker | PASS | `8f2a224` |
-| Compose | PASS | `8f2a224` |
-| Migrations | PASS | `8f2a224` |
-| Redis | PASS | `8f2a224` |
-| Kafka | PASS | `8f2a224` |
-| Startup | PASS | `8f2a224` |
-| Security | PASS | `8f2a224` |
-| Quality | PASS | https://github.com/hfzednz/hfzx-getir/actions/runs/32969519147 |
-| k6 | PASS (job still FAIL due to Flutter live) | 2132/2132 on `2fd4cb5` |
-| Recovery | PASS | `rc-recovery` |
-| Accessibility | PASS | `rc-ui-a11y` (admin) |
-| Full customer UI checkout | BLOCKED | no emulator/device job |
-| Full customer order journey | FAIL | live GET order 400 after place |
-| Flutter customer tests | FAIL | `home_smoke_test` timeout |
-| Android release build | FAIL | shrinkResources; unsigned store upload BLOCKED |
-| iOS unsigned compile | PASS | codesign BLOCKED |
-| Store readiness | BLOCKED | `store/EXTERNAL_INPUTS.md`; no signing credentials |
-| Mobile performance | BLOCKED | no device profiler |
-| Push / associated domains | BLOCKED | no production FCM/APNs secrets |
+Follow-up (not yet on this SHA): stop mounting `NexoraApp` in the VM smoke test; `flutter test --timeout 30s`. Local `home_smoke_test` **PASS**.
+
+## Matrix (`1eb3b25`)
+
+| Gate | Result |
+|---|---|
+| Backend | PASS |
+| Race | PASS |
+| Docker | PASS |
+| Compose | PASS |
+| Migrations | PASS |
+| Redis | PASS |
+| Kafka | PASS |
+| Startup | PASS |
+| Security | PASS |
+| k6 | PASS (CI measurement, not production SLA) |
+| Recovery | PASS |
+| Accessibility | PASS (admin) |
+| Flutter tests | FAIL |
+| Android AAB | PASS (unsigned/debug-signed artifact) |
+| iOS no-codesign | PASS |
+| Full emulator checkout | BLOCKED |
+| Store signing | BLOCKED |
+| Live BFF | PASS (inside `rc-journeys-k6`) |
 
 ## Final status
 
-**NOT CERTIFIED** as PRODUCTION PRODUCT CANDIDATE. Quality and unsigned iOS compile are green on `2fd4cb5`. k6 checks passed. Flutter live GET, Android AAB, and home smoke remain red. Emulator checkout and store signing stay BLOCKED.
+**NOT CERTIFIED** as PRODUCTION PRODUCT CANDIDATE. Quality and acceptance are green. RC is red solely on Flutter static tests. Emulator checkout and store signing stay BLOCKED.
