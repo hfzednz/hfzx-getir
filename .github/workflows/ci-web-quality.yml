@@ -8,6 +8,8 @@ on:
       - "apps/admin_web/**"
       - "apps/super_admin_web/**"
       - "packages/web/**"
+      - "qa/playwright/**"
+      - "scripts/ci/web-e2e.sh"
       - "scripts/ci/web-static.sh"
       - ".github/workflows/ci-web-quality.yml"
   workflow_dispatch:

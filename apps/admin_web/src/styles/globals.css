@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@nexora/ui/styles.css";
+@source "../../../../packages/web/core/src/**/*.{ts,tsx}";
 
 @theme inline {
   --font-sans: var(--nx-font-body);

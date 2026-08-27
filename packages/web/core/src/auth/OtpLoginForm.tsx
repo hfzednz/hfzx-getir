@@ -79,7 +79,8 @@ export function OtpLoginForm({
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-violet-600 py-3 font-semibold text-white disabled:opacity-60"
+            className="w-full rounded-lg bg-violet-600 px-4 font-semibold text-white disabled:opacity-60"
+            style={{ minHeight: 44, paddingTop: 12, paddingBottom: 12 }}
           >
             {loading ? "Sending…" : "Send OTP"}
           </button>
@@ -101,7 +102,8 @@ export function OtpLoginForm({
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-violet-600 py-3 font-semibold text-white disabled:opacity-60"
+            className="w-full rounded-lg bg-violet-600 px-4 font-semibold text-white disabled:opacity-60"
+            style={{ minHeight: 44, paddingTop: 12, paddingBottom: 12 }}
           >
             {loading ? "Verifying…" : "Verify & continue"}
           </button>
