@@ -108,7 +108,7 @@ if [[ "${RC_FULL:-}" == "1" ]]; then
   run_svc payment-service
   run_svc order-service
   run_svc inventory-service
-  run_svc finance-ledger-service
+  run_svc finance-ledger-service -p 8091:8080
   run_svc settlement-service
 fi
 run_svc bff-admin -p 8114:8080
@@ -488,7 +488,11 @@ fi
 echo "==> Playwright (API request tests)"
 cd "$ROOT/qa/playwright"
 npm install --no-fund --no-audit
-ADMIN_BASE="http://127.0.0.1:8114" CUSTOMER_BASE="http://127.0.0.1:8111" npx playwright test --project=api --reporter=list
+PLAY_ENV=(ADMIN_BASE="http://127.0.0.1:8114" CUSTOMER_BASE="http://127.0.0.1:8111")
+if [[ "${RC_FULL:-}" == "1" ]]; then
+  PLAY_ENV+=(FINANCE_BASE="http://127.0.0.1:8091")
+fi
+env "${PLAY_ENV[@]}" npx playwright test --project=api --reporter=list
 
 echo "==> ZAP baseline against customer BFF"
 set +e
