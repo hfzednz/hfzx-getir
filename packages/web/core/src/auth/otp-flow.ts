@@ -53,16 +53,31 @@ function sessionFromResponse(
   phone: string,
   fallbackRoles: string[],
 ): WebSession {
+  const accessToken = String(res.accessToken ?? res.AccessToken ?? "");
+  const principalId = String(
+    res.principalId ??
+      res.PrincipalID ??
+      res.customerId ??
+      res.CustomerID ??
+      "",
+  );
+  const expiresRaw = res.expiresIn ?? res.ExpiresIn;
   return {
-    accessToken: String(res.accessToken ?? res.AccessToken ?? ""),
-    refreshToken: res.refreshToken ? String(res.refreshToken) : undefined,
-    principalId: String(res.principalId ?? res.PrincipalID ?? ""),
+    accessToken,
+    refreshToken: res.refreshToken
+      ? String(res.refreshToken)
+      : res.RefreshToken
+        ? String(res.RefreshToken)
+        : undefined,
+    principalId,
     roles: Array.isArray(res.roles)
       ? (res.roles as string[])
-      : fallbackRoles,
+      : Array.isArray(res.Roles)
+        ? (res.Roles as string[])
+        : fallbackRoles,
     phone,
-    expiresAt: res.expiresIn
-      ? new Date(Date.now() + Number(res.expiresIn) * 1000).toISOString()
+    expiresAt: expiresRaw
+      ? new Date(Date.now() + Number(expiresRaw) * 1000).toISOString()
       : undefined,
   };
 }
