@@ -525,6 +525,20 @@ PY
   if [[ -z "$FIN_TOKEN" ]]; then
     dump_fail "finance login returned no access token"
   fi
+  FIN_ROLES="$(python3 - <<'PY'
+import base64, json
+d=json.load(open("/tmp/e2e-fin-verify.json"))
+tok=d.get("accessToken") or d.get("AccessToken") or ""
+body=tok.split(".")[1] if tok.count(".") == 2 else ""
+pad="=" * (-len(body) % 4)
+claims=json.loads(base64.urlsafe_b64decode(body + pad)) if body else {}
+print(",".join(claims.get("roles") or claims.get("scope", "").split()))
+PY
+)"
+  echo "finance_roles ${FIN_ROLES}"
+  if [[ "$FIN_ROLES" != *finance_analyst* ]]; then
+    dump_fail "finance login did not carry finance_analyst, got '${FIN_ROLES}'"
+  fi
   FIN_AUTH=(-H "Authorization: Bearer ${FIN_TOKEN}")
   # A customer principal must not reach the ledger.
   LEDGER_AS_CUSTOMER="$(curl -sS --max-time 10 -o /tmp/e2e-ledger-customer.json -w "%{http_code}" \
