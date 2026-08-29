@@ -55,7 +55,11 @@ export function CustomerShell({ children }: { children: ReactNode }) {
     <div className="nx-customer-shell flex min-h-dvh flex-col">
       <header className="sticky top-0 z-10 bg-[var(--nx-customer-header)] px-4 py-3 text-white">
         <div className="flex items-center justify-between gap-2">
-          <Link href="/home" className="text-lg font-semibold tracking-tight">
+          <Link
+            href="/home"
+            className="inline-flex items-center text-lg font-semibold tracking-tight"
+            style={{ minHeight: 44 }}
+          >
             NEXORA
           </Link>
           <button
@@ -82,7 +86,8 @@ export function CustomerShell({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 py-3 ${active ? "text-[var(--nx-brand)] font-semibold" : "text-neutral-600"}`}
+              className={`flex flex-col items-center justify-center gap-1 py-3 ${active ? "text-[var(--nx-brand)] font-semibold" : "text-neutral-600"}`}
+              style={{ minHeight: 44 }}
               aria-current={active ? "page" : undefined}
             >
               {item.label}

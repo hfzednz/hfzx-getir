@@ -23,13 +23,22 @@ export default function ProductPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["product", sku, lat, lng],
     queryFn: async () => {
-      const feed = await customerApi().request<{ products?: CatalogProduct[] }>(
+      const api = customerApi();
+      const match = (products: CatalogProduct[]) =>
+        products.find((p) => p.sku === sku || p.id === sku) ?? null;
+
+      const searched = await api.request<{ products?: CatalogProduct[] }>(
         `/v1/customer/home?lat=${lat}&lng=${lng}&q=${encodeURIComponent(sku)}`,
       );
-      const products = feed.products ?? [];
-      return (
-        products.find((p) => p.sku === sku || p.id === sku) ?? products[0] ?? null
+      const bySearch = match(searched.products ?? []);
+      if (bySearch) return bySearch;
+
+      // The identifier in the URL is not always a searchable term (it can be a
+      // product id), so fall back to the unfiltered feed for this location.
+      const feed = await api.request<{ products?: CatalogProduct[] }>(
+        `/v1/customer/home?lat=${lat}&lng=${lng}`,
       );
+      return match(feed.products ?? []);
     },
   });
 
@@ -38,7 +47,11 @@ export default function ProductPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/home" className="text-sm text-[var(--nx-brand)]">
+      <Link
+        href="/home"
+        className="inline-flex items-center text-sm text-[var(--nx-brand)]"
+        style={{ minHeight: 44 }}
+      >
         ← Back
       </Link>
       <h1 className="text-xl font-semibold">{name ?? "Product"}</h1>

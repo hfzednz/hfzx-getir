@@ -12,7 +12,11 @@ export default function CartPage() {
     return (
       <div className="space-y-4 text-center py-12">
         <p className="text-neutral-600">Your cart is empty.</p>
-        <Link href="/home" className="text-[var(--nx-brand)] font-medium">
+        <Link
+          href="/home"
+          className="inline-flex items-center justify-center font-medium text-[var(--nx-brand)]"
+          style={{ minHeight: 44 }}
+        >
           Browse products
         </Link>
       </div>

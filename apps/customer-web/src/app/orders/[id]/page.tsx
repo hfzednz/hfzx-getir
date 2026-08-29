@@ -56,7 +56,11 @@ export default function OrderDetailPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/orders" className="text-sm text-[var(--nx-brand)]">
+      <Link
+        href="/orders"
+        className="inline-flex items-center text-sm text-[var(--nx-brand)]"
+        style={{ minHeight: 44 }}
+      >
         ← Back to orders
       </Link>
       <h1 className="text-xl font-semibold">Order</h1>

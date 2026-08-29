@@ -78,7 +78,9 @@ describe("api client error handling", () => {
   });
 
   it("sends tenant, bearer token and idempotency key", async () => {
-    const fetchMock = vi.fn(async () => respond(200, JSON.stringify({ ok: true })));
+    const fetchMock = vi.fn(async (_url: string, _init: RequestInit) =>
+      respond(200, JSON.stringify({ ok: true })),
+    );
     vi.stubGlobal("fetch", fetchMock);
     const api = createApiClient({
       baseUrl: "",
@@ -92,7 +94,7 @@ describe("api client error handling", () => {
       idempotencyKey: "key-1",
     });
 
-    const headers = (fetchMock.mock.calls[0]?.[1] as RequestInit).headers as Headers;
+    const headers = fetchMock.mock.calls[0]![1].headers as Headers;
     expect(headers.get("X-Tenant-Id")).toBe("11111111-1111-1111-1111-111111111111");
     expect(headers.get("Authorization")).toBe("Bearer tok");
     expect(headers.get("Idempotency-Key")).toBe("key-1");

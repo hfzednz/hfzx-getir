@@ -143,6 +143,15 @@ def main():
         return 1
 
     st, home, _ = call(CUSTOMER, "GET", "/v1/customer/home?lat=41&lng=29", token=cust_tok)
+    # A signed-in shopper sends customerId, which makes the BFF ask for recommendation
+    # rails. That request must still serve the storefront when recs are unavailable.
+    st_home_recs, home_recs, _ = call(
+        CUSTOMER, "GET", f"/v1/customer/home?lat=41&lng=29&customerId={principal}", token=cust_tok
+    )
+    print("home_with_customer_id", st_home_recs, "products", len(home_recs.get("products") or []))
+    if st_home_recs != 200:
+        print("FAIL home with customerId", st_home_recs)
+        return 1
     products = home.get("products") or []
     sku = str((products[0].get("id") or products[0].get("sku")) if products else "")
     print("catalog_sku", bool(sku), "product_count", len(products))
@@ -236,6 +245,16 @@ def main():
     wrong_order = call(CUSTOMER, "GET", f"/v1/customer/orders/{oid}", token=cust_tok, tenant=WRONG)[0]
     right_order = call(BFF, "GET", f"/v1/customer/orders/{oid}", token=cust_tok)[0]
     print("wrong_tenant_order", wrong_order, "right_order", right_order)
+    wrong_tenant_write = call(
+        CUSTOMER,
+        "POST",
+        "/v1/customer/cart/items",
+        {"cartId": cart_id, "sku": sku, "qty": 5, "unitMinor": 1500},
+        token=cust_tok,
+        tenant=WRONG,
+    )[0]
+    wrong_tenant_pick = call(WH, "POST", f"/v1/warehouse/tasks/{oid}/pick", {}, token=wh_tok, tenant=WRONG)[0]
+    print("wrong_tenant_cart_write", wrong_tenant_write, "wrong_tenant_pick", wrong_tenant_pick)
 
     print("== sse tickets (pre-event)")
     st_unauth, _ = curl_sse(RT + "/v1/realtime/sse?topic=" + urllib.parse.quote("order:" + oid))
@@ -271,6 +290,8 @@ def main():
         "oid": oid, "place_http": st, "order_get": st_get,
         "denials": denials, "legit": legit,
         "wrong_tenant_order": wrong_order, "right_order": right_order,
+        "wrong_tenant_cart_write": wrong_tenant_write, "wrong_tenant_pick": wrong_tenant_pick,
+        "home_with_customer_id": st_home_recs,
         "unauth_sse": st_unauth, "own_sse": st_ok, "cross_sse": st_cross,
         "wrong_tenant_ticket": st_bad_tix, "customer_b_order": st_b_get, "customer_b_ticket": st_b_tix,
         "tracking_direct": st_tr_direct, "bff_track": st_track,
@@ -298,6 +319,9 @@ def main():
         return 1
     if wrong_order not in (401, 403, 404):
         print("TENANT_FAIL", wrong_order)
+        return 1
+    if wrong_tenant_write < 400 or wrong_tenant_pick < 400:
+        print("TENANT_WRITE_FAIL", wrong_tenant_write, wrong_tenant_pick)
         return 1
     if st_bad_tix not in (401, 403, 404):
         print("SSE_WRONG_TENANT_TICKET_FAIL", st_bad_tix)

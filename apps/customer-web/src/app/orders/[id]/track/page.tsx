@@ -54,7 +54,11 @@ export default function OrderTrackPage() {
 
   return (
     <div className="space-y-4">
-      <Link href={`/orders/${id}`} className="text-sm text-[var(--nx-brand)]">
+      <Link
+        href={`/orders/${id}`}
+        className="inline-flex items-center text-sm text-[var(--nx-brand)]"
+        style={{ minHeight: 44 }}
+      >
         ← Order detail
       </Link>
       <h1 className="text-xl font-semibold">Live tracking</h1>

@@ -19,6 +19,8 @@ const BASE = "http://127.0.0.1:3000";
 const PHONE = "+905551112233";
 const WH_PHONE = "+905551112234";
 const TENANT = "11111111-1111-1111-1111-111111111111";
+// Seeded by scripts/staging/prompt80-seed-catalog.sh; overridable for other catalogs.
+const SKU_FOR_PRODUCT_PAGE = process.env.PROMPT80_SKU || "fresh-milk";
 
 function otp(phone) {
   const logs = execSync(
@@ -128,6 +130,75 @@ function warehousePick() {
   console.log("mobile_overflow_checkout", await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth));
   await page.goto(BASE + "/orders", { waitUntil: "domcontentloaded", timeout: 20000 });
   console.log("orders_ok");
+
+  // The product page must show the catalog name and must never invent a price.
+  // Reach it the way a shopper does: tap the first card on the storefront.
+  await page.goto(BASE + "/home", { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.waitForTimeout(1500);
+  const firstProduct = page.locator('a[href^="/product/"]').first();
+  if (await firstProduct.count()) {
+    await firstProduct.click();
+    await page.waitForURL(/\/product\//, { timeout: 20000 });
+  } else {
+    await page.goto(BASE + "/product/" + encodeURIComponent(SKU_FOR_PRODUCT_PAGE), {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+  }
+  await page.waitForTimeout(2000);
+  console.log("product_url", page.url());
+  const productText = (await page.locator("main").innerText().catch(() => "")) || "";
+  console.log("product_page_fabricated_price", /Add to cart — ₺/.test(productText));
+  console.log("product_page_snippet", productText.replace(/\s+/g, " ").slice(0, 160));
+
+  // Touch targets across the authenticated customer surfaces.
+  const smallTargets = [];
+  for (const route of ["/home", "/cart", "/orders", "/account", "/orders/" + ORDER + "/track"]) {
+    await page.goto(BASE + route, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.waitForTimeout(800);
+    const bad = await page.evaluate(() =>
+      Array.from(document.querySelectorAll("button, a[href], input"))
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 && r.height < 44;
+        })
+        .map((el) => `${el.tagName}:${(el.textContent || "").trim().slice(0, 24)}:${Math.round(el.getBoundingClientRect().height)}`),
+    );
+    if (bad.length) smallTargets.push([route, bad]);
+  }
+  console.log("touch_targets_under_44", JSON.stringify(smallTargets));
+
+  // Refresh, back navigation and a deep link on a second phone viewport.
+  const page2 = await context.newPage();
+  await page2.setViewportSize({ width: 393, height: 852 });
+  for (const route of ["/home", "/search?q=milk", "/cart", "/checkout", "/orders", "/orders/" + ORDER, "/orders/" + ORDER + "/track"]) {
+    await page2.goto(BASE + route, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page2.waitForTimeout(600);
+    const overflow = await page2.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    console.log("viewport393_overflow", route, overflow);
+  }
+  await page2.reload({ waitUntil: "domcontentloaded", timeout: 30000 });
+  console.log("refresh_url", page2.url());
+  await page2.goBack({ waitUntil: "domcontentloaded", timeout: 30000 });
+  console.log("back_url", page2.url());
+  await page2.close();
+
+  // A signed-out deep link must not render protected content.
+  const anon = await browser.newContext({ viewport: { width: 393, height: 852 } });
+  const anonPage = await anon.newPage();
+  await anonPage.goto(BASE + "/orders/" + ORDER + "/track", { waitUntil: "domcontentloaded", timeout: 30000 });
+  await anonPage.waitForTimeout(2000);
+  const anonText = (await anonPage.locator("body").innerText().catch(() => "")) || "";
+  const anonGuarded =
+    /\/login$/.test(new URL(anonPage.url()).pathname) ||
+    /Redirecting to sign in|Loading/i.test(anonText);
+  console.log("anon_deeplink_url", anonPage.url());
+  console.log("anon_deeplink_guarded", anonGuarded);
+  console.log("anon_deeplink_leaked_order", anonText.includes(ORDER));
+  await anon.close();
+
   await browser.close();
   console.log("PROMPT80_BROWSER_OK");
   console.log("PROMPT80_ORDER", ORDER);
