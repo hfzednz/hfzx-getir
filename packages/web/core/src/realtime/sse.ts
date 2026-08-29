@@ -2,24 +2,58 @@ export function subscribeOrderSse(
   orderId: string,
   onEvent: (payload: Record<string, unknown>) => void,
   onDisconnect?: () => void,
+  onOpen?: () => void,
+  getTicket?: () => Promise<string>,
 ): () => void {
   if (typeof EventSource === "undefined") {
     onDisconnect?.();
     return () => undefined;
   }
-  const base = (process.env.NEXT_PUBLIC_REALTIME_URL ?? "http://localhost:8115").replace(/\/$/, "");
+  const envUrl = process.env.NEXT_PUBLIC_REALTIME_URL;
+  const base =
+    envUrl === undefined
+      ? typeof window !== "undefined"
+        ? ""
+        : "http://localhost:8115"
+      : envUrl.replace(/\/$/, "");
   const topic = encodeURIComponent(`order:${orderId}`);
-  const es = new EventSource(`${base}/v1/realtime/sse?topic=${topic}`);
-  es.onmessage = (ev) => {
-    try {
-      onEvent(JSON.parse(ev.data) as Record<string, unknown>);
-    } catch {
-      /* ignore malformed */
+  let closed = false;
+  let es: EventSource | null = null;
+
+  void (async () => {
+    let ticket = "";
+    if (getTicket) {
+      try {
+        ticket = await getTicket();
+      } catch {
+        if (!closed) onDisconnect?.();
+        return;
+      }
     }
+    if (closed) return;
+    const q = ticket
+      ? `${base}/v1/realtime/sse?topic=${topic}&ticket=${encodeURIComponent(ticket)}`
+      : `${base}/v1/realtime/sse?topic=${topic}`;
+    es = new EventSource(q);
+    es.onopen = () => {
+      onOpen?.();
+    };
+    es.onmessage = (ev) => {
+      try {
+        onEvent(JSON.parse(ev.data) as Record<string, unknown>);
+      } catch {
+        /* ignore malformed */
+      }
+    };
+    es.onerror = () => {
+      if (es && es.readyState === EventSource.CLOSED) {
+        onDisconnect?.();
+      }
+    };
+  })();
+
+  return () => {
+    closed = true;
+    es?.close();
   };
-  es.onerror = () => {
-    es.close();
-    onDisconnect?.();
-  };
-  return () => es.close();
 }

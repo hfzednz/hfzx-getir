@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nexora/finance-ledger-service/internal/app"
+	"github.com/nexora/finance-ledger-service/internal/authz"
 	"github.com/nexora/finance-ledger-service/internal/domain"
 	"github.com/nexora/finance-ledger-service/internal/ratelimit"
 )
@@ -29,6 +30,7 @@ type ServerConfig struct {
 	Log                *slog.Logger
 	Ready              func(*http.Request) error
 	Live               func(*http.Request) error
+	Auth               authz.Validator
 }
 
 // NewHandler returns a fully wired http.Handler.
@@ -53,12 +55,22 @@ func NewHandler(cfg ServerConfig) http.Handler {
 	mux.HandleFunc("POST "+base+"/tax-rules", tenant(h.upsertTaxRule))
 	mux.HandleFunc("POST "+base+"/outbox/publish", tenant(h.publishOutbox))
 
+	v := cfg.Auth
+	if v == nil {
+		v = authz.FromEnv()
+	}
 	return chain(mux,
 		requestIDMiddleware,
 		recoverMiddleware(cfg.Log),
 		loggingMiddleware(cfg.Log),
 		corsMiddleware(cfg.CORSOrigins),
 		rateLimitMiddleware(cfg.Limiter, cfg.RateLimitPerMinute),
+		authz.Gate(v, authz.Options{
+			Public: []string{"/health", "/ready", "/v1/ledger/health", "/v1/ledger/ready"},
+			Rules: []authz.Rule{
+				{Prefix: "/v1/ledger", Roles: []string{"finance_analyst", "admin", "super_admin"}},
+			},
+		}),
 	)
 }
 

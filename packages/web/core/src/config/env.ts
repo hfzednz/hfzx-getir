@@ -6,7 +6,11 @@ export function tenantId(): string {
 }
 
 export function identityUrl(): string {
-  return (process.env.NEXT_PUBLIC_IDENTITY_URL ?? "http://localhost:8081").replace(/\/$/, "");
+  const v = process.env.NEXT_PUBLIC_IDENTITY_URL;
+  if (v === "") {
+    return "";
+  }
+  return (v ?? "http://localhost:8081").replace(/\/$/, "");
 }
 
 export function bffUrl(kind: "customer" | "admin" | "courier" | "warehouse"): string {

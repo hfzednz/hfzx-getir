@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nexora/bff-admin/internal/app"
+	"github.com/nexora/bff-admin/internal/authz"
 )
 
 func writeErr(w http.ResponseWriter, status int, code, msg string) {
@@ -17,6 +18,10 @@ func writeErr(w http.ResponseWriter, status int, code, msg string) {
 }
 
 func NewServer(addr string, d *app.Deps) *http.Server {
+	return NewServerWithAuth(addr, d, authz.FromEnv())
+}
+
+func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -66,5 +71,12 @@ func NewServer(addr string, d *app.Deps) *http.Server {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(res)
 	})
-	return &http.Server{Addr: addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	h := authz.Gate(v, authz.Options{
+		Public: []string{"/health", "/ready"},
+		Rules: []authz.Rule{
+			{Prefix: "/v1/admin/flags", Roles: []string{"admin", "super_admin"}},
+			{Prefix: "/v1/admin", Roles: []string{"admin", "super_admin", "support_agent", "city_ops"}},
+		},
+	})(mux)
+	return &http.Server{Addr: addr, Handler: h, ReadHeaderTimeout: 5 * time.Second}
 }

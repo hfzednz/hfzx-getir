@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nexora/platform-ops-service/internal/app"
+	"github.com/nexora/platform-ops-service/internal/authz"
 	"github.com/nexora/platform-ops-service/internal/domain"
 	"github.com/nexora/platform-ops-service/internal/ratelimit"
 )
@@ -26,6 +27,7 @@ type ServerConfig struct {
 	Log                *slog.Logger
 	Ready              func(*http.Request) error
 	Live               func(*http.Request) error
+	Auth               authz.Validator
 }
 
 func NewHandler(cfg ServerConfig) http.Handler {
@@ -51,8 +53,18 @@ func NewHandler(cfg ServerConfig) http.Handler {
 	mux.HandleFunc("GET "+base+"/admin/stats", tenant(h.stats))
 	mux.HandleFunc("POST "+base+"/outbox/publish", tenant(h.outbox))
 
+	v := cfg.Auth
+	if v == nil {
+		v = authz.FromEnv()
+	}
 	return chain(mux, requestIDMiddleware, recoverMiddleware(cfg.Log), loggingMiddleware(cfg.Log),
-		corsMiddleware(cfg.CORSOrigins), rateLimitMiddleware(cfg.Limiter, cfg.RateLimitPerMinute))
+		corsMiddleware(cfg.CORSOrigins), rateLimitMiddleware(cfg.Limiter, cfg.RateLimitPerMinute),
+		authz.Gate(v, authz.Options{
+			Public: []string{"/health", "/ready"},
+			Rules: []authz.Rule{
+				{Prefix: "/v1/platform", Roles: []string{"super_admin", "service_account"}},
+			},
+		}))
 }
 
 func NewServer(cfg ServerConfig) *http.Server {

@@ -24,7 +24,13 @@ SERVICES=(
   inventory-service
   finance-ledger-service
   settlement-service
+  tracking-service
+  realtime-gateway
+  supplier-service
   bff-customer
+  bff-courier
+  bff-warehouse
+  bff-admin
 )
 
 build_one() {
@@ -54,10 +60,11 @@ run_svc() {
 
 wait_health() {
   local name="$1"
+  local alias="${name#nexora-staging-}"
   for _ in $(seq 1 60); do
-    local ip
-    ip="$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$name" 2>/dev/null || true)"
-    if [[ -n "$ip" ]] && curl -fsS --max-time 2 "http://${ip}:8080/health" >/dev/null 2>&1; then
+    # Prefer network-alias curl so this works when the script runs via docker.sock helper.
+    if docker run --rm --network "$NET" curlimages/curl:8.5.0 \
+      -fsS --max-time 2 "http://${alias}:8080/health" >/dev/null 2>&1; then
       echo "OK health $name"
       return 0
     fi
@@ -78,23 +85,56 @@ for s in "${SERVICES[@]}"; do
 done
 
 echo "==> run services (in-memory dev mode, MockPSP, OTP_DEV_MODE=true)"
-run_svc identity-service
+# LAN bind: publish on 0.0.0.0 so phones on the same Wi-Fi can reach the BFF/identity.
+# Override with PHONE_BIND_HOST=127.0.0.1 for loopback-only.
+PHONE_BIND_HOST="${PHONE_BIND_HOST:-0.0.0.0}"
+
+run_svc identity-service -p "${PHONE_BIND_HOST}:8081:8080" \
+  -e CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS:-*}"
 run_svc catalog-service
 run_svc cart-service
 run_svc location-service
-run_svc checkout-service
+run_svc checkout-service \
+  -e CART_URL=http://cart-service:8080 \
+  -e ORDER_URL=http://order-service:8080 \
+  -e PAYMENT_URL=http://payment-service:8080 \
+  -e INVENTORY_URL=http://inventory-service:8080
 run_svc payment-service
 run_svc order-service
 run_svc inventory-service
-run_svc finance-ledger-service
+run_svc finance-ledger-service -p "${PHONE_BIND_HOST}:8091:8080" \
+  -e IDENTITY_URL=http://identity-service:8080
 run_svc settlement-service
-run_svc bff-customer -p 127.0.0.1:8111:8080 \
+run_svc tracking-service
+run_svc realtime-gateway -p "${PHONE_BIND_HOST}:8115:8080" \
+  -e SSE_TICKET_SECRET="${SSE_TICKET_SECRET:-nexora-phone-staging-sse}" \
+  -e REALTIME_PUBLISH_TOKEN="${REALTIME_PUBLISH_TOKEN:-nexora-phone-staging-publish}"
+run_svc supplier-service -p "${PHONE_BIND_HOST}:8117:8080" \
+  -e IDENTITY_URL=http://identity-service:8080
+run_svc bff-customer -p "${PHONE_BIND_HOST}:8111:8080" \
   -e IDENTITY_URL=http://identity-service:8080 \
   -e CATALOG_URL=http://catalog-service:8080 \
   -e CART_URL=http://cart-service:8080 \
   -e LOCATION_URL=http://location-service:8080 \
   -e CHECKOUT_URL=http://checkout-service:8080 \
   -e PAYMENT_URL=http://payment-service:8080 \
+  -e ORDER_URL=http://order-service:8080 \
+  -e TRACKING_URL=http://tracking-service:8080 \
+  -e SSE_TICKET_SECRET="${SSE_TICKET_SECRET:-nexora-phone-staging-sse}"
+run_svc bff-courier -p "${PHONE_BIND_HOST}:8112:8080" \
+  -e IDENTITY_URL=http://identity-service:8080 \
+  -e ORDER_URL=http://order-service:8080 \
+  -e TRACKING_URL=http://tracking-service:8080 \
+  -e REALTIME_URL=http://realtime-gateway:8080 \
+  -e REALTIME_PUBLISH_TOKEN="${REALTIME_PUBLISH_TOKEN:-nexora-phone-staging-publish}"
+run_svc bff-warehouse -p "${PHONE_BIND_HOST}:8113:8080" \
+  -e IDENTITY_URL=http://identity-service:8080 \
+  -e ORDER_URL=http://order-service:8080 \
+  -e TRACKING_URL=http://tracking-service:8080 \
+  -e REALTIME_URL=http://realtime-gateway:8080 \
+  -e REALTIME_PUBLISH_TOKEN="${REALTIME_PUBLISH_TOKEN:-nexora-phone-staging-publish}"
+run_svc bff-admin -p "${PHONE_BIND_HOST}:8114:8080" \
+  -e IDENTITY_URL=http://identity-service:8080 \
   -e ORDER_URL=http://order-service:8080
 
 for s in "${SERVICES[@]}"; do
@@ -121,8 +161,8 @@ EOF
   echo "OK Caddy listening on https://${STAGING_DOMAIN}"
   echo "    Point DNS A/AAAA record to this host before opening the app."
 else
-  echo "WARN: STAGING_DOMAIN unset — BFF bound to http://127.0.0.1:8111 only."
-  echo "      Set STAGING_DOMAIN and re-run, or use a tunnel (cloudflared/ngrok) to port 8111."
+  echo "LAN BFF:        http://${PHONE_BIND_HOST}:8111 (use PC LAN IP from the phone)"
+  echo "LAN identity:   http://${PHONE_BIND_HOST}:8081"
 fi
 
 cat <<EOF
@@ -130,7 +170,9 @@ cat <<EOF
 PHONE TEST STAGING READY (disposable in-memory stack)
 
 Local BFF:     http://127.0.0.1:8111
-Public URL:    ${STAGING_PUBLIC_URL:-<set STAGING_PUBLIC_URL after HTTPS is live>}
+LAN BFF:       http://<PC-LAN-IP>:8111  (published on ${PHONE_BIND_HOST}:8111)
+LAN identity:  http://<PC-LAN-IP>:8081
+Public URL:    ${STAGING_PUBLIC_URL:-<optional HTTPS via STAGING_DOMAIN>}
 Tenant header: X-Tenant-Id: ${TENANT}
 Test phone:    +905551112233
 OTP:           docker logs nexora-staging-identity-service | grep otp.dev_mode

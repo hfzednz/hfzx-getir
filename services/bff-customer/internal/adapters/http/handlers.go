@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/nexora/bff-customer/internal/app"
+	"github.com/nexora/bff-customer/internal/authz"
 	"github.com/nexora/bff-customer/internal/domain"
 	"github.com/nexora/bff-customer/internal/reqctx"
 )
@@ -16,6 +18,10 @@ import (
 type Handler struct{ Deps *app.Deps }
 
 func NewServer(addr string, deps *app.Deps) *http.Server {
+	return NewServerWithAuth(addr, deps, authz.FromEnv())
+}
+
+func NewServerWithAuth(addr string, deps *app.Deps, v authz.Validator) *http.Server {
 	h := &Handler{Deps: deps}
 	mux := http.NewServeMux()
 	const base = "/v1/customer"
@@ -29,9 +35,16 @@ func NewServer(addr string, deps *app.Deps) *http.Server {
 	mux.HandleFunc("POST "+base+"/checkout/place", h.place)
 	mux.HandleFunc("GET "+base+"/orders/{id}", h.getOrder)
 	mux.HandleFunc("GET "+base+"/orders/{id}/track", h.track)
+	mux.HandleFunc("POST "+base+"/orders/{id}/realtime-ticket", h.realtimeTicket)
 	mux.HandleFunc("POST "+base+"/support/tickets", h.ticket)
 	mux.HandleFunc("POST "+base+"/reviews", h.review)
-	return &http.Server{Addr: addr, Handler: requestIDMiddleware(mux), ReadHeaderTimeout: 5 * time.Second}
+	gated := authz.Gate(v, authz.Options{
+		Public: []string{"/health", "/ready", "/v1/customer/auth/otp/"},
+		Rules: []authz.Rule{
+			{Prefix: "/v1/customer", Roles: []string{"customer"}},
+		},
+	})(requestIDMiddleware(mux))
+	return &http.Server{Addr: addr, Handler: gated, ReadHeaderTimeout: 5 * time.Second}
 }
 
 func requestIDMiddleware(next http.Handler) http.Handler {
@@ -64,6 +77,8 @@ func writeErr(w http.ResponseWriter, err error) {
 		code, status = "unauthorized", 401
 	case errors.Is(err, domain.ErrNotFound):
 		code, status = "not_found", 404
+	case errors.Is(err, domain.ErrConflict):
+		code, status = "conflict", 409
 	case errors.Is(err, domain.ErrUpstream):
 		code, status = "upstream_failure", 502
 	}
@@ -149,16 +164,17 @@ func (h *Handler) preview(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) place(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		CartID        string `json:"cartId"`
-		PaymentMethod string `json:"paymentMethod"`
-		SessionID     string `json:"sessionId"`
-		PrincipalID   string `json:"principalId"`
+		CartID        string                `json:"cartId"`
+		PaymentMethod string                `json:"paymentMethod"`
+		SessionID     string                `json:"sessionId"`
+		PrincipalID   string                `json:"principalId"`
+		Address       domain.CheckoutAddress `json:"address"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
 	if body.PrincipalID != "" {
 		r = r.WithContext(reqctx.WithUserID(r.Context(), body.PrincipalID))
 	}
-	id, err := h.Deps.PlaceOrder(r.Context(), tenant(r), body.CartID, body.PaymentMethod, body.SessionID)
+	id, err := h.Deps.PlaceOrder(r.Context(), tenant(r), body.CartID, body.PaymentMethod, body.SessionID, body.Address)
 	if err != nil {
 		writeErr(w, err)
 		return
@@ -176,16 +192,85 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
+	if !ownedByCaller(r, out) {
+		writeErr(w, domain.ErrNotFound)
+		return
+	}
 	writeJSON(w, 200, out)
 }
 
 func (h *Handler) track(w http.ResponseWriter, r *http.Request) {
+	if err := h.requireOwnedOrder(r); err != nil {
+		writeErr(w, err)
+		return
+	}
 	t, err := h.Deps.TrackOrder(r.Context(), tenant(r), r.PathValue("id"))
 	if err != nil {
 		writeErr(w, err)
 		return
 	}
 	writeJSON(w, 200, t)
+}
+
+func (h *Handler) realtimeTicket(w http.ResponseWriter, r *http.Request) {
+	if err := h.requireOwnedOrder(r); err != nil {
+		writeErr(w, err)
+		return
+	}
+	p, ok := authz.PrincipalFrom(r.Context())
+	if !ok {
+		writeErr(w, domain.ErrUnauthorized)
+		return
+	}
+	secret := os.Getenv("SSE_TICKET_SECRET")
+	topic := "order:" + r.PathValue("id")
+	ticket, err := authz.IssueSSETicket(secret, p.TenantID, p.ID, topic, 2*time.Minute)
+	if err != nil {
+		writeErr(w, domain.ErrUnauthorized)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ticket": ticket, "expiresIn": 120, "topic": topic})
+}
+
+func (h *Handler) requireOwnedOrder(r *http.Request) error {
+	if h.Deps.Orders == nil {
+		return domain.ErrUpstream
+	}
+	out, err := h.Deps.Orders.Get(r.Context(), tenant(r), r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	if !ownedByCaller(r, out) {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
+func ownedByCaller(r *http.Request, order map[string]any) bool {
+	p, ok := authz.PrincipalFrom(r.Context())
+	if !ok || p.ID == "" {
+		return false
+	}
+	owner := firstNonEmpty(
+		asString(order["customerPrincipalId"]),
+		asString(order["CustomerPrincipalId"]),
+		asString(order["principalId"]),
+	)
+	return owner == p.ID
+}
+
+func asString(v any) string {
+	s, _ := v.(string)
+	return s
+}
+
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 func (h *Handler) ticket(w http.ResponseWriter, r *http.Request) {

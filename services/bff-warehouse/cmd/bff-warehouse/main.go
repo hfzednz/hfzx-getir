@@ -16,7 +16,7 @@ func main() {
 	if addr == "" {
 		addr = ":8113"
 	}
-	srv := httpadapter.NewServer(addr, &app.Deps{})
+	srv := httpadapter.NewServer(addr, app.DepsFromEnv())
 	go func() {
 		log.Println("listen", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

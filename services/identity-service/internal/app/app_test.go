@@ -2,7 +2,10 @@ package app_test
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +19,25 @@ import (
 	"github.com/nexora/identity-service/internal/security/password"
 	"github.com/nexora/identity-service/internal/security/webauthn"
 )
+
+func jwtRoleClaim(t *testing.T, token string) []string {
+	t.Helper()
+	parts := strings.Split(token, ".")
+	if len(parts) < 2 {
+		t.Fatalf("token parts")
+	}
+	raw, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var p struct {
+		Roles []string `json:"roles"`
+	}
+	if err := json.Unmarshal(raw, &p); err != nil {
+		t.Fatal(err)
+	}
+	return p.Roles
+}
 
 func testDeps(t *testing.T) (*app.Deps, *memory.Store, *memory.OTPSender) {
 	t.Helper()
@@ -127,6 +149,9 @@ func TestVerifyOTP_HappyPath(t *testing.T) {
 			if res.Tokens.AccessToken == "" || res.Tokens.RefreshToken == "" {
 				t.Fatal("expected token pair")
 			}
+			if roles := jwtRoleClaim(t, res.Tokens.AccessToken); len(roles) != 1 || roles[0] != "customer" {
+				t.Fatalf("expected customer role on OTP JWT, got %v", roles)
+			}
 			if res.Principal.ID == uuid.Nil {
 				t.Fatal("expected principal")
 			}
@@ -137,6 +162,31 @@ func TestVerifyOTP_HappyPath(t *testing.T) {
 				t.Fatal("otp challenge should be deleted")
 			}
 		})
+	}
+}
+
+func TestVerifyOTP_DevModeWarehouseRoles(t *testing.T) {
+	t.Setenv("OTP_DEV_MODE", "true")
+	d, _, otpSender := testDeps(t)
+	ctx := context.Background()
+	tenant := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	chalID, err := d.StartOTP(ctx, app.StartOTPInput{TenantID: tenant, Phone: "+905551112234"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := d.VerifyOTP(ctx, app.VerifyOTPInput{ChallengeID: chalID, Code: otpSender.LastCode})
+	if err != nil {
+		t.Fatal(err)
+	}
+	roles := jwtRoleClaim(t, res.Tokens.AccessToken)
+	want := map[string]bool{"picker": true, "packer": true, "dispatcher": true}
+	if len(roles) != 3 {
+		t.Fatalf("roles=%v", roles)
+	}
+	for _, r := range roles {
+		if !want[r] {
+			t.Fatalf("unexpected role %s in %v", r, roles)
+		}
 	}
 }
 

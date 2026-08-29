@@ -138,6 +138,9 @@ func (d *Deps) VerifyOTP(ctx context.Context, in VerifyOTPInput) (AuthResult, er
 	if err := d.ensurePrincipalAuthn(p); err != nil {
 		return AuthResult{}, err
 	}
+	if err := d.ensureOTPRoles(ctx, p.ID, ch.Phone); err != nil {
+		return AuthResult{}, err
+	}
 
 	signals := append([]string{}, in.AuthCtx.Signals...)
 	score := d.scoreSignals(signals)

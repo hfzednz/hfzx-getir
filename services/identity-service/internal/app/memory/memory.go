@@ -54,9 +54,9 @@ type Store struct {
 	Policies      map[uuid.UUID]domain.SecurityPolicy
 }
 
-// NewStore returns an empty in-memory store.
+// NewStore returns an in-memory store with the platform role catalog seeded.
 func NewStore() *Store {
-	return &Store{
+	s := &Store{
 		Principals: make(map[uuid.UUID]domain.Principal),
 		Identifiers: make(map[uuid.UUID]domain.Identifier),
 		Credentials: make(map[uuid.UUID]domain.Credential),
@@ -81,6 +81,23 @@ func NewStore() *Store {
 		Ceremonies: make(map[string]*webauthn.CeremonySession),
 		Clients: make(map[string]ports.OAuthClient),
 		Policies: make(map[uuid.UUID]domain.SecurityPolicy),
+	}
+	seedPlatformRoles(s)
+	return s
+}
+
+func seedPlatformRoles(s *Store) {
+	now := time.Now().UTC()
+	for _, name := range []string{
+		"customer", "courier", "picker", "packer", "dispatcher", "city_ops",
+		"support_agent", "finance_analyst", "admin", "super_admin",
+		"service_account", "partner", "supplier",
+	} {
+		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte("nexora.platform.role."+name))
+		s.Roles[id] = domain.Role{
+			ID: id, Name: name, Kind: domain.RoleKindPlatform,
+			Description: "platform " + name, CreatedAt: now, UpdatedAt: now,
+		}
 	}
 }
 

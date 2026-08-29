@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useSession } from "@/shared/api/client";
 
 const NAV = [
@@ -17,14 +17,30 @@ export function CustomerShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const session = useSession((s) => s.session);
   const logout = useSession((s) => s.logout);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const persist = useSession.persist;
+    if (persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    return persist.onFinishHydration(() => setHydrated(true));
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || pathname === "/login") return;
+    if (!session) {
+      router.replace("/login");
+    }
+  }, [hydrated, pathname, session, router]);
 
   if (pathname === "/login") {
     return <div className="nx-customer-shell">{children}</div>;
   }
 
-  if (!session && pathname !== "/login") {
-    router.replace("/login");
-    return null;
+  if (!hydrated || !session) {
+    return <div className="nx-customer-shell">{children}</div>;
   }
 
   return (
