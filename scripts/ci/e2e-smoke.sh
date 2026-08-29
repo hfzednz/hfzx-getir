@@ -108,8 +108,11 @@ if [[ "${RC_FULL:-}" == "1" ]]; then
   run_svc payment-service
   run_svc order-service
   run_svc inventory-service
-  run_svc finance-ledger-service -p 8091:8080
-  run_svc settlement-service
+  # Without IDENTITY_URL these two cannot fetch the signing keys and reject every token.
+  run_svc finance-ledger-service -p 8091:8080 \
+    -e IDENTITY_URL=http://identity-service:8080
+  run_svc settlement-service \
+    -e IDENTITY_URL=http://identity-service:8080
 fi
 run_svc bff-admin -p 8114:8080
 if [[ "${RC_FULL:-}" == "1" ]]; then
