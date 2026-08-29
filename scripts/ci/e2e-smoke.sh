@@ -495,9 +495,40 @@ PY
   echo "OK inventory"
 
   echo "==> RC finance ledger + settlement idempotency"
-  http_json /tmp/e2e-acc1.json "http://${FIN_IP}:8080/v1/ledger/accounts" \
+  # The ledger and the settlement batches are finance-only, so sign in the seeded
+  # finance analyst rather than calling them anonymously.
+  IDN_IP="$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nexora-e2e-identity-service)"
+  http_json /tmp/e2e-fin-start.json "http://${IDN_IP}:8080/v1/identity/auth/otp/start" \
+    -d "{\"phone\":\"+905551112236\",\"tenantId\":\"${TENANT}\"}"
+  FIN_CHALLENGE="$(python3 - <<'PY'
+import json
+d=json.load(open("/tmp/e2e-fin-start.json"))
+print(d.get("challengeId") or d.get("ChallengeID") or "")
+PY
+)"
+  FIN_CODE="$(docker logs nexora-e2e-identity-service 2>&1 | grep otp.dev_mode | grep '905551112236' | tail -n 1 |
+    python3 -c 'import re,sys; m=re.search(r"\"code\":\"(\d+)\"", sys.stdin.read()); print(m.group(1) if m else "")')"
+  if [[ -z "$FIN_CHALLENGE" || -z "$FIN_CODE" ]]; then
+    dump_fail "finance login could not start"
+  fi
+  http_json /tmp/e2e-fin-verify.json "http://${IDN_IP}:8080/v1/identity/auth/otp/verify" \
+    -d "{\"challengeId\":\"${FIN_CHALLENGE}\",\"code\":\"${FIN_CODE}\"}"
+  FIN_TOKEN="$(python3 - <<'PY'
+import json
+d=json.load(open("/tmp/e2e-fin-verify.json"))
+print(d.get("accessToken") or d.get("AccessToken") or "")
+PY
+)"
+  if [[ -z "$FIN_TOKEN" ]]; then
+    dump_fail "finance login returned no access token"
+  fi
+  FIN_AUTH=(-H "Authorization: Bearer ${FIN_TOKEN}")
+  # A customer principal must not reach the ledger.
+  http_expect 403 /tmp/e2e-ledger-customer.json "http://${FIN_IP}:8080/v1/ledger/journals" \
+    "${HDR[@]}" "${AUTH[@]}"
+  http_json /tmp/e2e-acc1.json "http://${FIN_IP}:8080/v1/ledger/accounts" "${FIN_AUTH[@]}" \
     -d '{"code":"1000","name":"Cash","type":"asset","currency":"TRY"}'
-  http_json /tmp/e2e-acc2.json "http://${FIN_IP}:8080/v1/ledger/accounts" \
+  http_json /tmp/e2e-acc2.json "http://${FIN_IP}:8080/v1/ledger/accounts" "${FIN_AUTH[@]}" \
     -d '{"code":"4000","name":"Revenue","type":"revenue","currency":"TRY"}'
   CASH="$(python3 - <<'PY'
 import json
@@ -512,8 +543,8 @@ print(d.get("id") or "")
 PY
 )"
   JBODY="{\"currency\":\"TRY\",\"reference\":\"rc-pay\",\"idempotencyKey\":\"rc-j-1\",\"lines\":[{\"accountId\":\"${CASH}\",\"debitMinor\":1500},{\"accountId\":\"${REV}\",\"creditMinor\":1500}]}"
-  http_json /tmp/e2e-j1.json "http://${FIN_IP}:8080/v1/ledger/journals" -d "$JBODY"
-  http_json /tmp/e2e-j2.json "http://${FIN_IP}:8080/v1/ledger/journals" -d "$JBODY"
+  http_json /tmp/e2e-j1.json "http://${FIN_IP}:8080/v1/ledger/journals" "${FIN_AUTH[@]}" -d "$JBODY"
+  http_json /tmp/e2e-j2.json "http://${FIN_IP}:8080/v1/ledger/journals" "${FIN_AUTH[@]}" -d "$JBODY"
   python3 - <<'PY'
 import json
 a=json.load(open("/tmp/e2e-j1.json"))
@@ -521,9 +552,9 @@ b=json.load(open("/tmp/e2e-j2.json"))
 assert a.get("id") and a.get("id")==b.get("id"), (a,b)
 print("journal", a.get("id"), "debit", a.get("debitTotal"))
 PY
-  http_json /tmp/e2e-set1.json "http://${SET_IP}:8080/v1/settlements/batches" \
+  http_json /tmp/e2e-set1.json "http://${SET_IP}:8080/v1/settlements/batches" "${FIN_AUTH[@]}" \
     -d '{"currency":"TRY","periodStart":"2026-08-01T00:00:00Z","periodEnd":"2026-08-07T00:00:00Z","idempotencyKey":"rc-set-1","actorId":"'"${PRINCIPAL}"'"}'
-  http_json /tmp/e2e-set2.json "http://${SET_IP}:8080/v1/settlements/batches" \
+  http_json /tmp/e2e-set2.json "http://${SET_IP}:8080/v1/settlements/batches" "${FIN_AUTH[@]}" \
     -d '{"currency":"TRY","periodStart":"2026-08-01T00:00:00Z","periodEnd":"2026-08-07T00:00:00Z","idempotencyKey":"rc-set-1","actorId":"'"${PRINCIPAL}"'"}'
   python3 - <<'PY'
 import json
