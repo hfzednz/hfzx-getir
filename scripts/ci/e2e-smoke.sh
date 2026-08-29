@@ -259,6 +259,14 @@ fi
 HDR+=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
 echo "OK customer session"
 
+# Signed in, an empty cart id must still be rejected by validation rather than auth.
+AUTH_EMPTY_CART="$(curl -sS --max-time 10 -o /tmp/e2e-empty-cart-auth.json -w "%{http_code}" "${HDR[@]}" \
+  "${CUST}/v1/customer/cart/items" -d '{"cartId":"","sku":"x","qty":1,"unitMinor":100}' || true)"
+echo "HTTP $AUTH_EMPTY_CART (want 4xx/502) authenticated empty cart"
+if [[ "$AUTH_EMPTY_CART" != 4* && "$AUTH_EMPTY_CART" != "502" ]]; then
+  dump_fail "expected client/upstream error for authenticated empty cart got $AUTH_EMPTY_CART"
+fi
+
 echo "==> journey browse_catalog (BFF home without search index + catalog list)"
 http_json /tmp/e2e-home.json "${CUST}/v1/customer/home?lat=41.0&lng=29.0"
 python3 - <<'PY'
@@ -348,9 +356,11 @@ status=(d.get("status") or "").lower()
 assert status in ("ready","completed"), d
 print("checkout_status", status, "total", (d.get("quote") or {}).get("totalMinor"))
 PY
+  # The BFF requires the delivery address on place, the same way the web app sends it.
+  PLACE_ADDRESS='{"line1":"Test St 1","city":"Istanbul","lat":41.0,"lng":29.0}'
   http_json /tmp/e2e-place.json "${CUST}/v1/customer/checkout/place" \
     -H "X-Nexora-User: ${PRINCIPAL}" \
-    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\"}"
+    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}"
   ORDER_ID="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-place.json"))
@@ -362,7 +372,7 @@ PY
   fi
   http_json /tmp/e2e-place2.json "${CUST}/v1/customer/checkout/place" \
     -H "X-Nexora-User: ${PRINCIPAL}" \
-    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\"}"
+    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}"
   ORDER_ID2="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-place2.json"))
