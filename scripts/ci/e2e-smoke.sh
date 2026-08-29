@@ -223,6 +223,42 @@ http_expect 404 /tmp/e2e-bad-product.json "http://${CAT_IP}:8080/v1/catalog/prod
 http_json /tmp/e2e-health-after-neg.json "${CUST}/health"
 echo "OK negative"
 
+# The storefront feed and the cart require a customer session. Sign one in the way the
+# web app does so the journeys below exercise the authenticated path.
+echo "==> customer session"
+http_expect 401 /tmp/e2e-home-anon.json "${CUST}/v1/customer/home?lat=41.0&lng=29.0" \
+  -H "X-Tenant-Id: ${TENANT}"
+http_json /tmp/e2e-login-start.json "${CUST}/v1/customer/auth/otp/start" \
+  -d '{"phone":"+905551112233"}'
+LOGIN_CHALLENGE="$(python3 - <<'PY'
+import json
+d=json.load(open("/tmp/e2e-login-start.json"))
+print(d.get("challengeId") or d.get("ChallengeID") or "")
+PY
+)"
+if [[ -z "$LOGIN_CHALLENGE" ]]; then
+  dump_fail "customer login missing challengeId"
+fi
+LOGIN_CODE="$(docker logs nexora-e2e-identity-service 2>&1 | grep otp.dev_mode | tail -n 1 |
+  python3 -c 'import re,sys; m=re.search(r"\"code\":\"(\d+)\"", sys.stdin.read()); print(m.group(1) if m else "")')"
+if [[ -z "$LOGIN_CODE" ]]; then
+  dump_fail "identity did not log a dev-mode OTP"
+fi
+curl -sS --max-time 10 -o /tmp/e2e-login-verify.json -w "%{http_code}\n" "${HDR[@]}" \
+  "${CUST}/v1/customer/auth/otp/verify" \
+  -d "{\"challengeId\":\"${LOGIN_CHALLENGE}\",\"code\":\"${LOGIN_CODE}\"}" >/dev/null
+ACCESS_TOKEN="$(python3 - <<'PY'
+import json
+d=json.load(open("/tmp/e2e-login-verify.json"))
+print(d.get("accessToken") or d.get("AccessToken") or "")
+PY
+)"
+if [[ -z "$ACCESS_TOKEN" ]]; then
+  dump_fail "customer login returned no access token"
+fi
+HDR+=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
+echo "OK customer session"
+
 echo "==> journey browse_catalog (BFF home without search index + catalog list)"
 http_json /tmp/e2e-home.json "${CUST}/v1/customer/home?lat=41.0&lng=29.0"
 python3 - <<'PY'

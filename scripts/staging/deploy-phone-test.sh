@@ -143,8 +143,14 @@ done
 
 echo "==> smoke"
 curl -fsS "http://127.0.0.1:8111/health" >/dev/null
-curl -fsS -H "X-Tenant-Id: ${TENANT}" \
-  "http://127.0.0.1:8111/v1/customer/home?lat=41.0&lng=29.0" >/dev/null
+# The storefront feed requires a customer session, so an anonymous call must be
+# rejected. A 200 here would mean the BFF stopped enforcing authentication.
+home_status=$(curl -sS -o /dev/null -w '%{http_code}' -H "X-Tenant-Id: ${TENANT}" \
+  "http://127.0.0.1:8111/v1/customer/home?lat=41.0&lng=29.0")
+if [[ "$home_status" != "401" ]]; then
+  echo "FAIL smoke: anonymous /v1/customer/home returned $home_status, expected 401" >&2
+  exit 1
+fi
 echo "OK smoke"
 
 if [[ -n "${STAGING_DOMAIN:-}" ]]; then
