@@ -21,6 +21,22 @@ export interface ClientOptions {
   tenantId: string;
   getToken?: () => string | null;
   getUserId?: () => string | null;
+  /** Called once per 401 so the app can drop the expired session and re-authenticate. */
+  onUnauthorized?: () => void;
+}
+
+const GENERIC_MESSAGES: Record<number, string> = {
+  400: "The request was invalid.",
+  401: "Your session has expired. Please sign in again.",
+  403: "You are not allowed to perform this action.",
+  404: "Not found.",
+  409: "This action conflicts with the current state.",
+  422: "The submitted data could not be processed.",
+  429: "Too many requests. Please wait and try again.",
+};
+
+function genericMessage(status: number): string {
+  return GENERIC_MESSAGES[status] ?? "Something went wrong. Please try again.";
 }
 
 export function createApiClient(opts: ClientOptions) {
@@ -67,19 +83,28 @@ export function createApiClient(opts: ClientOptions) {
       try {
         parsed = JSON.parse(text);
       } catch {
-        parsed = { error: { code: "invalid_json", message: text } };
+        // Upstream sent a non-JSON body (HTML error page, panic trace). Never surface it.
+        parsed = res.ok ? null : { error: { code: `http_${res.status}` } };
       }
     }
 
     if (!res.ok) {
+      if (res.status === 401) {
+        opts.onUnauthorized?.();
+      }
       const errBody = parsed as ApiErrorBody | null;
-      throw new ApiError(
-        res.status,
-        errBody?.error ?? {
-          code: `http_${res.status}`,
-          message: res.statusText || "Request failed",
-        },
-      );
+      const code = errBody?.error?.code ?? `http_${res.status}`;
+      const upstreamMessage = errBody?.error?.message;
+      throw new ApiError(res.status, {
+        code,
+        // Only trust a message that came from a structured service error envelope,
+        // and never relay 5xx internals to the UI.
+        message:
+          upstreamMessage && res.status < 500
+            ? upstreamMessage
+            : genericMessage(res.status),
+        traceId: errBody?.error?.traceId,
+      });
     }
 
     return parsed as T;

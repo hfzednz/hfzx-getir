@@ -58,14 +58,22 @@ export default function OrderTrackPage() {
         ← Order detail
       </Link>
       <h1 className="text-xl font-semibold">Live tracking</h1>
-      <p className="text-xs text-neutral-500" data-testid="sse-connection">
+      <p
+        className="text-xs text-neutral-500"
+        data-testid="sse-connection"
+        aria-live="polite"
+      >
         {sseOpen
           ? sseEvent
             ? "SSE connected; live event received."
             : "SSE connected (waiting for event)."
           : "Polling every 5s (SSE reconnecting…)."}
       </p>
-      <p data-testid="sse-event-status" className="text-xs text-neutral-500">
+      <p
+        data-testid="sse-event-status"
+        className="text-xs text-neutral-500"
+        aria-live="polite"
+      >
         Event: {sseEvent ? sseStatus ?? "received" : "none"}
       </p>
       {isLoading ? <p>Loading…</p> : null}
@@ -86,7 +94,8 @@ export default function OrderTrackPage() {
       ) : null}
       <button
         type="button"
-        className="rounded-lg border px-4 py-2 text-sm"
+        className="rounded-lg border px-4 text-sm"
+        style={{ minHeight: 44 }}
         onClick={() => refetch()}
       >
         Refresh

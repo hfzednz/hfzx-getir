@@ -33,7 +33,6 @@ export async function verifyOtp(
   channel: OtpChannel = "identity",
   expectedRoles: string[] = [],
 ): Promise<WebSession> {
-  void expectedRoles;
   const tid = tenantId();
   if (channel === "customer-bff") {
     const api = createApiClient({
@@ -44,14 +43,27 @@ export async function verifyOtp(
       "/v1/customer/auth/otp/verify",
       { method: "POST", body: { challengeId, code } },
     );
-    return sessionFromResponse(res, phone);
+    return assertRoles(sessionFromResponse(res, phone), expectedRoles);
   }
   const api = createApiClient({ baseUrl: identityUrl(), tenantId: tid });
   const res = await api.request<Record<string, unknown>>(
     "/v1/identity/auth/otp/verify",
     { method: "POST", body: { challengeId, code } },
   );
-  return sessionFromResponse(res, phone);
+  return assertRoles(sessionFromResponse(res, phone), expectedRoles);
+}
+
+export class RoleNotAllowedError extends Error {
+  constructor() {
+    super("This account is not allowed to use this application.");
+    this.name = "RoleNotAllowedError";
+  }
+}
+
+function assertRoles(session: WebSession, expectedRoles: string[]): WebSession {
+  if (expectedRoles.length === 0) return session;
+  if (session.roles.some((role) => expectedRoles.includes(role))) return session;
+  throw new RoleNotAllowedError();
 }
 
 function rolesFromAccessToken(token: string): string[] {

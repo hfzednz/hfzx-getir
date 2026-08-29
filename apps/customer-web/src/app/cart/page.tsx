@@ -25,14 +25,18 @@ export default function CartPage() {
       <ul className="divide-y rounded-xl border">
         {lines.map((line) => (
           <li key={line.sku} className="flex items-center justify-between gap-3 p-4">
-            <div>
-              <p className="font-medium">{line.name}</p>
-              <p className="text-sm text-neutral-600">₺{(line.unitMinor / 100).toFixed(2)}</p>
+            <div className="min-w-0">
+              <p className="truncate font-medium">{line.name}</p>
+              <p className="text-sm text-neutral-600">
+                {line.unitMinor > 0
+                  ? `₺${(line.unitMinor / 100).toFixed(2)}`
+                  : "Price at checkout"}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
-                aria-label="Decrease quantity"
+                aria-label={`Decrease quantity of ${line.name}`}
                 className="h-11 w-11 rounded border"
                 onClick={() => updateQty(line.sku, line.qty - 1)}
               >
@@ -41,7 +45,7 @@ export default function CartPage() {
               <span className="w-6 text-center">{line.qty}</span>
               <button
                 type="button"
-                aria-label="Increase quantity"
+                aria-label={`Increase quantity of ${line.name}`}
                 className="h-11 w-11 rounded border"
                 onClick={() => updateQty(line.sku, line.qty + 1)}
               >
@@ -49,7 +53,9 @@ export default function CartPage() {
               </button>
               <button
                 type="button"
-                className="text-xs text-red-600"
+                aria-label={`Remove ${line.name} from cart`}
+                className="rounded px-2 text-xs text-red-600"
+                style={{ minHeight: 44 }}
                 onClick={() => removeLine(line.sku)}
               >
                 Remove

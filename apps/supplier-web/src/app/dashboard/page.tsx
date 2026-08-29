@@ -1,59 +1,124 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { RouteGuard } from "@nexora/web-core";
 import { supplierApi, useSession } from "@/shared/api/client";
+
+type Row = { id?: string; name?: string; status?: string; code?: string };
+
+function rows(payload: { items?: Row[] } | Row[]): Row[] {
+  return Array.isArray(payload) ? payload : payload.items ?? [];
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const session = useSession((s) => s.session);
   const logout = useSession((s) => s.logout);
-  const [suppliers, setSuppliers] = useState<unknown[]>([]);
-  const [sellers, setSellers] = useState<unknown[]>([]);
-  const [pos, setPos] = useState<unknown[]>([]);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!session) router.replace("/login");
-  }, [session, router]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["supplier-dashboard"],
+    enabled: Boolean(session),
+    queryFn: async () => {
+      const api = supplierApi();
+      const [suppliers, purchaseOrders, sellers] = await Promise.all([
+        api.request<{ items?: Row[] } | Row[]>("/v1/supplier/suppliers"),
+        api.request<{ items?: Row[] } | Row[]>("/v1/supplier/purchase-orders"),
+        // Sellers is a separate capability: report its failure instead of showing an
+        // empty list that looks like "no sellers".
+        api
+          .request<{ items?: Row[] } | Row[]>("/v1/supplier/sellers")
+          .then((res) => ({ ok: true as const, rows: rows(res) }))
+          .catch((err: unknown) => ({
+            ok: false as const,
+            message: err instanceof Error ? err.message : "Sellers unavailable",
+          })),
+      ]);
+      return {
+        suppliers: rows(suppliers),
+        purchaseOrders: rows(purchaseOrders),
+        sellers,
+      };
+    },
+  });
 
-  useEffect(() => {
-    if (!session) return;
-    (async () => {
-      try {
-        const s = await supplierApi().request<{ items?: unknown[] } | unknown[]>("/v1/supplier/suppliers");
-        const p = await supplierApi().request<{ items?: unknown[] } | unknown[]>("/v1/supplier/purchase-orders");
-        let sellers: unknown[] = [];
-        try {
-          const sl = await supplierApi().request<{ items?: unknown[] } | unknown[]>("/v1/supplier/sellers");
-          sellers = Array.isArray(sl) ? sl : sl.items ?? [];
-        } catch {
-          sellers = [];
-        }
-        setSuppliers(Array.isArray(s) ? s : s.items ?? []);
-        setPos(Array.isArray(p) ? p : p.items ?? []);
-        setSellers(sellers);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Load failed");
-      }
-    })();
-  }, [session]);
+  const sections = [
+    { title: "Suppliers", items: data?.suppliers ?? [] },
+    { title: "Purchase orders", items: data?.purchaseOrders ?? [] },
+  ];
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex justify-between">
-        <h1 className="text-xl font-semibold">Supplier portal</h1>
-        <button type="button" className="text-sm" onClick={() => { logout(); router.push("/login"); }}>Logout</button>
+    <RouteGuard session={session} allow={["supplier", "partner"]} onDeny={logout}>
+      <div className="space-y-4 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold">Supplier portal</h1>
+          <button
+            type="button"
+            className="rounded-lg px-3 text-sm"
+            style={{ minHeight: 44 }}
+            onClick={() => {
+              logout();
+              router.push("/login");
+            }}
+          >
+            Logout
+          </button>
+        </div>
+        {isLoading ? <p className="text-sm text-neutral-500">Loading…</p> : null}
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">
+            {error instanceof Error ? error.message : "Load failed"}
+          </p>
+        ) : null}
+
+        {sections.map((section) => (
+          <section key={section.title} className="rounded-xl border p-4">
+            <h2 className="font-medium">
+              {section.title} ({section.items.length})
+            </h2>
+            {!isLoading && section.items.length === 0 ? (
+              <p className="text-sm text-neutral-500">Nothing to show yet.</p>
+            ) : null}
+            {section.items.length > 0 ? (
+              <ul className="mt-2 divide-y text-sm">
+                {section.items.map((row, index) => (
+                  <li key={row.id ?? index} className="flex items-center justify-between gap-3 py-2">
+                    <span className="min-w-0 truncate">
+                      {row.name ?? row.code ?? row.id ?? "—"}
+                    </span>
+                    {row.status ? (
+                      <span className="shrink-0 text-neutral-600">{row.status}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+        ))}
+
+        <section className="rounded-xl border p-4">
+          <h2 className="font-medium">
+            Marketplace sellers
+            {data?.sellers.ok ? ` (${data.sellers.rows.length})` : ""}
+          </h2>
+          {data && !data.sellers.ok ? (
+            <p className="text-sm text-red-600" role="alert">
+              {data.sellers.message}
+            </p>
+          ) : null}
+          {data?.sellers.ok && data.sellers.rows.length === 0 ? (
+            <p className="text-sm text-neutral-500">No sellers registered yet.</p>
+          ) : null}
+          {data?.sellers.ok && data.sellers.rows.length > 0 ? (
+            <ul className="mt-2 divide-y text-sm">
+              {data.sellers.rows.map((row, index) => (
+                <li key={row.id ?? index} className="truncate py-2">
+                  {row.name ?? row.id ?? "—"}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
       </div>
-      {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
-      <section className="rounded-xl border p-4">
-        <h2 className="font-medium">Suppliers ({suppliers.length})</h2>
-      </section>
-      <section className="rounded-xl border p-4">
-        <h2 className="font-medium">Marketplace sellers ({sellers.length})</h2>
-      </section>
-      <section className="rounded-xl border p-4">
-        <h2 className="font-medium">Purchase orders ({pos.length})</h2>
-      </section>
-    </div>
+    </RouteGuard>
   );
 }

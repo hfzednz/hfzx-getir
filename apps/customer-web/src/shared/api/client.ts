@@ -13,5 +13,15 @@ export function customerApi() {
     tenantId: tenantId(),
     getToken: () => session?.accessToken ?? null,
     getUserId: () => session?.principalId ?? null,
+    onUnauthorized: expireSession,
   });
+}
+
+function expireSession() {
+  if (typeof window === "undefined") return;
+  if (!useSession.getState().session) return;
+  useSession.getState().logout();
+  if (window.location.pathname !== "/login") {
+    window.location.assign("/login");
+  }
 }

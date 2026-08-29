@@ -17,18 +17,22 @@ const IDENTITY_TO_ADMIN: Record<string, Role> = {
 };
 
 export function adminSessionFromOtp(web: WebSession, phone: string): AdminSession {
-  const mapped = web.roles
-    .map((r) => IDENTITY_TO_ADMIN[r])
-    .filter(Boolean) as Role[];
-  const roles: Role[] = mapped.length ? mapped : ["viewer"];
+  const roles = Array.from(
+    new Set(web.roles.map((r) => IDENTITY_TO_ADMIN[r]).filter(Boolean) as Role[]),
+  );
+  if (roles.length === 0) {
+    // An identity principal with no admin-side role must not be granted a fallback
+    // read-only console session.
+    throw new Error("This account is not allowed to use the admin console.");
+  }
   return {
     userId: web.principalId,
     email: phone,
     displayName: phone,
     roles,
     permissions: permissionsForRoles(roles),
-    cityIds: ["city_ist"],
-    mfaVerified: true,
+    cityIds: [],
+    mfaVerified: false,
     accessToken: web.accessToken,
   };
 }

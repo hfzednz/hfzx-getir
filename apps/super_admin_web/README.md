@@ -19,7 +19,8 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) and [`FEATURES.md`](./FEATURES.md).
 
 - Node.js 20+
 - Shared UI package at `packages/web/ui` (`@nexora/ui`)
-- Optional: `bff-admin` on `http://localhost:8084` (mock fallbacks run without it)
+- `identity-service` on `http://localhost:8081` for OTP login
+- `platform-ops-service` on `http://localhost:8110` (fixture fallbacks only run when `NEXT_PUBLIC_ALLOW_MOCK_FALLBACK=true`)
 
 ## Setup
 
@@ -32,7 +33,7 @@ npm install
 `.env.local`:
 
 ```env
-NEXT_PUBLIC_BFF_ADMIN_URL=http://localhost:8084/v1
+NEXT_PUBLIC_PLATFORM_OPS_URL=http://localhost:8110/v1
 ```
 
 All platform API calls use `platformPath('/…')` → `/platform/…` under that base.
@@ -49,7 +50,7 @@ Open the URL Next prints (default `http://localhost:3000`). If Admin Web already
 npx next dev --turbopack -p 3001
 ```
 
-Demo login: any email + password; pick a platform role (default `platform_owner`). MFA/WebAuthn flags are simulated in the auth store.
+Login is a real phone-number OTP against `identity-service`. Only an identity principal carrying the `super_admin` role is accepted; it is mapped to `platform_owner`. MFA and WebAuthn start unverified and are only flipped by the in-app step-up flows.
 
 ## Scripts
 

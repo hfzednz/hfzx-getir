@@ -55,3 +55,38 @@ func TestCustomerJourney(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+type failingRecs struct{}
+
+func (failingRecs) ForYou(context.Context, string, string) ([]map[string]any, error) {
+	return nil, domain.ErrUpstream
+}
+
+func TestHomeSurvivesRecsOutage(t *testing.T) {
+	stubs := memory.NewStubs()
+	d := &app.Deps{Catalog: stubs, Recs: failingRecs{}, Location: stubs}
+	home, err := d.Home(context.Background(), "t1", "cust_1", "water", 41.01, 28.97)
+	if err != nil {
+		t.Fatalf("home must not fail when recommendations are down: %v", err)
+	}
+	if len(home.Products) == 0 {
+		t.Fatal("products must still be served when recommendations are down")
+	}
+	if len(home.Rails) != 0 {
+		t.Fatalf("rails must be empty on recs failure, got %v", home.Rails)
+	}
+}
+
+func TestHomeFailsWhenCatalogDown(t *testing.T) {
+	stubs := memory.NewStubs()
+	d := &app.Deps{Catalog: failingCatalog{}, Location: stubs}
+	if _, err := d.Home(context.Background(), "t1", "", "water", 41.01, 28.97); err == nil {
+		t.Fatal("catalog outage must surface as an error")
+	}
+}
+
+type failingCatalog struct{}
+
+func (failingCatalog) Search(context.Context, string, string) ([]map[string]any, error) {
+	return nil, domain.ErrUpstream
+}

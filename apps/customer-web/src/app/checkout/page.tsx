@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { customerApi, useSession } from "@/shared/api/client";
 import { useCart } from "@/shared/stores/cart-store";
@@ -16,11 +16,22 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [paymentMethod] = useState("card");
-  const activeCartId = cartId ?? crypto.randomUUID();
+  // One cart id and one idempotency key for the whole checkout attempt: regenerating
+  // either on re-render or on retry would let a retried submit create a second order.
+  const [draftCartId] = useState(() => crypto.randomUUID());
+  const placeKeyRef = useRef<string>("");
+  const syncedCartRef = useRef<string>("");
+  const activeCartId = cartId ?? draftCartId;
   const deliveryLine = line1.trim() || addressLabel.trim();
   const addressReady = Boolean(deliveryLine) || (lat !== 0 && lng !== 0);
 
   async function syncCart() {
+    const signature = `${activeCartId}|${lines
+      .map((l) => `${l.sku}:${l.qty}:${l.unitMinor}`)
+      .join(",")}`;
+    if (syncedCartRef.current === signature) {
+      return activeCartId;
+    }
     const api = customerApi();
     for (const line of lines) {
       await api.request("/v1/customer/cart/items", {
@@ -33,6 +44,7 @@ export default function CheckoutPage() {
         },
       });
     }
+    syncedCartRef.current = signature;
     setCartId(activeCartId);
     return activeCartId;
   }
@@ -71,11 +83,14 @@ export default function CheckoutPage() {
       const sessionId = String(
         preview?.sessionId ?? preview?.SessionID ?? preview?.id ?? "",
       );
+      if (!placeKeyRef.current) {
+        placeKeyRef.current = crypto.randomUUID();
+      }
       const res = await api.request<{ orderId?: string }>(
         "/v1/customer/checkout/place",
         {
           method: "POST",
-          idempotencyKey: crypto.randomUUID(),
+          idempotencyKey: placeKeyRef.current,
           body: {
             cartId: id,
             paymentMethod,
@@ -120,6 +135,21 @@ export default function CheckoutPage() {
     return <p className="text-neutral-600">Cart is empty.</p>;
   }
 
+  const money = (minor: unknown, currency: string) =>
+    typeof minor === "number" ? `${currency} ${(minor / 100).toFixed(2)}` : "—";
+  const currency = String(preview?.currency ?? "TRY");
+  const previewRows = preview
+    ? [
+        { label: "Subtotal", value: money(preview.subtotalMinor, currency) },
+        { label: "Discount", value: money(preview.discountMinor, currency) },
+        { label: "Total", value: money(preview.totalMinor, currency) },
+        {
+          label: "Payment",
+          value: preview.paymentReady ? "Ready" : "Not ready",
+        },
+      ]
+    : [];
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Checkout</h1>
@@ -135,6 +165,8 @@ export default function CheckoutPage() {
             style={{ minHeight: 44 }}
             placeholder="Street and building"
             autoComplete="street-address"
+            aria-invalid={error && !addressReady ? true : undefined}
+            aria-describedby={error ? "checkout-error" : undefined}
           />
         </label>
       </section>
@@ -153,9 +185,17 @@ export default function CheckoutPage() {
           {loading ? "Loading…" : "Preview order"}
         </button>
       ) : (
-        <pre className="overflow-auto rounded bg-neutral-50 p-3 text-xs">
-          {JSON.stringify(preview, null, 2)}
-        </pre>
+        <section className="rounded-xl border p-4 text-sm" aria-label="Order summary">
+          <h2 className="mb-2 font-medium">Order summary</h2>
+          <dl className="space-y-1">
+            {previewRows.map((row) => (
+              <div key={row.label} className="flex justify-between gap-3">
+                <dt className="text-neutral-600">{row.label}</dt>
+                <dd className="font-medium">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       )}
       <button
         type="button"
@@ -166,7 +206,7 @@ export default function CheckoutPage() {
         {loading ? "Placing…" : "Place order"}
       </button>
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p id="checkout-error" className="text-sm text-red-600" role="alert">
           {error}
         </p>
       ) : null}

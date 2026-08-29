@@ -16,13 +16,15 @@ export async function GET(req: NextRequest) {
   }
   const qs = new URLSearchParams({ topic });
   if (ticket) qs.set("ticket", ticket);
-  const up = await fetch(
-    `${realtimeInternal}/v1/realtime/sse?${qs.toString()}`,
-    {
+  let up: Response;
+  try {
+    up = await fetch(`${realtimeInternal}/v1/realtime/sse?${qs.toString()}`, {
       headers: { Accept: "text/event-stream" },
       cache: "no-store",
-    },
-  );
+    });
+  } catch {
+    return new Response("realtime gateway unreachable", { status: 502 });
+  }
   if (!up.ok || !up.body) {
     return new Response(await up.text(), { status: up.status });
   }

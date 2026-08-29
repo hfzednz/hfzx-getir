@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/v1/identity/:path*", destination: `${identity}/v1/identity/:path*` },
       { source: "/v1/:path*", destination: `${bff}/v1/:path*` },
+      { source: "/ws/admin/:path*", destination: `${bff}/ws/admin/:path*` },
     ];
   },
 };

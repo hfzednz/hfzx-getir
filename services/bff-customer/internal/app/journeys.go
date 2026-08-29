@@ -58,11 +58,11 @@ func (d *Deps) Home(ctx context.Context, tenantID, customerID, query string, lat
 		feed.Products = items
 	}
 	if d.Recs != nil && customerID != "" {
-		rails, err := d.Recs.ForYou(ctx, tenantID, customerID)
-		if err != nil {
-			return feed, err
+		// Recommendation rails are supplementary: a recs outage must not take down
+		// the whole home feed, which would leave the storefront unusable.
+		if rails, err := d.Recs.ForYou(ctx, tenantID, customerID); err == nil {
+			feed.Rails = rails
 		}
-		feed.Rails = rails
 	}
 	return feed, nil
 }

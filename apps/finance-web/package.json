@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack -p 3004",
     "build": "next build",
-    "start": "next start -p 3004"
+    "start": "next start -p 3004",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nexora/ui": "file:../../packages/web/ui",

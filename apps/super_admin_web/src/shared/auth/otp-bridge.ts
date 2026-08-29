@@ -6,15 +6,17 @@ import {
 } from "@/shared/permissions/platform-permissions";
 
 export function platformSessionFromOtp(web: WebSession, phone: string): PlatformSession {
-  const role: Role = web.roles.includes("super_admin") ? "platform_owner" : "platform_viewer";
-  const roles: Role[] = [role];
+  if (!web.roles.includes("super_admin")) {
+    throw new Error("Super admin role required");
+  }
+  const roles: Role[] = ["platform_owner"];
   return {
     userId: web.principalId,
     email: phone,
     displayName: phone,
     roles,
     permissions: permissionsForRoles(roles),
-    mfaVerified: true,
+    mfaVerified: false,
     webauthnVerified: false,
     accessToken: web.accessToken,
   };

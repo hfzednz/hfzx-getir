@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build + lint all NEXORA web applications (does not deploy).
+# Typecheck, unit-test and build all NEXORA web applications (does not deploy).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 export NEXT_TELEMETRY_DISABLED=1
@@ -36,6 +36,17 @@ for app in "${WEB_APPS[@]}"; do
     npm ci --no-fund --no-audit
   else
     npm install --no-fund --no-audit
+  fi
+  has_script() {
+    node -e "process.exit(require('./package.json').scripts?.['$1'] ? 0 : 1)"
+  }
+  if has_script typecheck; then
+    npm run typecheck
+  else
+    npx --yes tsc --noEmit -p tsconfig.json
+  fi
+  if has_script test; then
+    npm test
   fi
   npm run build
 done

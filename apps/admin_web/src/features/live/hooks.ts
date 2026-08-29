@@ -53,9 +53,14 @@ export function useOpsSocket(enabled = true) {
   useEffect(() => {
     if (!enabled) return;
 
-    const wsBase =
-      process.env.NEXT_PUBLIC_BFF_ADMIN_WS_URL ??
-      "ws://localhost:8084/ws/admin/ops";
+    // Default to the same origin the rest of the console uses, so the socket follows
+    // the Next rewrite to bff-admin instead of a stale hardcoded port.
+    const sameOrigin =
+      typeof window === "undefined"
+        ? ""
+        : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws/admin/ops`;
+    const wsBase = process.env.NEXT_PUBLIC_BFF_ADMIN_WS_URL ?? sameOrigin;
+    if (!wsBase) return;
     const url = cityId
       ? `${wsBase}?cityId=${encodeURIComponent(cityId)}`
       : wsBase;

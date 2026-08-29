@@ -31,7 +31,7 @@ cd apps/admin_web
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Sign in on `/login` with any email/password (demo session). Default role is `admin`; elevate via code or auth store for `super_admin` kill-switch demos.
+Open [http://localhost:3000](http://localhost:3000). Sign in on `/login` with a real phone-number OTP served by `identity-service`; there is no email/password or demo session. The identity roles `admin`, `super_admin`, `city_ops`, `support_agent`, `finance_analyst`, `dispatcher`, `picker` and `packer` map to console roles, and an account with none of them is rejected at login.
 
 ## Scripts
 

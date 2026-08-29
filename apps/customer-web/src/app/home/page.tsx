@@ -72,7 +72,7 @@ export default function HomePage() {
             const item = p as { id?: string; sku?: string; name?: string; unitMinor?: number };
             const sku = item.sku ?? item.id ?? "unknown";
             const name = item.name ?? "Product";
-            const price = item.unitMinor ?? 1000;
+            const price = item.unitMinor;
             return (
               <li
                 key={sku}
@@ -80,13 +80,15 @@ export default function HomePage() {
               >
                 <Link href={`/product/${encodeURIComponent(sku)}`} className="block">
                   <p className="font-medium">{name}</p>
-                  <p className="text-sm text-neutral-600">₺{(price / 100).toFixed(2)}</p>
+                  <p className="text-sm text-neutral-600">
+                    {price != null ? `₺${(price / 100).toFixed(2)}` : "Price at checkout"}
+                  </p>
                 </Link>
                 <button
                   type="button"
                   className="mt-3 w-full rounded-lg bg-[var(--nx-brand)] py-2 text-sm font-medium text-white"
                   style={{ minHeight: 44 }}
-                  onClick={() => addLine({ sku, name, qty: 1, unitMinor: price })}
+                  onClick={() => addLine({ sku, name, qty: 1, unitMinor: price ?? 0 })}
                 >
                   Add to cart
                 </button>

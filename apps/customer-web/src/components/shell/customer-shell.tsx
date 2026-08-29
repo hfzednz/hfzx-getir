@@ -40,7 +40,15 @@ export function CustomerShell({ children }: { children: ReactNode }) {
   }
 
   if (!hydrated || !session) {
-    return <div className="nx-customer-shell">{children}</div>;
+    // Never mount protected children (and their authenticated queries) before the
+    // session is known — otherwise a signed-out visitor briefly sees the real page.
+    return (
+      <div className="nx-customer-shell px-4 py-6">
+        <p className="text-sm text-neutral-500" role="status">
+          {hydrated ? "Redirecting to sign in…" : "Loading…"}
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -52,7 +60,8 @@ export function CustomerShell({ children }: { children: ReactNode }) {
           </Link>
           <button
             type="button"
-            className="text-sm opacity-90"
+            className="rounded-lg px-3 text-sm opacity-90"
+            style={{ minHeight: 44 }}
             onClick={() => {
               logout();
               router.push("/login");

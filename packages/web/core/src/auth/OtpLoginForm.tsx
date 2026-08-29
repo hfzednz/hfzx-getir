@@ -17,9 +17,9 @@ export function OtpLoginForm({
   title,
   channel = "identity",
   expectedRoles = [],
-  defaultPhone = "+905551112233",
+  defaultPhone = "",
   onSuccess,
-  otpHint = "Staging: read OTP from identity-service logs when OTP_DEV_MODE=true.",
+  otpHint,
 }: OtpLoginFormProps) {
   const [phone, setPhone] = useState(defaultPhone);
   const [challengeId, setChallengeId] = useState("");
@@ -73,6 +73,8 @@ export function OtpLoginForm({
               className="mt-1 w-full rounded-lg border px-3 py-3"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "otp-form-error" : undefined}
               required
             />
           </label>
@@ -95,10 +97,12 @@ export function OtpLoginForm({
               className="mt-1 w-full rounded-lg border px-3 py-3 tracking-widest"
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "otp-form-error" : undefined}
               required
             />
           </label>
-          <p className="text-xs text-neutral-500">{otpHint}</p>
+          {otpHint ? <p className="text-xs text-neutral-500">{otpHint}</p> : null}
           <button
             type="submit"
             disabled={loading}
@@ -110,7 +114,7 @@ export function OtpLoginForm({
         </form>
       )}
       {error ? (
-        <p className="mt-4 text-sm text-red-600" role="alert">
+        <p id="otp-form-error" className="mt-4 text-sm text-red-600" role="alert">
           {error}
         </p>
       ) : null}
