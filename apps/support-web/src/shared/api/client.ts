@@ -4,7 +4,7 @@ export const useSession = createSessionStore("nexora-support-web-session");
 export function supportApi() {
   const session = useSession.getState().session;
   return createApiClient({
-    baseUrl: bffUrl("admin"),
+    baseUrl: typeof window === "undefined" ? bffUrl("admin") : "",
     tenantId: tenantId(),
     getToken: () => session?.accessToken ?? null,
     getUserId: () => session?.principalId ?? null,

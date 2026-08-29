@@ -107,6 +107,10 @@ func (b Base) post(ctx context.Context, path, tenantID string, reqBody, out any)
 	return b.do(ctx, http.MethodPost, path, tenantID, reqBody, out)
 }
 
+func (b Base) patch(ctx context.Context, path, tenantID string, reqBody, out any) error {
+	return b.do(ctx, http.MethodPatch, path, tenantID, reqBody, out)
+}
+
 func asString(v any) string {
 	switch t := v.(type) {
 	case string:

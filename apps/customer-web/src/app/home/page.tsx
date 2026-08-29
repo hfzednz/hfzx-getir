@@ -18,20 +18,23 @@ export default function HomePage() {
       const api = customerApi();
       return api.request<{
         serviceable?: boolean;
+        Serviceable?: boolean;
         products?: Array<{ id?: string; sku?: string; name?: string; unitMinor?: number }>;
+        Products?: Array<{ id?: string; sku?: string; name?: string; unitMinor?: number }>;
         rails?: unknown[];
       }>(`/v1/customer/home?lat=${lat}&lng=${lng}&customerId=${session?.principalId ?? ""}`);
     },
   });
 
-  const products = data?.products ?? [];
+  const products = data?.products ?? data?.Products ?? [];
+  const serviceable = data?.serviceable ?? data?.Serviceable;
 
   return (
     <div className="space-y-6">
       <section>
         <p className="text-xs uppercase tracking-wide text-neutral-500">Deliver to</p>
         <p className="font-medium">{addressLabel}</p>
-        {data && !data.serviceable ? (
+        {data && serviceable === false ? (
           <p className="text-sm text-amber-700">Area may be outside service zone.</p>
         ) : null}
       </section>
@@ -41,9 +44,14 @@ export default function HomePage() {
           name="q"
           placeholder="Search products…"
           className="flex-1 rounded-lg border px-3 py-2 text-sm"
+          style={{ minHeight: 44 }}
           aria-label="Search products"
         />
-        <button type="submit" className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white">
+        <button
+          type="submit"
+          className="rounded-lg bg-neutral-900 px-4 text-sm text-white"
+          style={{ minHeight: 44 }}
+        >
           Search
         </button>
       </form>
@@ -77,6 +85,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   className="mt-3 w-full rounded-lg bg-[var(--nx-brand)] py-2 text-sm font-medium text-white"
+                  style={{ minHeight: 44 }}
                   onClick={() => addLine({ sku, name, qty: 1, unitMinor: price })}
                 >
                   Add to cart

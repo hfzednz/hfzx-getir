@@ -33,7 +33,7 @@ export default function CartPage() {
               <button
                 type="button"
                 aria-label="Decrease quantity"
-                className="h-8 w-8 rounded border"
+                className="h-11 w-11 rounded border"
                 onClick={() => updateQty(line.sku, line.qty - 1)}
               >
                 −
@@ -42,7 +42,7 @@ export default function CartPage() {
               <button
                 type="button"
                 aria-label="Increase quantity"
-                className="h-8 w-8 rounded border"
+                className="h-11 w-11 rounded border"
                 onClick={() => updateQty(line.sku, line.qty + 1)}
               >
                 +

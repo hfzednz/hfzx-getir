@@ -45,10 +45,10 @@ func NewClient(baseURL string, log *slog.Logger, inner ports.OrderClient) *Clien
 
 // CreateFromCheckout posts POST /v1/orders with fromCheckout=true.
 func (c *Client) CreateFromCheckout(ctx context.Context, req ports.CreateFromCheckoutRequest) (ports.CreateFromCheckoutResult, error) {
-	if c.inner != nil {
-		return c.inner.CreateFromCheckout(ctx, req)
-	}
 	if c.baseURL == "" {
+		if c.inner != nil {
+			return c.inner.CreateFromCheckout(ctx, req)
+		}
 		c.log.Warn("order.client.unconfigured")
 		return ports.CreateFromCheckoutResult{}, fmt.Errorf("%w: order client unconfigured", domain.ErrInvariant)
 	}
@@ -106,10 +106,10 @@ func (c *Client) CreateFromCheckout(ctx context.Context, req ports.CreateFromChe
 
 // PlaceOrder posts POST /v1/orders/{id}/place.
 func (c *Client) PlaceOrder(ctx context.Context, req ports.PlaceOrderRequest) (ports.PlaceOrderResult, error) {
-	if c.inner != nil {
-		return c.inner.PlaceOrder(ctx, req)
-	}
 	if c.baseURL == "" {
+		if c.inner != nil {
+			return c.inner.PlaceOrder(ctx, req)
+		}
 		c.log.Warn("order.place.unconfigured")
 		return ports.PlaceOrderResult{}, fmt.Errorf("%w: order client unconfigured", domain.ErrInvariant)
 	}

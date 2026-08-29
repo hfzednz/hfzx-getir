@@ -4,7 +4,7 @@ export const useSession = createSessionStore("nexora-courier-web-session");
 export function courierApi() {
   const session = useSession.getState().session;
   return createApiClient({
-    baseUrl: bffUrl("courier"),
+    baseUrl: typeof window === "undefined" ? bffUrl("courier") : "",
     tenantId: tenantId(),
     getToken: () => session?.accessToken ?? null,
     getUserId: () => session?.principalId ?? null,

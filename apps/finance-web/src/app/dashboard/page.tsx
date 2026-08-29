@@ -13,8 +13,9 @@ export default function DashboardPage() {
 
   async function loadJournals() {
     try {
-      const data = await financeApi().request("/v1/ledger/journals");
-      setMsg(`Loaded ${Array.isArray(data) ? data.length : 0} journals`);
+        const data = await financeApi().request<{ items?: unknown[] } | unknown[]>("/v1/ledger/journals");
+        const n = Array.isArray(data) ? data.length : Array.isArray(data.items) ? data.items.length : 0;
+        setMsg(`Loaded ${n} journals`);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Journals load failed");
     }

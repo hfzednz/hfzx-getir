@@ -2,7 +2,9 @@ package httpclients
 
 import (
 	"context"
+	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/nexora/bff-customer/internal/app/ports"
 	"github.com/nexora/bff-customer/internal/domain"
@@ -77,11 +79,14 @@ func (c *Catalog) Search(ctx context.Context, tenantID, query string) ([]map[str
 	out := make([]map[string]any, 0, len(arr))
 	for _, h := range arr {
 		if m, ok := h.(map[string]any); ok {
+			pid := firstNonEmpty(asString(m["ProductID"]), asString(m["productId"]))
+			sku := firstNonEmpty(pid, asString(m["SKU"]), asString(m["sku"]))
 			item := map[string]any{
-				"sku":  firstNonEmpty(asString(m["SKU"]), asString(m["sku"])),
-				"name": firstNonEmpty(asString(m["Title"]), asString(m["title"]), asString(m["name"])),
+				"id":   sku,
+				"sku":  sku,
+				"name": firstNonEmpty(asString(m["Title"]), asString(m["title"]), asString(m["name"]), "Product"),
 			}
-			if pid := firstNonEmpty(asString(m["ProductID"]), asString(m["productId"])); pid != "" {
+			if pid != "" {
 				item["productId"] = pid
 			}
 			if pm, ok := m["priceMinor"]; ok {
@@ -128,11 +133,34 @@ func (c *Cart) Get(ctx context.Context, tenantID, cartID string) (map[string]any
 }
 
 func (c *Cart) AddItem(ctx context.Context, tenantID, cartID, sku string, qty, unitMinor int64) (map[string]any, error) {
-	body := map[string]any{"qty": qty, "sku": sku, "unitMinor": unitMinor}
-	// cart-service AddLine expects variantId (UUID). Pass sku when it looks like one.
-	body["variantId"] = sku
+	create := func() error {
+		var created map[string]any
+		if err := c.post(ctx, "/v1/cart", tenantID, map[string]any{
+			"guestToken": fmt.Sprintf("web-%d", time.Now().UnixNano()), "currency": "TRY",
+		}, &created); err != nil {
+			return err
+		}
+		cartID = firstNonEmpty(asString(created["ID"]), asString(created["id"]), asString(created["cartId"]))
+		if cartID == "" {
+			return domain.ErrUpstream
+		}
+		return nil
+	}
+	if cartID == "" {
+		if err := create(); err != nil {
+			return nil, err
+		}
+	}
+	body := map[string]any{"qty": qty, "sku": sku, "unitMinor": unitMinor, "variantId": sku}
 	var out map[string]any
-	if err := c.post(ctx, "/v1/cart/"+url.PathEscape(cartID)+"/lines", tenantID, body, &out); err != nil {
+	err := c.post(ctx, "/v1/cart/"+url.PathEscape(cartID)+"/lines", tenantID, body, &out)
+	if err == domain.ErrNotFound {
+		if err := create(); err != nil {
+			return nil, err
+		}
+		err = c.post(ctx, "/v1/cart/"+url.PathEscape(cartID)+"/lines", tenantID, body, &out)
+	}
+	if err != nil {
 		return nil, err
 	}
 	if _, ok := out["cartId"]; !ok {
@@ -177,10 +205,14 @@ func (c *Checkout) Preview(ctx context.Context, tenantID, cartID string) (domain
 	return previewFromSession(cartID, sess), nil
 }
 
-func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, sessionID string) (string, error) {
-	var quote map[string]any
-	currency := "TRY"
+func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, sessionID string, addr domain.CheckoutAddress) (string, error) {
+	if addr.Empty() {
+		return "", fmt.Errorf("%w: delivery address required", domain.ErrInvalidArgument)
+	}
 	if sessionID == "" {
+		if cartID == "" {
+			return "", fmt.Errorf("%w: cart required", domain.ErrInvalidArgument)
+		}
 		var sess map[string]any
 		body := map[string]any{
 			"cartId": cartID, "currency": "TRY",
@@ -196,11 +228,25 @@ func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, s
 		if sessionID == "" {
 			return "", domain.ErrUpstream
 		}
-		quote, _ = sess["quote"].(map[string]any)
-		currency = firstNonEmpty(asString(sess["currency"]), "TRY")
 	}
+	_ = paymentMethod
+	if err := c.patch(ctx, "/v1/checkout/sessions/"+url.PathEscape(sessionID), tenantID, map[string]any{
+		"address": addr.Map(),
+	}, nil); err != nil {
+		return "", err
+	}
+	var validated map[string]any
+	if err := c.post(ctx, "/v1/checkout/sessions/"+url.PathEscape(sessionID)+"/validate", tenantID, map[string]any{}, &validated); err != nil {
+		return "", err
+	}
+	if asString(validated["status"]) != "ready" {
+		return "", fmt.Errorf("%w: checkout not ready (status=%s issues=%s)",
+			domain.ErrInvalidArgument, asString(validated["status"]), validationIssueSummary(validated))
+	}
+	quote, _ := validated["quote"].(map[string]any)
 	amount := asInt64(quote["totalMinor"])
-	if c.Payment.BaseURL != "" {
+	currency := firstNonEmpty(asString(validated["currency"]), asString(quote["currency"]), "TRY")
+	if c.Payment.BaseURL != "" && amount > 0 {
 		payload := map[string]any{"currency": currency, "amountMinor": amount}
 		var elig map[string]any
 		if err := c.Payment.post(ctx, "/v1/payments/eligibility", tenantID, payload, &elig); err != nil {
@@ -215,7 +261,7 @@ func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, s
 	}
 	var done map[string]any
 	if err := c.post(ctx, "/v1/checkout/sessions/"+url.PathEscape(sessionID)+"/complete", tenantID, map[string]any{
-		"placeOrder": true, "paymentMethod": paymentMethod,
+		"placeOrder":     true,
 		"idempotencyKey": "bff-complete-" + sessionID,
 	}, &done); err != nil {
 		return "", err
@@ -225,6 +271,32 @@ func (c *Checkout) Place(ctx context.Context, tenantID, cartID, paymentMethod, s
 		return "", domain.ErrUpstream
 	}
 	return oid, nil
+}
+
+func validationIssueSummary(sess map[string]any) string {
+	val, _ := sess["validation"].(map[string]any)
+	if val == nil {
+		return ""
+	}
+	raw, ok := val["issues"].([]any)
+	if !ok || len(raw) == 0 {
+		return ""
+	}
+	parts := make([]string, 0, len(raw))
+	for _, item := range raw {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		msg := firstNonEmpty(asString(m["message"]), asString(m["code"]))
+		if msg != "" {
+			parts = append(parts, msg)
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%v", parts)
 }
 
 func previewFromSession(cartID string, sess map[string]any) domain.CheckoutPreview {
@@ -283,17 +355,22 @@ func (c *Tracking) Track(ctx context.Context, tenantID, orderID string) (domain.
 		return tr, nil
 	}
 	last, _ := items[len(items)-1].(map[string]any)
-	tr.Status = firstNonEmpty(asString(last["type"]), asString(last["status"]), "unknown")
+	var meta map[string]any
+	if m, ok := last["meta"].(map[string]any); ok {
+		meta = m
+	}
+	tr.Status = firstNonEmpty(asString(meta["status"]), asString(last["message"]), asString(last["status"]), asString(last["type"]), "unknown")
+	if tr.Status == "Custom" {
+		tr.Status = firstNonEmpty(asString(meta["status"]), asString(last["message"]), "unknown")
+	}
 	tr.CourierID = asString(last["courierId"])
 	tr.Lat = asFloat64(last["lat"])
 	tr.Lng = asFloat64(last["lon"])
 	if tr.Lng == 0 {
 		tr.Lng = asFloat64(last["lng"])
 	}
-	if meta, ok := last["meta"].(map[string]any); ok {
-		if eta := asInt64(meta["etaSeconds"]); eta > 0 {
-			tr.ETASeconds = int(eta)
-		}
+	if eta := asInt64(meta["etaSeconds"]); eta > 0 {
+		tr.ETASeconds = int(eta)
 	}
 	return tr, nil
 }

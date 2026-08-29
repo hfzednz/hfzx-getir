@@ -13,16 +13,16 @@ import (
 
 // CreateLineInput is a priced line snapshot at create time.
 type CreateLineInput struct {
-	VariantID      uuid.UUID
-	SKUCode        string
-	TitleSnapshot  string
-	Qty            int
-	UnitPriceMinor int64
-	DiscountsMinor int64
-	TaxMinor       int64
-	WarehouseID    *uuid.UUID
-	SortOrder      int
-	Metadata       map[string]any
+	VariantID      uuid.UUID      `json:"variantId"`
+	SKUCode        string         `json:"skuCode"`
+	TitleSnapshot  string         `json:"titleSnapshot"`
+	Qty            int            `json:"qty"`
+	UnitPriceMinor int64          `json:"unitPriceMinor"`
+	DiscountsMinor int64          `json:"discountsMinor"`
+	TaxMinor       int64          `json:"taxMinor"`
+	WarehouseID    *uuid.UUID     `json:"warehouseId,omitempty"`
+	SortOrder      int            `json:"sortOrder,omitempty"`
+	Metadata       map[string]any `json:"metadata,omitempty"`
 }
 
 // CreateDraftInput creates a draft order (idempotent).

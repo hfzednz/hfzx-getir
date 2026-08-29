@@ -55,6 +55,12 @@ func TestCatalogSearchAndCheckoutPlace(t *testing.T) {
 	mux.HandleFunc("POST /v1/checkout/sessions/sess-1/complete", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"orderId": "ord-9", "id": "sess-1"})
 	})
+	mux.HandleFunc("PATCH /v1/checkout/sessions/sess-1", func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"id": "sess-1", "status": "started"})
+	})
+	mux.HandleFunc("POST /v1/checkout/sessions/sess-1/validate", func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"id": "sess-1", "status": "ready"})
+	})
 	mux.HandleFunc("POST /v1/payments/eligibility", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"eligible": true, "methods": []string{"card"}})
 	})
@@ -72,7 +78,9 @@ func TestCatalogSearchAndCheckoutPlace(t *testing.T) {
 	if err != nil || prev.TotalMinor != 1000 {
 		t.Fatal(err, prev)
 	}
-	oid, err := chk.Place(context.Background(), "t1", "cart1", "card", prev.SessionID)
+	oid, err := chk.Place(context.Background(), "t1", "cart1", "card", prev.SessionID, domain.CheckoutAddress{
+		Line1: "Istanbul", City: "Istanbul", Country: "TR", Lat: 41.0082, Lng: 28.9784,
+	})
 	if err != nil || oid != "ord-9" {
 		t.Fatal(err, oid)
 	}

@@ -10,12 +10,15 @@ export default function CheckoutPage() {
   const router = useRouter();
   const session = useSession((s) => s.session);
   const { cartId, lines, setCartId, clear, totalMinor } = useCart();
-  const { addressLabel } = useLocation();
+  const { lat, lng, addressLabel } = useLocation();
+  const [line1, setLine1] = useState(addressLabel);
   const [preview, setPreview] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [paymentMethod] = useState("card");
   const activeCartId = cartId ?? crypto.randomUUID();
+  const deliveryLine = line1.trim() || addressLabel.trim();
+  const addressReady = Boolean(deliveryLine) || (lat !== 0 && lng !== 0);
 
   async function syncCart() {
     const api = customerApi();
@@ -56,11 +59,18 @@ export default function CheckoutPage() {
   }
 
   async function placeOrder() {
+    if (!addressReady) {
+      setError("Delivery address required");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
       const id = cartId ?? activeCartId;
       const api = customerApi();
+      const sessionId = String(
+        preview?.sessionId ?? preview?.SessionID ?? preview?.id ?? "",
+      );
       const res = await api.request<{ orderId?: string }>(
         "/v1/customer/checkout/place",
         {
@@ -69,13 +79,25 @@ export default function CheckoutPage() {
           body: {
             cartId: id,
             paymentMethod,
-            sessionId: crypto.randomUUID(),
+            ...(sessionId ? { sessionId } : {}),
             principalId: session?.principalId,
+            address: {
+              label: addressLabel,
+              line1: deliveryLine || addressLabel,
+              city: addressLabel,
+              country: "TR",
+              lat,
+              lng,
+            },
           },
         },
       );
+      const orderId = res.orderId;
+      if (!orderId) {
+        setError("Place order did not return an order id");
+        return;
+      }
       clear();
-      const orderId = res.orderId ?? crypto.randomUUID();
       try {
         const raw = localStorage.getItem("nexora-customer-order-ids");
         const ids = raw ? (JSON.parse(raw) as string[]) : [];
@@ -101,9 +123,20 @@ export default function CheckoutPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Checkout</h1>
-      <section className="rounded-xl border p-4">
+      <section className="rounded-xl border p-4 space-y-2">
         <h2 className="font-medium">Delivery address</h2>
         <p className="text-sm text-neutral-600">{addressLabel}</p>
+        <label className="block text-sm">
+          Street / building
+          <input
+            value={line1}
+            onChange={(e) => setLine1(e.target.value)}
+            className="mt-1 w-full rounded-lg border px-3 py-3"
+            style={{ minHeight: 44 }}
+            placeholder="Street and building"
+            autoComplete="street-address"
+          />
+        </label>
       </section>
       <section className="rounded-xl border p-4">
         <h2 className="font-medium">Payment</h2>
@@ -126,7 +159,7 @@ export default function CheckoutPage() {
       )}
       <button
         type="button"
-        disabled={loading || !preview}
+        disabled={loading || !preview || !addressReady}
         className="w-full rounded-lg bg-[var(--nx-brand)] py-3 font-semibold text-white disabled:opacity-50"
         onClick={placeOrder}
       >

@@ -6,6 +6,7 @@ import (
 
 	"github.com/nexora/bff-customer/internal/app"
 	"github.com/nexora/bff-customer/internal/app/memory"
+	"github.com/nexora/bff-customer/internal/domain"
 )
 
 func TestCustomerJourney(t *testing.T) {
@@ -36,7 +37,9 @@ func TestCustomerJourney(t *testing.T) {
 	if err != nil || prev.TotalMinor <= 0 {
 		t.Fatal(err)
 	}
-	oid, err := d.PlaceOrder(ctx, "t1", "cart1", "card", prev.SessionID)
+	oid, err := d.PlaceOrder(ctx, "t1", "cart1", "card", prev.SessionID, domain.CheckoutAddress{
+		Line1: "Istanbul", City: "Istanbul", Country: "TR", Lat: 41.0082, Lng: 28.9784,
+	})
 	if err != nil || oid == "" {
 		t.Fatal(err)
 	}

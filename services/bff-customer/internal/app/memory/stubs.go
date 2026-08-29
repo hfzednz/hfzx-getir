@@ -56,7 +56,7 @@ func (s *Stubs) Preview(_ context.Context, _, cartID string) (domain.CheckoutPre
 	}, nil
 }
 
-func (s *Stubs) Place(_ context.Context, _, cartID, _, sessionID string) (string, error) {
+func (s *Stubs) Place(_ context.Context, _, cartID, _, sessionID string, _ domain.CheckoutAddress) (string, error) {
 	id := "ord_" + uuid.NewString()[:8]
 	s.Orders[cartID] = id
 	if sessionID != "" {

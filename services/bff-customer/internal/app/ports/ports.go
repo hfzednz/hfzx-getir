@@ -26,7 +26,7 @@ type CartClient interface {
 
 type CheckoutClient interface {
 	Preview(ctx context.Context, tenantID, cartID string) (domain.CheckoutPreview, error)
-	Place(ctx context.Context, tenantID, cartID, paymentMethod, sessionID string) (orderID string, err error)
+	Place(ctx context.Context, tenantID, cartID, paymentMethod, sessionID string, addr domain.CheckoutAddress) (orderID string, err error)
 }
 
 type OrderClient interface {

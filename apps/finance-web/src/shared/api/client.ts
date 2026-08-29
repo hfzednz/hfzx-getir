@@ -4,7 +4,7 @@ export const useSession = createSessionStore("nexora-finance-web-session");
 export function financeApi() {
   const session = useSession.getState().session;
   return createApiClient({
-    baseUrl: serviceUrl("finance"),
+    baseUrl: typeof window === "undefined" ? serviceUrl("finance") : "",
     tenantId: tenantId(),
     getToken: () => session?.accessToken ?? null,
     getUserId: () => session?.principalId ?? null,

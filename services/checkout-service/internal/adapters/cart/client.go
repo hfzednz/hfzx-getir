@@ -46,10 +46,10 @@ func NewClient(baseURL string, log *slog.Logger, inner ports.CartClient) *Client
 
 // GetCart fetches GET /v1/cart/{id} or delegates to inner.
 func (c *Client) GetCart(ctx context.Context, tenantID, cartID uuid.UUID) (ports.CartView, error) {
-	if c.inner != nil {
-		return c.inner.GetCart(ctx, tenantID, cartID)
-	}
 	if c.baseURL == "" {
+		if c.inner != nil {
+			return c.inner.GetCart(ctx, tenantID, cartID)
+		}
 		c.log.Warn("cart.client.unconfigured", "cartId", cartID)
 		return ports.CartView{}, fmt.Errorf("%w: cart client unconfigured", domain.ErrInvariant)
 	}

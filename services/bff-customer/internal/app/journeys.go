@@ -50,7 +50,7 @@ func (d *Deps) Home(ctx context.Context, tenantID, customerID, query string, lat
 		}
 		feed.Serviceable = ok
 	}
-	if d.Catalog != nil && query != "" {
+	if d.Catalog != nil {
 		items, err := d.Catalog.Search(ctx, tenantID, query)
 		if err != nil {
 			return feed, err
@@ -81,18 +81,32 @@ func (d *Deps) PreviewCheckout(ctx context.Context, tenantID, cartID string) (do
 	return d.Checkout.Preview(ctx, tenantID, cartID)
 }
 
-func (d *Deps) PlaceOrder(ctx context.Context, tenantID, cartID, paymentMethod, sessionID string) (string, error) {
+func (d *Deps) PlaceOrder(ctx context.Context, tenantID, cartID, paymentMethod, sessionID string, addr domain.CheckoutAddress) (string, error) {
 	if d.Checkout == nil {
 		return "", domain.ErrUpstream
 	}
-	return d.Checkout.Place(ctx, tenantID, cartID, paymentMethod, sessionID)
+	return d.Checkout.Place(ctx, tenantID, cartID, paymentMethod, sessionID, addr)
 }
 
 func (d *Deps) TrackOrder(ctx context.Context, tenantID, orderID string) (domain.OrderTrack, error) {
-	if d.Tracking == nil {
+	if d.Tracking != nil {
+		tr, err := d.Tracking.Track(ctx, tenantID, orderID)
+		if err == nil && tr.Status != "" && tr.Status != "unknown" && tr.Status != "Custom" {
+			return tr, nil
+		}
+	}
+	if d.Orders == nil {
 		return domain.OrderTrack{}, domain.ErrUpstream
 	}
-	return d.Tracking.Track(ctx, tenantID, orderID)
+	raw, err := d.Orders.Get(ctx, tenantID, orderID)
+	if err != nil {
+		return domain.OrderTrack{}, err
+	}
+	status, _ := raw["status"].(string)
+	if status == "" {
+		status = "unknown"
+	}
+	return domain.OrderTrack{OrderID: orderID, Status: status}, nil
 }
 
 func (d *Deps) OpenSupport(ctx context.Context, tenantID, customerID, subject string) (string, error) {

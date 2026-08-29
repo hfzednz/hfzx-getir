@@ -10,6 +10,10 @@ import (
 	"github.com/nexora/order-service/internal/domain"
 )
 
+// destDefaultWarehouseID is used when cart/checkout lines have no warehouse
+// (in-memory phone-test stack has no warehouse assignment).
+var destDefaultWarehouseID = uuid.MustParse("55555555-5555-5555-5555-555555555555")
+
 // PlaceOrderInput starts (or resumes) the place-order saga.
 type PlaceOrderInput struct {
 	TenantID       uuid.UUID
@@ -360,7 +364,7 @@ func reserveLinesFromOrder(o domain.Order) []ports.ReserveLine {
 			wh = o.WarehouseIDs[0]
 		}
 		if wh == uuid.Nil {
-			continue
+			wh = destDefaultWarehouseID
 		}
 		out = append(out, ports.ReserveLine{
 			VariantID: l.VariantID, SKUCode: l.SKUCode, Qty: l.Qty, WarehouseID: wh,
@@ -378,5 +382,5 @@ func primaryWarehouse(o domain.Order) uuid.UUID {
 			return *l.WarehouseID
 		}
 	}
-	return uuid.Nil
+	return destDefaultWarehouseID
 }

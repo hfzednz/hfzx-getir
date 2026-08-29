@@ -105,6 +105,10 @@ func main() {
 	deps.Fraud = fraud.NewClient(cfg.FraudURL, log, deps.Fraud)
 	deps.Geofence = geofence.NewClient(cfg.GeofenceURL, log, deps.Geofence)
 
+	// Prefer HTTP cart/order when URLs are set (phone-test / staging), even in in-memory mode.
+	deps.Cart = cart.NewClient(cfg.CartURL, log, deps.Cart)
+	deps.Orders = order.NewClient(cfg.OrderURL, log, deps.Orders)
+
 	ready := func(*http.Request) error {
 		if db != nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)

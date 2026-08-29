@@ -20,17 +20,18 @@ export default function DashboardPage() {
     if (!session) return;
     (async () => {
       try {
-        const s = await supplierApi().request<unknown[]>("/v1/supplier/suppliers");
-        const p = await supplierApi().request<unknown[]>("/v1/supplier/purchase-orders");
+        const s = await supplierApi().request<{ items?: unknown[] } | unknown[]>("/v1/supplier/suppliers");
+        const p = await supplierApi().request<{ items?: unknown[] } | unknown[]>("/v1/supplier/purchase-orders");
         let sellers: unknown[] = [];
         try {
-          sellers = await supplierApi().request<unknown[]>("/v1/supplier/sellers");
+          const sl = await supplierApi().request<{ items?: unknown[] } | unknown[]>("/v1/supplier/sellers");
+          sellers = Array.isArray(sl) ? sl : sl.items ?? [];
         } catch {
           sellers = [];
         }
-        setSuppliers(Array.isArray(s) ? s : []);
-        setPos(Array.isArray(p) ? p : []);
-        setSellers(Array.isArray(sellers) ? sellers : []);
+        setSuppliers(Array.isArray(s) ? s : s.items ?? []);
+        setPos(Array.isArray(p) ? p : p.items ?? []);
+        setSellers(sellers);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Load failed");
       }

@@ -29,6 +29,9 @@ export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
 }
 
 function getBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return "/v1";
+  }
   return (
     process.env.NEXT_PUBLIC_BFF_ADMIN_URL?.replace(/\/$/, "") ?? DEFAULT_BASE
   );
