@@ -256,11 +256,12 @@ PY
 if [[ -z "$ACCESS_TOKEN" ]]; then
   dump_fail "customer login returned no access token"
 fi
-HDR+=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
+# Only the customer BFF calls carry this token; the staff services must keep rejecting it.
+AUTH=(-H "Authorization: Bearer ${ACCESS_TOKEN}")
 echo "OK customer session"
 
 # Signed in, an empty cart id must still be rejected by validation rather than auth.
-AUTH_EMPTY_CART="$(curl -sS --max-time 10 -o /tmp/e2e-empty-cart-auth.json -w "%{http_code}" "${HDR[@]}" \
+AUTH_EMPTY_CART="$(curl -sS --max-time 10 -o /tmp/e2e-empty-cart-auth.json -w "%{http_code}" "${HDR[@]}" "${AUTH[@]}" \
   "${CUST}/v1/customer/cart/items" -d '{"cartId":"","sku":"x","qty":1,"unitMinor":100}' || true)"
 echo "HTTP $AUTH_EMPTY_CART (want 4xx/502) authenticated empty cart"
 if [[ "$AUTH_EMPTY_CART" != 4* && "$AUTH_EMPTY_CART" != "502" ]]; then
@@ -268,7 +269,7 @@ if [[ "$AUTH_EMPTY_CART" != 4* && "$AUTH_EMPTY_CART" != "502" ]]; then
 fi
 
 echo "==> journey browse_catalog (BFF home without search index + catalog list)"
-http_json /tmp/e2e-home.json "${CUST}/v1/customer/home?lat=41.0&lng=29.0"
+http_json /tmp/e2e-home.json "${CUST}/v1/customer/home?lat=41.0&lng=29.0" "${AUTH[@]}"
 python3 - <<'PY'
 import json
 p=json.load(open("/tmp/e2e-home.json"))
@@ -307,9 +308,9 @@ PY
 if [[ -z "$CART_ID" ]]; then
   dump_fail "create cart missing id"
 fi
-http_json /tmp/e2e-addcart.json "${CUST}/v1/customer/cart/items" \
+http_json /tmp/e2e-addcart.json "${CUST}/v1/customer/cart/items" "${AUTH[@]}" \
   -d "{\"cartId\":\"${CART_ID}\",\"sku\":\"${VARIANT}\",\"qty\":1,\"unitMinor\":1500}"
-http_json /tmp/e2e-addcart2.json "${CUST}/v1/customer/cart/items" \
+http_json /tmp/e2e-addcart2.json "${CUST}/v1/customer/cart/items" "${AUTH[@]}" \
   -d "{\"cartId\":\"${CART_ID}\",\"sku\":\"${VARIANT}\",\"qty\":1,\"unitMinor\":1500}"
 echo "OK add_to_cart cartId=$CART_ID"
 
@@ -333,7 +334,7 @@ if [[ "${RC_FULL:-}" == "1" ]]; then
   SET_IP="$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nexora-e2e-settlement-service)"
 
   echo "==> RC checkout preview + address + validate + complete (idempotent)"
-  http_json /tmp/e2e-preview.json "${CUST}/v1/customer/checkout/preview" \
+  http_json /tmp/e2e-preview.json "${CUST}/v1/customer/checkout/preview" "${AUTH[@]}" \
     -H "X-Nexora-User: ${PRINCIPAL}" \
     -d "{\"cartId\":\"${DEMO_CART}\",\"principalId\":\"${PRINCIPAL}\"}"
   SESS_ID="$(python3 - <<'PY'
@@ -358,7 +359,7 @@ print("checkout_status", status, "total", (d.get("quote") or {}).get("totalMinor
 PY
   # The BFF requires the delivery address on place, the same way the web app sends it.
   PLACE_ADDRESS='{"line1":"Test St 1","city":"Istanbul","lat":41.0,"lng":29.0}'
-  http_json /tmp/e2e-place.json "${CUST}/v1/customer/checkout/place" \
+  http_json /tmp/e2e-place.json "${CUST}/v1/customer/checkout/place" "${AUTH[@]}" \
     -H "X-Nexora-User: ${PRINCIPAL}" \
     -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}"
   ORDER_ID="$(python3 - <<'PY'
@@ -372,7 +373,7 @@ PY
   fi
   # Resubmitting the same session must not create a second order. The checkout service
   # either replays the original order id or refuses the completed session with 409.
-  PLACE2_CODE="$(curl -sS --max-time 10 -o /tmp/e2e-place2.json -w "%{http_code}" "${HDR[@]}" \
+  PLACE2_CODE="$(curl -sS --max-time 10 -o /tmp/e2e-place2.json -w "%{http_code}" "${HDR[@]}" "${AUTH[@]}" \
     -H "X-Nexora-User: ${PRINCIPAL}" "${CUST}/v1/customer/checkout/place" \
     -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}" || true)"
   echo "HTTP $PLACE2_CODE (want 200|201|409) duplicate place"
