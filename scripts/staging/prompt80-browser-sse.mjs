@@ -3,9 +3,16 @@
  * Prompt 80: Chromium EventSource on fresh order, then warehouse pick, then mobile pages.
  * One browser only. Close before staff Chromium smokes.
  */
-const { chromium } = require("/workspaces/hfzx-getir/qa/playwright/node_modules/@playwright/test");
-const { execSync } = require("child_process");
-const fs = require("fs");
+import { execSync } from "node:child_process";
+import { createRequire } from "node:module";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+// Playwright lives in the QA workspace, not in this script's package.
+const require = createRequire(path.join(here, "../../qa/playwright/package.json"));
+const { chromium } = require("@playwright/test");
 
 const ORDER = process.env.PROMPT80_ORDER_ID || fs.readFileSync("/tmp/prompt80-sse-order.txt", "utf8").trim();
 const BASE = "http://127.0.0.1:3000";
