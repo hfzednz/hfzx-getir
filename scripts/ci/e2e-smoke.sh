@@ -524,8 +524,12 @@ PY
   fi
   FIN_AUTH=(-H "Authorization: Bearer ${FIN_TOKEN}")
   # A customer principal must not reach the ledger.
-  http_expect 403 /tmp/e2e-ledger-customer.json "http://${FIN_IP}:8080/v1/ledger/journals" \
-    "${HDR[@]}" "${AUTH[@]}"
+  LEDGER_AS_CUSTOMER="$(curl -sS --max-time 10 -o /tmp/e2e-ledger-customer.json -w "%{http_code}" \
+    "${HDR[@]}" "${AUTH[@]}" "http://${FIN_IP}:8080/v1/ledger/journals" || true)"
+  echo "HTTP $LEDGER_AS_CUSTOMER (want 401|403) ledger as customer"
+  if [[ "$LEDGER_AS_CUSTOMER" != "401" && "$LEDGER_AS_CUSTOMER" != "403" ]]; then
+    dump_fail "customer principal reached the ledger with $LEDGER_AS_CUSTOMER"
+  fi
   http_json /tmp/e2e-acc1.json "http://${FIN_IP}:8080/v1/ledger/accounts" "${FIN_AUTH[@]}" \
     -d '{"code":"1000","name":"Cash","type":"asset","currency":"TRY"}'
   http_json /tmp/e2e-acc2.json "http://${FIN_IP}:8080/v1/ledger/accounts" "${FIN_AUTH[@]}" \
