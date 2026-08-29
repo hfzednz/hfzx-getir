@@ -46,16 +46,19 @@ export const options = {
 
 const BASE = __ENV.BFF_BASE || 'http://127.0.0.1:8111';
 const TENANT = __ENV.TENANT_ID || '11111111-1111-1111-1111-111111111111';
+// The storefront feed needs a customer session; the caller signs one in and passes it.
+const TOKEN = __ENV.CUSTOMER_TOKEN || '';
 
 export default function () {
-  const params = {
-    headers: {
-      'X-Tenant-Id': TENANT,
-      'Content-Type': 'application/json',
-      'X-Request-Id': `k6-${__VU}-${__ITER}`,
-    },
-    timeout: '10s',
+  const headers = {
+    'X-Tenant-Id': TENANT,
+    'Content-Type': 'application/json',
+    'X-Request-Id': `k6-${__VU}-${__ITER}`,
   };
+  if (TOKEN) {
+    headers.Authorization = `Bearer ${TOKEN}`;
+  }
+  const params = { headers, timeout: '10s' };
   group('auth_health', () => {
     const h = http.get(`${BASE}/health`, params);
     check(h, { 'health 200': (r) => r.status === 200 });

@@ -592,6 +592,7 @@ PY
   docker run --rm --network "$NET" \
     -e BFF_BASE=http://bff-customer:8080 \
     -e TENANT_ID="$TENANT" \
+    -e CUSTOMER_TOKEN="$ACCESS_TOKEN" \
     -v "$ROOT/qa/k6:/scripts" grafana/k6:latest run \
     --summary-trend-stats="avg,min,med,p(50),p(95),p(99),max" \
     /scripts/rc_bff.js
