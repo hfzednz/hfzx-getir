@@ -78,7 +78,11 @@ export default function HomePage() {
                 key={sku}
                 className="rounded-xl border p-4 shadow-sm"
               >
-                <Link href={`/product/${encodeURIComponent(sku)}`} className="block">
+                <Link
+                  href={`/product/${encodeURIComponent(sku)}`}
+                  className="block"
+                  style={{ minHeight: 44 }}
+                >
                   <p className="font-medium">{name}</p>
                   <p className="text-sm text-neutral-600">
                     {price != null ? `₺${(price / 100).toFixed(2)}` : "Price at checkout"}
