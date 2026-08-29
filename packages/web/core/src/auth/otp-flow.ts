@@ -10,7 +10,10 @@ export async function startOtp(
 ): Promise<{ challengeId: string }> {
   const tid = tenantId();
   if (channel === "customer-bff") {
-    const api = createApiClient({ baseUrl: bffUrl("customer"), tenantId: tid });
+    const api = createApiClient({
+      baseUrl: typeof window !== "undefined" ? "" : bffUrl("customer"),
+      tenantId: tid,
+    });
     return api.request("/v1/customer/auth/otp/start", {
       method: "POST",
       body: { phone },
@@ -33,7 +36,10 @@ export async function verifyOtp(
   void expectedRoles;
   const tid = tenantId();
   if (channel === "customer-bff") {
-    const api = createApiClient({ baseUrl: bffUrl("customer"), tenantId: tid });
+    const api = createApiClient({
+      baseUrl: typeof window !== "undefined" ? "" : bffUrl("customer"),
+      tenantId: tid,
+    });
     const res = await api.request<Record<string, unknown>>(
       "/v1/customer/auth/otp/verify",
       { method: "POST", body: { challengeId, code } },
