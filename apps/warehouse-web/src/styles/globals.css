@@ -1,2 +1,4 @@
+@import "tailwindcss";
 @import "@nexora/ui/styles.css";
+@source "../../../../packages/web/core/src/**/*.{ts,tsx}";
 body { min-height: 100dvh; background: #f8fafc; }

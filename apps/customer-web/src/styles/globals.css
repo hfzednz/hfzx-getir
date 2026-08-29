@@ -1,4 +1,6 @@
+@import "tailwindcss";
 @import "@nexora/ui/styles.css";
+@source "../../../../packages/web/core/src/**/*.{ts,tsx}";
 
 :root {
   --nx-brand: #5c35ff;
