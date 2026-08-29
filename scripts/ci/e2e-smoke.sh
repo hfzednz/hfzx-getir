@@ -99,7 +99,9 @@ for s in "${SERVICES[@]}"; do
 done
 
 echo "==> run backends"
-run_svc identity-service
+# Disposable stack: OTP_DEV_MODE also maps the seeded test phones to their real roles,
+# without which every sign-in would come back as a plain customer.
+run_svc identity-service -e OTP_DEV_MODE=true
 run_svc catalog-service
 run_svc cart-service
 run_svc location-service
