@@ -370,18 +370,30 @@ PY
   if [[ -z "$ORDER_ID" ]]; then
     dump_fail "place missing orderId"
   fi
-  http_json /tmp/e2e-place2.json "${CUST}/v1/customer/checkout/place" \
-    -H "X-Nexora-User: ${PRINCIPAL}" \
-    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}"
-  ORDER_ID2="$(python3 - <<'PY'
+  # Resubmitting the same session must not create a second order. The checkout service
+  # either replays the original order id or refuses the completed session with 409.
+  PLACE2_CODE="$(curl -sS --max-time 10 -o /tmp/e2e-place2.json -w "%{http_code}" "${HDR[@]}" \
+    -H "X-Nexora-User: ${PRINCIPAL}" "${CUST}/v1/customer/checkout/place" \
+    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}" || true)"
+  echo "HTTP $PLACE2_CODE (want 200|201|409) duplicate place"
+  if [[ -s /tmp/e2e-place2.json ]]; then
+    head -c 300 /tmp/e2e-place2.json; echo
+  fi
+  case "$PLACE2_CODE" in
+    200|201)
+      ORDER_ID2="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-place2.json"))
 print(d.get("orderId") or d.get("OrderID") or "")
 PY
 )"
-  if [[ "$ORDER_ID" != "$ORDER_ID2" ]]; then
-    dump_fail "duplicate place created two orders $ORDER_ID vs $ORDER_ID2"
-  fi
+      if [[ "$ORDER_ID" != "$ORDER_ID2" ]]; then
+        dump_fail "duplicate place created two orders $ORDER_ID vs $ORDER_ID2"
+      fi
+      ;;
+    409) ;;
+    *) dump_fail "duplicate place returned $PLACE2_CODE" ;;
+  esac
   echo "OK checkout_place orderId=$ORDER_ID"
 
   echo "==> RC order create + history + detail + duplicate create"
