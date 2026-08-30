@@ -1,7 +1,17 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// The checkout session is keyed by cart id, so each run needs its own cart to avoid
+/// landing on a session another suite already completed.
+String _randomCartId() {
+  final rnd = Random.secure();
+  String hex(int n) =>
+      List.generate(n, (_) => rnd.nextInt(16).toRadixString(16)).join();
+  return '${hex(8)}-${hex(4)}-4${hex(3)}-a${hex(3)}-${hex(12)}';
+}
 
 /// Hits the real customer BFF when CUSTOMER_BASE is set (RC_FULL / FLUTTER_LIVE).
 /// CUSTOMER_TOKEN carries a signed-in customer session; the storefront and checkout
@@ -45,10 +55,11 @@ void main() {
       'lng': 29.0,
     };
 
+    final cartId = _randomCartId();
     final preview = await dio.post<Map<String, dynamic>>(
       '/v1/customer/checkout/preview',
       data: {
-        'cartId': '33333333-3333-3333-3333-333333333333',
+        'cartId': cartId,
         'principalId': '22222222-2222-2222-2222-222222222222',
       },
     );
@@ -58,7 +69,7 @@ void main() {
         preview.data?['session_id'];
 
     final placeBody = {
-      'cartId': '33333333-3333-3333-3333-333333333333',
+      'cartId': cartId,
       'principalId': '22222222-2222-2222-2222-222222222222',
       'paymentMethod': 'card',
       'address': address,
