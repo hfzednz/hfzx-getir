@@ -71,11 +71,33 @@ export function createApiClient(opts: ClientOptions) {
       ? path
       : `${opts.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 
-    const res = await fetch(url, {
-      ...rest,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        ...rest,
+        // Codespace/Safari tunnels set partitioned cookies; default "same-origin"
+        // is not reliable on iOS for *.app.github.dev.
+        credentials: "include",
+        cache: "no-store",
+        signal:
+          rest.signal ??
+          (typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
+            ? AbortSignal.timeout(15_000)
+            : undefined),
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      const name = err instanceof Error ? err.name : "";
+      if (err instanceof TypeError || name === "AbortError" || name === "TimeoutError") {
+        throw new ApiError(0, {
+          code: "network_error",
+          message: "Could not reach the server. Please try again.",
+        });
+      }
+      throw err;
+    }
 
     const text = await res.text();
     let parsed: unknown = null;

@@ -1,29 +1,49 @@
 import { createApiClient } from "../api/create-client";
-import { bffUrl, identityUrl, tenantId } from "../config/env";
+import { identityUrl, tenantId } from "../config/env";
 import type { WebSession } from "./types";
 
 export type OtpChannel = "customer-bff" | "identity";
+
+function challengeIdFrom(res: unknown): string {
+  if (!res || typeof res !== "object") return "";
+  const body = res as Record<string, unknown>;
+  const raw = body.challengeId ?? body.ChallengeID ?? body.challenge_id;
+  return raw == null ? "" : String(raw).trim();
+}
 
 export async function startOtp(
   phone: string,
   channel: OtpChannel = "identity",
 ): Promise<{ challengeId: string }> {
   const tid = tenantId();
+  const trimmed = phone.trim();
+  if (!trimmed) {
+    throw new Error("Enter a phone number to receive a verification code.");
+  }
+  let res: unknown;
   if (channel === "customer-bff") {
+    // Always same-origin so the Next rewrite reaches Codespace BFF.
+    // Never use http://localhost:8111 — that is the phone itself on iOS.
     const api = createApiClient({
-      baseUrl: typeof window !== "undefined" ? "" : bffUrl("customer"),
+      baseUrl: "",
       tenantId: tid,
     });
-    return api.request("/v1/customer/auth/otp/start", {
+    res = await api.request("/v1/customer/auth/otp/start", {
       method: "POST",
-      body: { phone },
+      body: { phone: trimmed },
+    });
+  } else {
+    const api = createApiClient({ baseUrl: identityUrl(), tenantId: tid });
+    res = await api.request("/v1/identity/auth/otp/start", {
+      method: "POST",
+      body: { phone: trimmed, tenantId: tid },
     });
   }
-  const api = createApiClient({ baseUrl: identityUrl(), tenantId: tid });
-  return api.request("/v1/identity/auth/otp/start", {
-    method: "POST",
-    body: { phone, tenantId: tid },
-  });
+  const challengeId = challengeIdFrom(res);
+  if (!challengeId) {
+    throw new Error("Could not start verification. Please try again.");
+  }
+  return { challengeId };
 }
 
 export async function verifyOtp(
@@ -36,7 +56,7 @@ export async function verifyOtp(
   const tid = tenantId();
   if (channel === "customer-bff") {
     const api = createApiClient({
-      baseUrl: typeof window !== "undefined" ? "" : bffUrl("customer"),
+      baseUrl: "",
       tenantId: tid,
     });
     const res = await api.request<Record<string, unknown>>(

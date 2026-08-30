@@ -28,23 +28,43 @@ export function OtpLoginForm({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function onStart(e: React.FormEvent) {
-    e.preventDefault();
+  async function onStart(e?: React.FormEvent) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    const submitted = phone.trim();
+    if (!submitted) {
+      setError("Enter a phone number to receive a verification code.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
-      const res = await startOtp(phone, channel);
+      const res = await startOtp(submitted, channel);
+      if (!res.challengeId) {
+        throw new Error("Could not start verification. Please try again.");
+      }
+      setPhone(submitted);
       setChallengeId(res.challengeId);
       setStep("otp");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "OTP start failed");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Could not send the verification code. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  async function onVerify(e: React.FormEvent) {
-    e.preventDefault();
+  async function onVerify(e?: React.FormEvent) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (!challengeId) {
+      setError("Verification expired. Please request a new code.");
+      setStep("phone");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -54,17 +74,27 @@ export function OtpLoginForm({
       }
       onSuccess(session);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid OTP");
+      setError(err instanceof Error && err.message ? err.message : "Invalid OTP");
     } finally {
       setLoading(false);
     }
   }
 
+  const errorAlert = error ? (
+    <p
+      id="otp-form-error"
+      className="rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700"
+      role="alert"
+    >
+      {error}
+    </p>
+  ) : null;
+
   return (
     <div className="flex min-h-dvh flex-col justify-center px-6 py-10">
       <h1 className="mb-2 text-2xl font-bold text-violet-700">{title}</h1>
       {step === "phone" ? (
-        <form onSubmit={onStart} className="space-y-4">
+        <form onSubmit={(e) => void onStart(e)} noValidate className="space-y-4">
           <label className="block text-sm font-medium">
             Phone
             <input
@@ -78,9 +108,11 @@ export function OtpLoginForm({
               required
             />
           </label>
+          {errorAlert}
           <button
-            type="submit"
+            type="button"
             disabled={loading}
+            onClick={() => void onStart()}
             className="w-full rounded-lg bg-violet-600 px-4 font-semibold text-white disabled:opacity-60"
             style={{ minHeight: 44, paddingTop: 12, paddingBottom: 12 }}
           >
@@ -88,7 +120,7 @@ export function OtpLoginForm({
           </button>
         </form>
       ) : (
-        <form onSubmit={onVerify} className="space-y-4">
+        <form onSubmit={(e) => void onVerify(e)} noValidate className="space-y-4">
           <label className="block text-sm font-medium">
             OTP code
             <input
@@ -103,9 +135,11 @@ export function OtpLoginForm({
             />
           </label>
           {otpHint ? <p className="text-xs text-neutral-500">{otpHint}</p> : null}
+          {errorAlert}
           <button
-            type="submit"
+            type="button"
             disabled={loading}
+            onClick={() => void onVerify()}
             className="w-full rounded-lg bg-violet-600 px-4 font-semibold text-white disabled:opacity-60"
             style={{ minHeight: 44, paddingTop: 12, paddingBottom: 12 }}
           >
@@ -113,11 +147,6 @@ export function OtpLoginForm({
           </button>
         </form>
       )}
-      {error ? (
-        <p id="otp-form-error" className="mt-4 text-sm text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }
