@@ -632,10 +632,26 @@ if [[ "${FLUTTER_LIVE:-}" == "1" ]]; then
     echo "FAIL flutter binary missing (install via flutter-action in this job)"
     exit 1
   fi
+  # The journey needs its own cart so it cannot land on a checkout session another
+  # suite already completed. Carts are created by cart-service, not by the BFF.
+  http_json /tmp/e2e-flutter-cart.json "http://${CART_IP}:8080/v1/cart" \
+    -d '{"guestToken":"flutter-live","currency":"TRY"}'
+  FLUTTER_CART="$(python3 - <<'PY'
+import json
+d=json.load(open("/tmp/e2e-flutter-cart.json"))
+print(d.get("ID") or d.get("id") or d.get("cartId") or "")
+PY
+)"
+  if [[ -z "$FLUTTER_CART" ]]; then
+    dump_fail "flutter live cart missing id"
+  fi
+  http_json /tmp/e2e-flutter-cart-item.json "${CUST}/v1/customer/cart/items" "${AUTH[@]}" \
+    -d "{\"cartId\":\"${FLUTTER_CART}\",\"sku\":\"${VARIANT}\",\"qty\":1,\"unitMinor\":1500}"
   (
     cd "$ROOT/apps/mobile_customer"
     flutter pub get
-    CUSTOMER_BASE="$CUST" CUSTOMER_TOKEN="$ACCESS_TOKEN" flutter test test/live --reporter expanded
+    CUSTOMER_BASE="$CUST" CUSTOMER_TOKEN="$ACCESS_TOKEN" CUSTOMER_CART_ID="$FLUTTER_CART" \
+      flutter test test/live --reporter expanded
   )
   echo "OK flutter-live-bff"
 fi
