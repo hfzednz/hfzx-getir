@@ -9,8 +9,9 @@ import '../../../../shared/business_rules/checkout_rules.dart';
 import '../../../../shared/business_rules/payment_rules.dart';
 import '../../../addresses/domain/entities/addresses_entity.dart';
 import '../../../addresses/presentation/providers/addresses_providers.dart';
+import '../../../auth/presentation/providers/auth_session_provider.dart';
+import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../domain/entities/checkout_entity.dart';
-import '../../domain/checkout_bff_defaults.dart';
 import 'checkout_providers.dart'
     show
         confirmCheckoutUseCaseProvider,
@@ -262,11 +263,23 @@ class CheckoutController extends Notifier<CheckoutState> {
     await refreshQuote();
   }
 
-    Map<String, dynamic> buildCheckoutBody() {
+  /// Cart id of the cart this device filled, or null when nothing has been added yet.
+  String? get _cartId {
+    final id = ref.read(cartIdProvider);
+    return id == null || id.isEmpty ? null : id;
+  }
+
+  /// Principal of the signed-in customer, or null when there is no session.
+  String? get _principalId {
+    final id = ref.read(authSessionProvider).userId;
+    return id == null || id.isEmpty ? null : id;
+  }
+
+  Map<String, dynamic> buildCheckoutBody() {
     final s = state;
     return {
-      'cartId': CheckoutBffDefaults.cartId,
-      'principalId': CheckoutBffDefaults.principalId,
+      if (_cartId != null) 'cartId': _cartId,
+      if (_principalId != null) 'principalId': _principalId,
       if (s.addressId != null) 'address_id': s.addressId,
       'payment': {
         'type': s.paymentType,
@@ -304,6 +317,11 @@ class CheckoutController extends Notifier<CheckoutState> {
 
   Future<void> refreshQuote() async {
     if (state.addressId == null) return;
+    final blocker = _identityBlocker();
+    if (blocker != null) {
+      state = state.copyWith(errorMessage: blocker, clearQuote: true);
+      return;
+    }
 
     state = state.copyWith(isLoading: true, clearError: true, clearVerifiedQuoteId: true);
     final result = await ref.read(getCheckoutQuoteUseCaseProvider).call(
@@ -359,7 +377,23 @@ class CheckoutController extends Notifier<CheckoutState> {
     );
   }
 
+  /// Message describing why checkout cannot run, or null when cart and session are known.
+  String? _identityBlocker() {
+    if (_cartId == null) {
+      return 'Add something to your cart before checking out.';
+    }
+    if (_principalId == null) {
+      return 'Sign in to complete your order.';
+    }
+    return null;
+  }
+
   Future<bool> placeOrder({String? idempotencyKey}) async {
+    final identityBlocker = _identityBlocker();
+    if (identityBlocker != null) {
+      state = state.copyWith(errorMessage: identityBlocker);
+      return false;
+    }
     if (state.addressId == null) {
       state = state.copyWith(errorMessage: 'Select a delivery address to continue.');
       return false;
@@ -535,6 +569,9 @@ class CheckoutController extends Notifier<CheckoutState> {
           lastAttemptAt: DateTime.now(),
         );
         _lastPaymentError = null;
+        // This cart has been consumed by the order, so the next checkout must start a new
+        // one; reusing the id would reopen a completed session.
+        unawaited(ref.read(cartIdProvider.notifier).clear());
         state = state.copyWith(
           isLoading: false,
           placedOrderId: orderId,
@@ -653,6 +690,7 @@ class CheckoutController extends Notifier<CheckoutState> {
           lastAttemptAt: DateTime.now(),
         );
         _lastPaymentError = null;
+        unawaited(ref.read(cartIdProvider.notifier).clear());
         state = state.copyWith(
           isLoading: false,
           placedOrderId: orderId,

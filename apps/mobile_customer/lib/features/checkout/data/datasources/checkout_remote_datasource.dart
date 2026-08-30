@@ -1,6 +1,5 @@
 import 'package:nexora_core/nexora_core.dart';
 
-import '../../domain/checkout_bff_defaults.dart';
 import '../../domain/entities/checkout_entity.dart';
 import '../models/checkout_model.dart';
 
@@ -15,16 +14,30 @@ class CheckoutRemoteDataSource {
   CheckoutSession _parseSession(dynamic json) =>
       CheckoutSessionModel.fromJson(json as Map<String, dynamic>).toEntity();
 
-  Map<String, dynamic> _bffBody(Map<String, dynamic> body) {
+  static const _missingIdentity = NexoraValidationException(
+    code: NexoraErrorCode.validationFailed,
+    message: 'A cart and a signed-in customer are required for checkout',
+  );
+
+  static String? _id(Map<String, dynamic> body, String camel, String snake) {
+    final raw = (body[camel] ?? body[snake])?.toString().trim();
+    return raw == null || raw.isEmpty ? null : raw;
+  }
+
+  /// Maps the controller body onto the BFF contract. Returns null when the cart or the
+  /// customer identity is unknown: checkout is keyed by both, and substituting a default
+  /// would quote someone else's cart.
+  Map<String, dynamic>? _bffBody(Map<String, dynamic> body) {
+    final cartId = _id(body, 'cartId', 'cart_id');
+    final principalId = _id(body, 'principalId', 'principal_id');
+    if (cartId == null || principalId == null) return null;
     final payment = body['payment'];
     final paymentType = body['paymentMethod'] ??
         (payment is Map ? payment['type'] : null) ??
         'card';
     return {
-      'cartId': (body['cartId'] ?? body['cart_id'] ?? CheckoutBffDefaults.cartId).toString(),
-      'principalId':
-          (body['principalId'] ?? body['principal_id'] ?? CheckoutBffDefaults.principalId)
-              .toString(),
+      'cartId': cartId,
+      'principalId': principalId,
       'paymentMethod': paymentType.toString(),
       if (body['sessionId'] != null || body['session_id'] != null)
         'sessionId': (body['sessionId'] ?? body['session_id']).toString(),
@@ -67,9 +80,13 @@ class CheckoutRemoteDataSource {
     required Map<String, dynamic> body,
     String? idempotencyKey,
   }) async {
+    final data = _bffBody(body);
+    if (data == null) {
+      return const Failure<CheckoutSession>(_missingIdentity);
+    }
     return _client.post<CheckoutSession>(
       _placePath,
-      data: _bffBody(body),
+      data: data,
       idempotencyKey: idempotencyKey,
       parser: (json) {
         final map = Map<String, dynamic>.from(json as Map);
@@ -87,9 +104,13 @@ class CheckoutRemoteDataSource {
   }
 
   Future<Result<CheckoutQuote>> getQuote({required Map<String, dynamic> body}) async {
+    final data = _bffBody(body);
+    if (data == null) {
+      return const Failure<CheckoutQuote>(_missingIdentity);
+    }
     return _client.post<CheckoutQuote>(
       _previewPath,
-      data: _bffBody(body),
+      data: data,
       parser: (json) =>
           CheckoutQuote.fromJson(Map<String, dynamic>.from(json as Map)),
     );
@@ -99,9 +120,13 @@ class CheckoutRemoteDataSource {
     required String quoteId,
     required Map<String, dynamic> body,
   }) async {
+    final data = _bffBody(body);
+    if (data == null) {
+      return const Failure<CheckoutSession>(_missingIdentity);
+    }
     return _client.post<CheckoutSession>(
       _previewPath,
-      data: _bffBody(body),
+      data: data,
       parser: (json) {
         final map = Map<String, dynamic>.from(json as Map);
         final quote = CheckoutQuote.fromJson({...map, 'quote_id': quoteId});

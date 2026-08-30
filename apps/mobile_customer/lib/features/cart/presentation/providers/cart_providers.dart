@@ -43,6 +43,38 @@ final cartLocalProvider = FutureProvider.autoDispose<Cart>((ref) async {
   return ref.watch(cartRepositoryProvider).buildLocalCart();
 });
 
+const cartIdPrefsKey = 'cart_id';
+
+/// Identity of the cart this device is filling. The BFF creates the cart on the first
+/// `POST /cart/items`, so the client owns the id; checkout is keyed by it and must never
+/// fall back to a shared or seeded id.
+class CartIdNotifier extends StateNotifier<String?> {
+  CartIdNotifier(this._prefs) : super(_prefs.get<String>(cartIdPrefsKey));
+
+  final PreferencesStore _prefs;
+  static const _uuid = Uuid();
+
+  /// Returns the current cart id, minting one on first use.
+  Future<String> ensure() async {
+    final existing = state;
+    if (existing != null && existing.isNotEmpty) return existing;
+    final id = _uuid.v4();
+    await _prefs.set(cartIdPrefsKey, id);
+    state = id;
+    return id;
+  }
+
+  /// Called once a cart is consumed (order placed) so the next cart is a new one.
+  Future<void> clear() async {
+    await _prefs.remove(cartIdPrefsKey);
+    state = null;
+  }
+}
+
+final cartIdProvider = StateNotifierProvider<CartIdNotifier, String?>((ref) {
+  return CartIdNotifier(ref.watch(preferencesStoreProvider));
+});
+
 final cartRepositoryProvider = Provider<CartLocalRepository>((ref) {
   return CartLocalRepository(
     ref.watch(databaseProvider),
@@ -51,6 +83,7 @@ final cartRepositoryProvider = Provider<CartLocalRepository>((ref) {
     ref.watch(mutationOutboxProvider),
     ref.watch(syncEngineProvider),
     ref.watch(analyticsTrackerProvider),
+    ensureCartId: () => ref.read(cartIdProvider.notifier).ensure(),
   );
 });
 
@@ -62,8 +95,11 @@ class CartLocalRepository {
     this._remote,
     this._outbox,
     this._syncEngine,
-    this._analytics,
-  );
+    this._analytics, {
+    Future<String> Function()? ensureCartId,
+  }) : _ensureCartId = ensureCartId;
+
+  final Future<String> Function()? _ensureCartId;
 
   final AppDatabase _db;
   final ApiClient _client;
@@ -115,6 +151,8 @@ class CartLocalRepository {
     String currency = 'TRY',
     int quantity = 1,
   }) async {
+    // Claim the cart identity with the first line so checkout has a real cart to quote.
+    await _ensureCartId?.call();
     await _db.upsertCartItem(
       CartItemsCompanion.insert(
         productId: productId,
