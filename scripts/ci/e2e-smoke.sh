@@ -8,8 +8,6 @@ NET="nexora-e2e"
 TENANT="11111111-1111-1111-1111-111111111111"
 VARIANT="22222222-2222-2222-2222-222222222222"
 PRINCIPAL="22222222-2222-2222-2222-222222222222"
-DEMO_CART="33333333-3333-3333-3333-333333333333"
-
 SERVICES=(
   identity-service
   catalog-service
@@ -106,7 +104,9 @@ run_svc catalog-service
 run_svc cart-service
 run_svc location-service
 if [[ "${RC_FULL:-}" == "1" ]]; then
-  run_svc checkout-service
+  # Read carts from cart-service instead of the single seeded demo cart, so every
+  # journey can check out the cart it actually built.
+  run_svc checkout-service -e CART_URL=http://cart-service:8080
   run_svc payment-service
   run_svc order-service
   run_svc inventory-service
@@ -341,7 +341,7 @@ if [[ "${RC_FULL:-}" == "1" ]]; then
   echo "==> RC checkout preview + address + validate + complete (idempotent)"
   http_json /tmp/e2e-preview.json "${CUST}/v1/customer/checkout/preview" "${AUTH[@]}" \
     -H "X-Nexora-User: ${PRINCIPAL}" \
-    -d "{\"cartId\":\"${DEMO_CART}\",\"principalId\":\"${PRINCIPAL}\"}"
+    -d "{\"cartId\":\"${CART_ID}\",\"principalId\":\"${PRINCIPAL}\"}"
   SESS_ID="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-preview.json"))
@@ -366,7 +366,7 @@ PY
   PLACE_ADDRESS='{"line1":"Test St 1","city":"Istanbul","lat":41.0,"lng":29.0}'
   http_json /tmp/e2e-place.json "${CUST}/v1/customer/checkout/place" "${AUTH[@]}" \
     -H "X-Nexora-User: ${PRINCIPAL}" \
-    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}"
+    -d "{\"cartId\":\"${CART_ID}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}"
   ORDER_ID="$(python3 - <<'PY'
 import json
 d=json.load(open("/tmp/e2e-place.json"))
@@ -380,7 +380,7 @@ PY
   # either replays the original order id or refuses the completed session with 409.
   PLACE2_CODE="$(curl -sS --max-time 10 -o /tmp/e2e-place2.json -w "%{http_code}" "${HDR[@]}" "${AUTH[@]}" \
     -H "X-Nexora-User: ${PRINCIPAL}" "${CUST}/v1/customer/checkout/place" \
-    -d "{\"cartId\":\"${DEMO_CART}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}" || true)"
+    -d "{\"cartId\":\"${CART_ID}\",\"paymentMethod\":\"card\",\"sessionId\":\"${SESS_ID}\",\"principalId\":\"${PRINCIPAL}\",\"address\":${PLACE_ADDRESS}}" || true)"
   echo "HTTP $PLACE2_CODE (want 200|201|409) duplicate place"
   if [[ -s /tmp/e2e-place2.json ]]; then
     head -c 300 /tmp/e2e-place2.json; echo

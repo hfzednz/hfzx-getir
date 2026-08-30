@@ -11,8 +11,7 @@ void main() {
   final token = Platform.environment['CUSTOMER_TOKEN'];
   // The runner creates a cart for this journey; the checkout session is keyed by it, so
   // sharing one with another suite would land on an already completed session.
-  final cartId = Platform.environment['CUSTOMER_CART_ID'] ??
-      '33333333-3333-3333-3333-333333333333';
+  final cartId = Platform.environment['CUSTOMER_CART_ID'];
   final live = base != null && base.isNotEmpty;
 
   test('live BFF home → cart → preview → place → order (idempotent retry)', () async {
@@ -41,6 +40,8 @@ void main() {
       return;
     }
     expect(home.statusCode, 200);
+    expect(cartId, isNotNull,
+        reason: 'CUSTOMER_CART_ID must carry a cart created for this run');
 
     final address = {
       'line1': 'Test St 1',
