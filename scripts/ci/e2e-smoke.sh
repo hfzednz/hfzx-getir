@@ -635,7 +635,7 @@ if [[ "${FLUTTER_LIVE:-}" == "1" ]]; then
   (
     cd "$ROOT/apps/mobile_customer"
     flutter pub get
-    CUSTOMER_BASE="$CUST" flutter test test/live --reporter expanded
+    CUSTOMER_BASE="$CUST" CUSTOMER_TOKEN="$ACCESS_TOKEN" flutter test test/live --reporter expanded
   )
   echo "OK flutter-live-bff"
 fi
