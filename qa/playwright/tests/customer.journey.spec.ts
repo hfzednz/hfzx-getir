@@ -10,8 +10,12 @@ test('customer BFF login home browse cart health', async ({ request }) => {
   const health = await request.get(customer() + '/health');
   expect(health.ok()).toBeTruthy();
 
-  const home = await request.get(customer() + '/v1/customer/home?lat=41.0&lng=29.0', { headers });
-  expect(home.ok()).toBeTruthy();
+  const token = process.env.CUSTOMER_TOKEN;
+  const home = await request.get(customer() + '/v1/customer/home?lat=41.0&lng=29.0', {
+    headers: token ? { ...headers, Authorization: `Bearer ${token}` } : headers,
+  });
+  // The feed needs a session; without one the only correct answer is 401.
+  expect(token ? home.ok() : home.status() === 401).toBeTruthy();
   expect(home.headers()['x-request-id'] || home.headers()['X-Request-Id']).toBeTruthy();
 
   const otp = await request.post(customer() + '/v1/customer/auth/otp/start', {

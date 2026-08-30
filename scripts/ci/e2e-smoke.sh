@@ -602,9 +602,13 @@ fi
 echo "==> Playwright (API request tests)"
 cd "$ROOT/qa/playwright"
 npm install --no-fund --no-audit
-PLAY_ENV=(ADMIN_BASE="http://127.0.0.1:8114" CUSTOMER_BASE="http://127.0.0.1:8111")
+PLAY_ENV=(
+  ADMIN_BASE="http://127.0.0.1:8114"
+  CUSTOMER_BASE="http://127.0.0.1:8111"
+  CUSTOMER_TOKEN="${ACCESS_TOKEN}"
+)
 if [[ "${RC_FULL:-}" == "1" ]]; then
-  PLAY_ENV+=(FINANCE_BASE="http://127.0.0.1:8091")
+  PLAY_ENV+=(FINANCE_BASE="http://127.0.0.1:8091" FINANCE_TOKEN="${FIN_TOKEN}")
 fi
 env "${PLAY_ENV[@]}" npx playwright test --project=api --reporter=list
 
