@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/nexora/bff-customer/internal/domain"
 )
@@ -19,8 +20,18 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
+	storeID := firstNonEmpty(r.URL.Query().Get("storeId"), r.URL.Query().Get("store_id"))
+	if storeID != "" && h.Deps.Stores != nil {
+		stock, err := h.Deps.Stores.StoreStock(r.Context(), tenant(r), storeID)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		items = filterItemsByStock(items, stock)
+	}
 	writeJSON(w, 200, map[string]any{
 		"query": q, "items": items, "hits": items, "total_count": len(items), "totalCount": len(items),
+		"storeId": storeID,
 	})
 }
 
@@ -124,6 +135,113 @@ func (h *Handler) getStore(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeErr(w, domain.ErrNotFound)
+}
+
+func (h *Handler) listStoreProducts(w http.ResponseWriter, r *http.Request) {
+	if h.Deps.Stores == nil {
+		writeErr(w, domain.ErrUpstream)
+		return
+	}
+	id := r.PathValue("id")
+	var store map[string]any
+	if items, err := h.Deps.Stores.ListStores(r.Context(), tenant(r)); err == nil {
+		for _, item := range items {
+			if asString(item["id"]) == id || asString(item["code"]) == id {
+				store = item
+				break
+			}
+		}
+	}
+	if store == nil {
+		writeErr(w, domain.ErrNotFound)
+		return
+	}
+	stock, err := h.Deps.Stores.StoreStock(r.Context(), tenant(r), id)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	var catalog []map[string]any
+	if h.Deps.Catalog != nil {
+		catalog, _ = h.Deps.Catalog.Search(r.Context(), tenant(r), "")
+	}
+	products := joinStockWithCatalog(stock, catalog)
+	writeJSON(w, 200, map[string]any{
+		"id": id, "store": store, "items": products, "products": products,
+		"open": store["open"] == true || asString(store["status"]) == "open" || asString(store["status"]) == "active",
+		"etaMinutes": store["etaMinutes"], "minOrderMinor": store["minOrderMinor"],
+		"deliveryFeeMinor": store["deliveryFeeMinor"],
+	})
+}
+
+func filterItemsByStock(items, stock []map[string]any) []map[string]any {
+	avail := map[string]int64{}
+	for _, row := range stock {
+		sku := strings.ToLower(firstNonEmpty(asString(row["sku"]), asString(row["skuCode"])))
+		if sku == "" {
+			continue
+		}
+		qty := asIntFromAny(row["available"])
+		oos, _ := row["outOfStock"].(bool)
+		if oos || qty <= 0 {
+			continue
+		}
+		avail[sku] = qty
+	}
+	out := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		sku := strings.ToLower(firstNonEmpty(asString(item["sku"]), asString(item["id"]), asString(item["productId"])))
+		if qty, ok := avail[sku]; ok {
+			item["available"] = qty
+			item["outOfStock"] = false
+			item["stock_status"] = "in_stock"
+			out = append(out, item)
+		}
+	}
+	return out
+}
+
+func joinStockWithCatalog(stock, catalog []map[string]any) []map[string]any {
+	bySKU := map[string]map[string]any{}
+	for _, p := range catalog {
+		key := strings.ToLower(firstNonEmpty(asString(p["sku"]), asString(p["id"]), asString(p["productId"])))
+		if key != "" {
+			bySKU[key] = p
+		}
+	}
+	out := make([]map[string]any, 0, len(stock))
+	for _, row := range stock {
+		sku := firstNonEmpty(asString(row["sku"]), asString(row["skuCode"]))
+		item := map[string]any{}
+		if p, ok := bySKU[strings.ToLower(sku)]; ok {
+			for k, v := range p {
+				item[k] = v
+			}
+		}
+		item["id"] = firstNonEmpty(asString(item["id"]), sku)
+		item["sku"] = sku
+		name := firstNonEmpty(asString(item["name"]), asString(item["title"]), asString(row["name"]), asString(row["title"]), sku)
+		item["name"] = name
+		item["title"] = name
+		avail := asIntFromAny(row["available"])
+		oos, _ := row["outOfStock"].(bool)
+		if avail <= 0 {
+			oos = true
+		}
+		item["available"] = avail
+		item["outOfStock"] = oos
+		if oos {
+			item["stock_status"] = "out_of_stock"
+		} else {
+			item["stock_status"] = "in_stock"
+		}
+		if pm := asIntFromAny(row["priceMinor"]); pm > 0 {
+			item["priceMinor"] = pm
+			item["price_minor"] = pm
+		}
+		out = append(out, item)
+	}
+	return out
 }
 
 func (h *Handler) listOrders(w http.ResponseWriter, r *http.Request) {

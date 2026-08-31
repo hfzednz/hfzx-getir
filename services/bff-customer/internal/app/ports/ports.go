@@ -19,6 +19,7 @@ type CatalogClient interface {
 
 type StoreClient interface {
 	ListStores(ctx context.Context, tenantID string) ([]map[string]any, error)
+	StoreStock(ctx context.Context, tenantID, storeID string) ([]map[string]any, error)
 }
 
 type RecClient interface {

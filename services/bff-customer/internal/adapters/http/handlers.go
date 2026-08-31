@@ -40,6 +40,7 @@ func NewServerWithAuth(addr string, deps *app.Deps, v authz.Validator) *http.Ser
 	mux.HandleFunc("GET "+base+"/categories", h.listCategories)
 	mux.HandleFunc("GET "+base+"/categories/{id}", h.getCategory)
 	mux.HandleFunc("GET "+base+"/stores", h.listStores)
+	mux.HandleFunc("GET "+base+"/stores/{id}/products", h.listStoreProducts)
 	mux.HandleFunc("GET "+base+"/stores/{id}", h.getStore)
 	mux.HandleFunc("POST "+base+"/cart/items", h.addCart)
 	mux.HandleFunc("POST "+base+"/checkout/preview", h.preview)
@@ -174,6 +175,9 @@ func (h *Handler) home(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
+	if pid := firstNonEmpty(callerID(r), q.Get("customerId")); pid != "" && h.Book != nil {
+		feed.Widgets = app.AppendHistoryWidgets(feed.Widgets, h.Book.ListOrders(tenant(r), pid))
+	}
 	writeJSON(w, 200, feed)
 }
 
@@ -232,11 +236,19 @@ func (h *Handler) place(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if h.Book != nil && pid != "" {
-		h.Book.RememberOrder(tenant(r), pid, map[string]any{
+		order := map[string]any{
 			"id": id, "orderId": id, "status": "confirmed", "cartId": body.CartID,
 			"customerPrincipalId": pid,
 			"address":             body.Address.Map(),
-		})
+		}
+		if h.Deps.Cart != nil && body.CartID != "" {
+			if cart, err := h.Deps.Cart.Get(r.Context(), tenant(r), body.CartID); err == nil {
+				if lines := extractOrderLines(cart); len(lines) > 0 {
+					order["items"] = lines
+				}
+			}
+		}
+		h.Book.RememberOrder(tenant(r), pid, order)
 		h.Book.AddNotification(tenant(r), pid, map[string]any{
 			"type": "transactional", "title": "Order confirmed",
 			"body": "Your order is confirmed.", "deep_link": "/orders/" + id,
@@ -371,6 +383,26 @@ func firstNonEmpty(vals ...string) string {
 		}
 	}
 	return ""
+}
+
+func asIntFromAny(v any) int64 {
+	switch n := v.(type) {
+	case int64:
+		return n
+	case int:
+		return int64(n)
+	case int32:
+		return int64(n)
+	case float64:
+		return int64(n)
+	case float32:
+		return int64(n)
+	case json.Number:
+		i, _ := n.Int64()
+		return i
+	default:
+		return 0
+	}
 }
 
 func (h *Handler) ticket(w http.ResponseWriter, r *http.Request) {

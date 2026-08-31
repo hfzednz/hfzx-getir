@@ -59,6 +59,30 @@ func TestCustomerSurfaceSearchAndAddresses(t *testing.T) {
 		t.Fatalf("stores %d", code)
 	}
 
+	code, kadikoy := hit(http.MethodGet, "/v1/customer/stores/store-kadikoy/products", "")
+	if code != 200 {
+		t.Fatalf("kadikoy products %d %+v", code, kadikoy)
+	}
+	if !storeHasSKU(kadikoy, "SKU1") {
+		t.Fatalf("kadikoy must carry milk SKU1: %+v", kadikoy)
+	}
+	code, besiktas := hit(http.MethodGet, "/v1/customer/stores/store-besiktas/products", "")
+	if code != 200 {
+		t.Fatalf("besiktas products %d %+v", code, besiktas)
+	}
+	if storeHasSKU(besiktas, "SKU1") {
+		t.Fatalf("besiktas must not carry milk SKU1: %+v", besiktas)
+	}
+	code, scoped := hit(http.MethodGet, "/v1/customer/search?q=SKU1&storeId=store-besiktas", "")
+	if code != 200 {
+		t.Fatalf("store-scoped search %d %+v", code, scoped)
+	}
+	if n, _ := scoped["total_count"].(float64); n != 0 {
+		if items, _ := scoped["items"].([]any); len(items) != 0 {
+			t.Fatalf("besiktas search must hide milk, got %+v", scoped)
+		}
+	}
+
 	code, created := hit(http.MethodPost, "/v1/customer/addresses", `{"formatted":"Moda Cd 12","lat":40.98,"lng":29.02}`)
 	if code != 201 {
 		t.Fatalf("create address %d %+v", code, created)
@@ -134,4 +158,52 @@ func TestCustomerSurfaceSearchAndAddresses(t *testing.T) {
 			t.Fatalf("reorder %d %+v", code, re)
 		}
 	}
+
+	code, _ = hit(http.MethodPost, "/v1/customer/cart/items", `{"cartId":"cart-history","sku":"SKU1","qty":7,"unitMinor":1999}`)
+	if code != 201 && code != 200 {
+		t.Fatalf("cart add for history %d", code)
+	}
+	prevHist, err := stubs.Preview(nil, tid, "cart-history")
+	if err != nil {
+		t.Fatal(err)
+	}
+	code, histPlaced := hit(http.MethodPost, "/v1/customer/checkout/place", `{"cartId":"cart-history","paymentMethod":"cash","sessionId":"`+prevHist.SessionID+`","principalId":"c1","address":{"line1":"Moda Cd 12","lat":40.98,"lng":29.02}}`)
+	if code != 201 {
+		t.Fatalf("history place %d %+v", code, histPlaced)
+	}
+	code, homeAfter := hit(http.MethodGet, "/v1/customer/home", "")
+	if code != 200 {
+		t.Fatalf("home after order %d", code)
+	}
+	if !homeHasWidget(homeAfter, "recently-ordered") {
+		t.Fatalf("home must include recently-ordered after a real order: %+v", homeAfter)
+	}
+}
+
+func storeHasSKU(body map[string]any, sku string) bool {
+	raw, _ := body["items"].([]any)
+	if raw == nil {
+		raw, _ = body["products"].([]any)
+	}
+	for _, item := range raw {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		if m["sku"] == sku || m["id"] == sku || m["productId"] == sku {
+			return true
+		}
+	}
+	return false
+}
+
+func homeHasWidget(body map[string]any, id string) bool {
+	raw, _ := body["widgets"].([]any)
+	for _, item := range raw {
+		m, ok := item.(map[string]any)
+		if ok && m["id"] == id {
+			return true
+		}
+	}
+	return false
 }

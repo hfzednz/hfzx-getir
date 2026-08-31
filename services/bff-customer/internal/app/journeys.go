@@ -134,6 +134,88 @@ func composeHomeWidgets(feed domain.HomeFeed) []map[string]any {
 	return widgets
 }
 
+// AppendHistoryWidgets adds recently ordered and frequently purchased rails
+// derived from the customer's real order history. Empty history is omitted.
+func AppendHistoryWidgets(widgets []map[string]any, orders []map[string]any) []map[string]any {
+	recent := make([]map[string]any, 0, 12)
+	seenRecent := map[string]bool{}
+	type freqEntry struct {
+		count int
+		tile  map[string]any
+	}
+	freq := map[string]*freqEntry{}
+	for _, order := range orders {
+		for _, line := range orderLines(order) {
+			id := firstString(line, "productId", "product_id", "sku", "id")
+			if id == "" {
+				continue
+			}
+			title := firstString(line, "title", "name")
+			if title == "" {
+				title = id
+			}
+			tile := map[string]any{
+				"id": id, "title": title, "deep_link": "/p/" + id,
+				"price_minor": firstInt(line, "unit_price_minor", "unitPriceMinor", "priceMinor", "price_minor"),
+				"currency":    "TRY",
+			}
+			if !seenRecent[id] && len(recent) < 12 {
+				recent = append(recent, tile)
+				seenRecent[id] = true
+			}
+			if freq[id] == nil {
+				freq[id] = &freqEntry{tile: tile}
+			}
+			freq[id].count++
+		}
+	}
+	if len(recent) > 0 {
+		widgets = append(widgets, map[string]any{
+			"id": "recently-ordered", "type": "recently_viewed", "title": "Recently ordered", "items": recent,
+		})
+	}
+	frequent := make([]map[string]any, 0, 8)
+	for _, entry := range freq {
+		if entry.count < 2 {
+			continue
+		}
+		frequent = append(frequent, entry.tile)
+		if len(frequent) >= 8 {
+			break
+		}
+	}
+	if len(frequent) == 0 {
+		for _, entry := range freq {
+			if entry.count >= 1 && len(frequent) < 6 {
+				frequent = append(frequent, entry.tile)
+			}
+		}
+	}
+	if len(frequent) > 0 {
+		widgets = append(widgets, map[string]any{
+			"id": "frequently-purchased", "type": "recommendation", "title": "Frequently purchased", "items": frequent,
+		})
+	}
+	return widgets
+}
+
+func orderLines(order map[string]any) []map[string]any {
+	raw, _ := order["items"].([]any)
+	if raw == nil {
+		if typed, ok := order["items"].([]map[string]any); ok {
+			return typed
+		}
+		raw, _ = order["lines"].([]any)
+	}
+	out := make([]map[string]any, 0, len(raw))
+	for _, item := range raw {
+		if m, ok := item.(map[string]any); ok {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
 func productTiles(in []map[string]any) []map[string]any {
 	out := make([]map[string]any, 0, len(in))
 	for _, item := range in {

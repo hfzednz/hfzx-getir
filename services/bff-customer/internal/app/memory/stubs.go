@@ -10,9 +10,12 @@ import (
 
 type Stubs struct {
 	Orders map[string]string
+	Carts  map[string][]map[string]any
 }
 
-func NewStubs() *Stubs { return &Stubs{Orders: map[string]string{}} }
+func NewStubs() *Stubs {
+	return &Stubs{Orders: map[string]string{}, Carts: map[string][]map[string]any{}}
+}
 
 func (s *Stubs) StartOTP(_ context.Context, _, phone string) (string, error) {
 	if phone == "" {
@@ -45,9 +48,37 @@ func (s *Stubs) Product(_ context.Context, _, id string) (map[string]any, error)
 
 func (s *Stubs) ListStores(_ context.Context, _ string) ([]map[string]any, error) {
 	return []map[string]any{
-		{"id": "store-kadikoy", "name": "Nexora Market Kadıköy", "status": "open", "etaMinutes": 12, "deliveryFeeMinor": 0, "minOrderMinor": 5000},
-		{"id": "store-besiktas", "name": "Nexora Market Beşiktaş", "status": "open", "etaMinutes": 18, "deliveryFeeMinor": 1499, "minOrderMinor": 7500},
+		{"id": "store-kadikoy", "name": "Nexora Market Kadıköy", "status": "open", "open": true, "etaMinutes": 12, "deliveryFeeMinor": 0, "minOrderMinor": 5000},
+		{"id": "store-besiktas", "name": "Nexora Market Beşiktaş", "status": "open", "open": true, "etaMinutes": 18, "deliveryFeeMinor": 1499, "minOrderMinor": 7500},
+		{"id": "store-bakirkoy", "name": "Nexora Market Bakırköy", "status": "closed", "open": false, "etaMinutes": 25, "deliveryFeeMinor": 1999, "minOrderMinor": 10000},
 	}, nil
+}
+
+func (s *Stubs) StoreStock(_ context.Context, _, storeID string) ([]map[string]any, error) {
+	milk := map[string]any{
+		"sku": "SKU1", "skuCode": "SKU1", "name": "Fresh Milk", "title": "Fresh Milk",
+		"available": int64(80), "outOfStock": false, "priceMinor": int64(1999),
+	}
+	bread := map[string]any{
+		"sku": "SKU2", "skuCode": "SKU2", "name": "Village Bread", "title": "Village Bread",
+		"available": int64(40), "outOfStock": false, "priceMinor": int64(1299),
+	}
+	yogurt := map[string]any{
+		"sku": "SKU3", "skuCode": "SKU3", "name": "Strained Yogurt", "title": "Strained Yogurt",
+		"available": int64(25), "outOfStock": false, "priceMinor": int64(3499),
+	}
+	switch storeID {
+	case "store-besiktas":
+		// Milk is not carried at this warehouse.
+		bread["priceMinor"] = int64(1599)
+		return []map[string]any{bread, yogurt}, nil
+	case "store-bakirkoy":
+		milk["available"] = int64(0)
+		milk["outOfStock"] = true
+		return []map[string]any{milk, bread}, nil
+	default:
+		return []map[string]any{milk, bread, yogurt}, nil
+	}
 }
 
 func (s *Stubs) ForYou(_ context.Context, _, _ string) ([]map[string]any, error) {
@@ -55,13 +86,26 @@ func (s *Stubs) ForYou(_ context.Context, _, _ string) ([]map[string]any, error)
 }
 
 func (s *Stubs) Get(_ context.Context, _, cartID string) (map[string]any, error) {
-	return map[string]any{"cartId": cartID, "items": []any{}}, nil
+	items := s.Carts[cartID]
+	if items == nil {
+		items = []map[string]any{}
+	}
+	return map[string]any{"cartId": cartID, "items": items}, nil
 }
 
 func (s *Stubs) AddItem(_ context.Context, _, cartID, sku string, qty, unitMinor int64) (map[string]any, error) {
+	if s.Carts == nil {
+		s.Carts = map[string][]map[string]any{}
+	}
+	line := map[string]any{
+		"id": sku, "sku": sku, "productId": sku, "product_id": sku,
+		"name": sku, "title": sku, "quantity": qty, "qty": qty,
+		"unit_price_minor": unitMinor, "unitPriceMinor": unitMinor, "priceMinor": unitMinor,
+	}
+	s.Carts[cartID] = append(s.Carts[cartID], line)
 	return map[string]any{
 		"cartId": cartID, "sku": sku, "qty": qty,
-		"lineTotalMinor": qty * unitMinor,
+		"lineTotalMinor": qty * unitMinor, "items": s.Carts[cartID],
 	}, nil
 }
 

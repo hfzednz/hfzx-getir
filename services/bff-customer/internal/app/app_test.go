@@ -98,3 +98,25 @@ func (failingCatalog) Categories(context.Context, string) ([]map[string]any, err
 func (failingCatalog) Product(context.Context, string, string) (map[string]any, error) {
 	return nil, domain.ErrUpstream
 }
+
+func TestAppendHistoryWidgetsFromOrders(t *testing.T) {
+	orders := []map[string]any{
+		{"id": "o1", "items": []map[string]any{
+			{"productId": "milk-1", "title": "Taze Süt", "quantity": 7, "unitPriceMinor": 1999},
+			{"productId": "bread-1", "title": "Ekmek", "quantity": 1, "unitPriceMinor": 1299},
+		}},
+		{"id": "o2", "items": []map[string]any{
+			{"productId": "milk-1", "title": "Taze Süt", "quantity": 2, "unitPriceMinor": 1999},
+		}},
+	}
+	widgets := app.AppendHistoryWidgets(nil, orders)
+	if len(widgets) != 2 {
+		t.Fatalf("want recently + frequently, got %d %+v", len(widgets), widgets)
+	}
+	if widgets[0]["id"] != "recently-ordered" {
+		t.Fatalf("recent widget: %+v", widgets[0])
+	}
+	if widgets[1]["id"] != "frequently-purchased" {
+		t.Fatalf("frequent widget: %+v", widgets[1])
+	}
+}

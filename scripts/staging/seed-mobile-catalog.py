@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import uuid
 import urllib.error
 import urllib.request
 
@@ -116,9 +117,22 @@ def pick_id(payload: dict, *keys: str) -> str:
 
 def main() -> int:
     print(f"seed-mobile-catalog tenant={TENANT} catalog={CATALOG} inventory={INVENTORY}")
+    warehouse_ids: list[tuple[str, str]] = []
     for store in STORES:
         out = call("POST", f"{INVENTORY}/v1/inventory/warehouses", store)
-        print(f"store {store['code']} id={pick_id(out, 'id', 'ID') or 'n/a'}")
+        wid = pick_id(out, "id", "ID")
+        warehouse_ids.append((store["code"], wid))
+        print(f"store {store['code']} id={wid or 'n/a'}")
+
+    listed = call("GET", f"{INVENTORY}/v1/inventory/warehouses?limit=50")
+    listed_items = listed.get("items") or listed.get("Items") or []
+    if isinstance(listed_items, list):
+        by_code = {
+            str(item.get("code") or item.get("Code") or ""): str(item.get("id") or item.get("ID") or "")
+            for item in listed_items
+            if isinstance(item, dict)
+        }
+        warehouse_ids = [(code, wid or by_code.get(code, "")) for code, wid in warehouse_ids]
 
     cat_ids: dict[str, str] = {}
     for name, slug in CATEGORIES:
@@ -153,6 +167,33 @@ def main() -> int:
         print(f"product {sku} id={pid} tr={tr} en={en}")
 
     call("POST", f"{CATALOG}/v1/catalog/search/reindex", {})
+
+    def variant_id(sku_code: str) -> str:
+        return str(uuid.uuid5(uuid.NAMESPACE_DNS, f"nexora.mobile.{sku_code}"))
+
+    for index, (code, wid) in enumerate(warehouse_ids):
+        if not wid:
+            print(f"WARN skip stock for {code}: missing warehouse id", file=sys.stderr)
+            continue
+        for _slug, sku, _cat, _tr, _en, _trd, _end, _brand in PRODUCTS:
+            sku_code = f"{sku}-{SUFFIX}"
+            if index == 1 and sku.startswith("MILK"):
+                continue
+            if index == 2 and sku not in ("MILK-1L", "BREAD-1", "YOG-1"):
+                continue
+            call(
+                "POST",
+                f"{INVENTORY}/v1/inventory/stock/receive",
+                {
+                    "warehouseId": wid,
+                    "variantId": variant_id(sku_code),
+                    "skuCode": sku_code,
+                    "qty": 80,
+                    "idempotencyKey": f"seed-{SUFFIX}-{wid}-{sku_code}",
+                },
+            )
+            print(f"stock {code} {sku_code} qty=80")
+
     print("OK mobile catalog seed")
     return 0
 

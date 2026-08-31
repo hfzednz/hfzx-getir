@@ -460,6 +460,55 @@ func (c *Stores) ListStores(ctx context.Context, tenantID string) ([]map[string]
 	return out, nil
 }
 
+func (c *Stores) StoreStock(ctx context.Context, tenantID, storeID string) ([]map[string]any, error) {
+	if storeID == "" {
+		return nil, nil
+	}
+	q := url.Values{"warehouseId": {storeID}, "limit": {"200"}}
+	var raw map[string]any
+	if err := c.get(ctx, "/v1/inventory/stock?"+q.Encode(), tenantID, &raw); err != nil {
+		return nil, err
+	}
+	arr, _ := raw["items"].([]any)
+	out := make([]map[string]any, 0, len(arr))
+	for _, h := range arr {
+		m, ok := h.(map[string]any)
+		if !ok {
+			continue
+		}
+		sku := firstNonEmpty(asString(m["SKUCode"]), asString(m["skuCode"]), asString(m["sku"]))
+		onHand := asInt64(m["OnHand"])
+		if onHand == 0 {
+			onHand = asInt64(m["onHand"])
+		}
+		reserved := asInt64(m["Reserved"])
+		if reserved == 0 {
+			reserved = asInt64(m["reserved"])
+		}
+		blocked := asInt64(m["Blocked"])
+		if blocked == 0 {
+			blocked = asInt64(m["blocked"])
+		}
+		avail := onHand - reserved - blocked
+		if v := asInt64(m["Available"]); v > 0 {
+			avail = v
+		}
+		if v := asInt64(m["available"]); v > 0 {
+			avail = v
+		}
+		if avail < 0 {
+			avail = 0
+		}
+		out = append(out, map[string]any{
+			"sku": sku, "skuCode": sku,
+			"available": avail, "onHand": onHand,
+			"outOfStock": avail <= 0,
+			"variantId": firstNonEmpty(asString(m["VariantID"]), asString(m["variantId"])),
+		})
+	}
+	return out, nil
+}
+
 var _ ports.StoreClient = (*Stores)(nil)
 
 // Tracking implements ports.TrackingClient against tracking-service.
