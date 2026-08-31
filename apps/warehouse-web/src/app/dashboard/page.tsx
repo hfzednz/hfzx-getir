@@ -4,27 +4,61 @@ import { useRouter } from "next/navigation";
 import { RouteGuard } from "@nexora/web-core";
 import { warehouseApi, useSession } from "@/shared/api/client";
 
+type Task = {
+  id?: string;
+  taskId?: string;
+  orderId?: string;
+  order_id?: string;
+  status?: string;
+  orderStatus?: string;
+};
+
+function taskIdOf(t: Task): string {
+  return (t.id ?? t.taskId ?? t.orderId ?? t.order_id ?? "").toString();
+}
+
+function unwrapTasks(data: unknown): Task[] {
+  if (Array.isArray(data)) return data as Task[];
+  if (data && typeof data === "object" && "items" in data) {
+    const items = (data as { items?: unknown }).items;
+    if (Array.isArray(items)) return items as Task[];
+  }
+  return [];
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const session = useSession((s) => s.session);
   const logout = useSession((s) => s.logout);
+  const [queue, setQueue] = useState<Task[]>([]);
   const [taskId, setTaskId] = useState(
     () => process.env.NEXT_PUBLIC_WAREHOUSE_TASK_ID?.trim() || "",
   );
-  // Empty until a transition actually returns one — never show a status we did not read.
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  async function loadQueue() {
+    try {
+      const raw = await warehouseApi().request<unknown>("/v1/warehouse/tasks");
+      const items = unwrapTasks(raw);
+      setQueue(items);
+      setTaskId((current) => current || (items[0] ? taskIdOf(items[0]) : ""));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load the pick queue");
+    }
+  }
+
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("orderId")?.trim();
     if (q) setTaskId(q);
+    void loadQueue();
   }, []);
 
   async function advance(step: "pick" | "pack" | "ready") {
     const id = taskId.trim();
     if (!id) {
-      setError("Enter the real order id (warehouse task id).");
+      setError("Select an order from the queue.");
       return;
     }
     setError("");
@@ -35,6 +69,7 @@ export default function DashboardPage() {
         { method: "POST", body: {} },
       );
       setStatus(typeof res.status === "string" ? res.status : step);
+      await loadQueue();
     } catch (e) {
       setStatus("");
       setError(e instanceof Error ? e.message : "Transition failed");
@@ -64,20 +99,37 @@ export default function DashboardPage() {
             Logout
           </button>
         </div>
-        <label className="block text-sm">
-          Order / task id
-          <input
-            className="mt-1 w-full rounded-lg border px-3 py-3"
-            style={{ minHeight: 44 }}
-            value={taskId}
-            onChange={(e) => setTaskId(e.target.value)}
-            placeholder="uuid"
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? "warehouse-error" : undefined}
-          />
-        </label>
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium">Incoming orders</h2>
+          {queue.length === 0 ? (
+            <p className="text-sm text-neutral-600">No orders waiting in the warehouse queue.</p>
+          ) : (
+            <ul className="divide-y rounded-xl border">
+              {queue.map((task) => {
+                const id = taskIdOf(task);
+                return (
+                  <li key={id}>
+                    <button
+                      type="button"
+                      className={`flex w-full items-center justify-between gap-3 p-4 text-left ${
+                        taskId === id ? "bg-violet-50" : "hover:bg-neutral-50"
+                      }`}
+                      style={{ minHeight: 44 }}
+                      onClick={() => setTaskId(id)}
+                    >
+                      <span className="truncate text-sm font-medium">{id.slice(0, 8)}…</span>
+                      <span className="text-xs text-neutral-600">
+                        {task.orderStatus ?? task.status ?? "queued"}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
         <p className="text-sm text-neutral-600" role="status" aria-live="polite">
-          {busy ? "Working…" : status ? `Status: ${status}` : "No transition run yet."}
+          {busy ? "Working…" : status ? `Status: ${status}` : "Select an order, then pick, pack, or mark ready."}
         </p>
         {error ? (
           <p id="warehouse-error" className="text-sm text-red-600" role="alert">

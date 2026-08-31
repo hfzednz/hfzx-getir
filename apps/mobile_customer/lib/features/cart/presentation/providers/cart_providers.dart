@@ -135,6 +135,29 @@ class CartLocalRepository {
     }
   }
 
+  Future<void> replaceLocalCart({
+    required String cartId,
+    required List<CartLine> lines,
+  }) async {
+    await _adoptCartId?.call(cartId);
+    await _db.clearCartItems();
+    for (final line in lines) {
+      if (line.productId.isEmpty || line.quantity <= 0) continue;
+      await _db.upsertCartItem(
+        CartItemsCompanion.insert(
+          productId: line.productId,
+          variantId: Value(line.variantId),
+          title: line.title,
+          imageUrl: Value(line.imageUrl),
+          quantity: Value(line.quantity),
+          unitPriceMinor: line.unitPriceMinor,
+          currency: Value(line.currency),
+          pendingSync: const Value(false),
+        ),
+      );
+    }
+  }
+
   Future<void> addItem({
     required String productId,
     String? variantId,

@@ -367,5 +367,7 @@
   "contactlessHint": "Kapıya bırakılsın — teslim alışverişi gerekmez.",
   "giftOrderHint": "Alıcının fişinde fiyatları gizle.",
   "companyInvoice": "Kurumsal fatura",
-  "companyInvoiceHint": "Bu sipariş için kurumsal fatura isteyin."
+  "companyInvoiceHint": "Bu sipariş için kurumsal fatura isteyin.",
+  "itemsAddedToCart": "Ürünler sepete eklendi",
+  "thoseItemsUnavailable": "Bu ürünler artık mevcut değil"
 }

@@ -112,10 +112,17 @@ class PickTask extends Equatable {
   }
 
   factory PickTask.fromJson(Map<String, dynamic> json) {
-    final linesJson = json['lines'] as List? ?? const [];
+    final id = json['id']?.toString() ??
+        json['taskId']?.toString() ??
+        json['orderId']?.toString() ??
+        json['order_id']?.toString() ??
+        '';
+    final linesJson = json['lines'] as List? ?? json['items'] as List? ?? const [];
     return PickTask(
-      id: json['id']?.toString() ?? '',
-      orderId: json['order_id']?.toString() ?? '',
+      id: id,
+      orderId: json['order_id']?.toString() ??
+          json['orderId']?.toString() ??
+          id,
       status: PickTaskStatus.fromString(json['status']?.toString()),
       lines: linesJson
           .map((e) => PickLine.fromJson(Map<String, dynamic>.from(e as Map)))

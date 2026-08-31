@@ -116,6 +116,28 @@ void main() {
     expect(a.recipientPhone, '+905551112233');
   });
 
+  test('Order.fromJson cart_created lines use productId', () {
+    final order = Order.fromJson({
+      'status': 'cart_created',
+      'cartId': 'cart-new',
+      'orderId': 'o1',
+      'id': 'cart-new',
+      'items': [
+        {
+          'productId': 'milk-1',
+          'title': 'Taze Süt',
+          'quantity': 7,
+          'unitPriceMinor': 2499,
+        },
+      ],
+    });
+    expect(order.id, 'cart-new');
+    expect(order.payload['cartId'], 'cart-new');
+    expect(order.items, hasLength(1));
+    expect(order.items.first.productId, 'milk-1');
+    expect(order.items.first.quantity, 7);
+  });
+
   test('Order.fromJson cart_seeded lines use productId', () {
     final order = Order.fromJson({
       'status': 'cart_seeded',

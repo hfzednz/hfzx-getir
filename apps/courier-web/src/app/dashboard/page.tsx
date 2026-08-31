@@ -5,19 +5,66 @@ import { useRouter } from "next/navigation";
 import { RouteGuard } from "@nexora/web-core";
 import { courierApi, useSession } from "@/shared/api/client";
 
+type Offer = {
+  id?: string;
+  jobId?: string;
+  orderId?: string;
+  order_id?: string;
+  status?: string;
+  orderStatus?: string;
+};
+
+function offerId(o: Offer): string {
+  return (o.id ?? o.jobId ?? o.orderId ?? o.order_id ?? "").toString();
+}
+
+function unwrapOffers(data: unknown): Offer[] {
+  if (Array.isArray(data)) return data as Offer[];
+  if (data && typeof data === "object") {
+    const rec = data as { items?: unknown; deliveries?: unknown };
+    if (Array.isArray(rec.items)) return rec.items as Offer[];
+    if (Array.isArray(rec.deliveries)) return rec.deliveries as Offer[];
+  }
+  return [];
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const session = useSession((s) => s.session);
   const logout = useSession((s) => s.logout);
   const [onDuty, setOnDuty] = useState(false);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [orderId, setOrderId] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
+  async function loadOffers() {
+    try {
+      const raw = await courierApi().request<unknown>("/v1/courier/offers");
+      const items = unwrapOffers(raw);
+      setOffers(items);
+      setOrderId((current) => current || (items[0] ? offerId(items[0]) : ""));
+    } catch (e) {
+      setFailed(true);
+      setMsg(e instanceof Error ? e.message : "Could not load delivery offers");
+    }
+  }
+
+  async function loadDuty() {
+    try {
+      const duty = await courierApi().request<{ onDuty?: boolean }>("/v1/courier/duty");
+      if (typeof duty.onDuty === "boolean") setOnDuty(duty.onDuty);
+    } catch {
+      // Duty endpoint may be empty before the first toggle.
+    }
+  }
+
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("orderId")?.trim();
     if (q) setOrderId(q);
+    void loadDuty();
+    void loadOffers();
   }, []);
 
   async function run(label: string, action: () => Promise<Record<string, unknown> | void>) {
@@ -28,6 +75,7 @@ export default function DashboardPage() {
       const res = (await action()) ?? {};
       const status = (res as Record<string, unknown>).status;
       setMsg(typeof status === "string" ? status : label);
+      await loadOffers();
     } catch (e) {
       setFailed(true);
       setMsg(e instanceof Error ? e.message : `${label} failed`);
@@ -51,7 +99,7 @@ export default function DashboardPage() {
     const id = orderId.trim();
     if (!id) {
       setFailed(true);
-      setMsg("Enter the real order id");
+      setMsg("Select a delivery from the queue.");
       return;
     }
     await run(accept ? "accepted" : "rejected", () =>
@@ -109,18 +157,35 @@ export default function DashboardPage() {
         >
           {onDuty ? "Online — tap to go offline" : "Go online"}
         </button>
-        <label className="block text-sm">
-          Order id
-          <input
-            className="mt-1 w-full rounded-lg border px-3 py-3"
-            style={{ minHeight: 44 }}
-            value={orderId}
-            onChange={(e) => setOrderId(e.target.value)}
-            placeholder="uuid"
-            aria-invalid={failed ? true : undefined}
-            aria-describedby={msg ? "courier-status" : undefined}
-          />
-        </label>
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium">Available jobs</h2>
+          {offers.length === 0 ? (
+            <p className="text-sm text-neutral-600">No delivery offers right now.</p>
+          ) : (
+            <ul className="divide-y rounded-xl border">
+              {offers.map((job) => {
+                const id = offerId(job);
+                return (
+                  <li key={id}>
+                    <button
+                      type="button"
+                      className={`flex w-full items-center justify-between gap-3 p-4 text-left ${
+                        orderId === id ? "bg-violet-50" : "hover:bg-neutral-50"
+                      }`}
+                      style={{ minHeight: 44 }}
+                      onClick={() => setOrderId(id)}
+                    >
+                      <span className="truncate text-sm font-medium">{id.slice(0, 8)}…</span>
+                      <span className="text-xs text-neutral-600">
+                        {job.orderStatus ?? job.status ?? "assigned"}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
         <div className="grid gap-2">
           <button
             type="button"

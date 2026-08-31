@@ -12,6 +12,7 @@ import '../providers/orders_providers.dart';
 import '../../../../di/analytics_providers.dart';
 import '../../../../shared/analytics/analytics_events.dart';
 import '../../../cart/presentation/providers/cart_providers.dart';
+import '../../../cart/domain/entities/cart_entity.dart';
 import '../../../../shared/errors/error_copy.dart';
 import '../../../../shared/widgets/error_view.dart';
 
@@ -339,37 +340,46 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     if (!mounted) return;
     await result.fold(
       onSuccess: (seeded) async {
-        final lines = seeded.items.isNotEmpty ? seeded.items : order.items;
-        var added = 0;
-        var skipped = 0;
-        for (final line in lines) {
-          if (line.cancelled || line.productId.isEmpty) {
-            skipped++;
-            continue;
-          }
-          await ref.read(cartRepositoryProvider).addItem(
-                productId: line.productId,
-                title: line.name.isNotEmpty ? line.name : line.productId,
-                imageUrl: line.imageUrl,
-                unitPriceMinor: line.unitPriceMinor,
-                quantity: line.quantity,
-              );
-          added++;
-        }
-        if (!mounted) return;
-        if (added == 0) {
+        final cartId = seeded.payload['cartId']?.toString().trim() ?? '';
+        final lines = (seeded.items.isNotEmpty ? seeded.items : order.items)
+            .where((line) => !line.cancelled && line.productId.isNotEmpty)
+            .toList();
+        if (cartId.isEmpty) {
           NxToast.show(
             context,
-            message: skipped > 0
-                ? 'Those items are no longer available'
-                : 'Could not add items to cart',
+            message: localizedCustomerError(
+              context,
+              'Could not create a cart from this order',
+            ),
           );
           return;
         }
-        NxToast.show(context, message: 'Items added to cart');
+        if (lines.isEmpty) {
+          NxToast.show(
+            context,
+            message: AppLocalizations.of(context).thoseItemsUnavailable,
+          );
+          return;
+        }
+        await ref.read(cartRepositoryProvider).replaceLocalCart(
+              cartId: cartId,
+              lines: [
+                for (final line in lines)
+                  CartLine(
+                    productId: line.productId,
+                    title: line.name.isNotEmpty ? line.name : line.productId,
+                    imageUrl: line.imageUrl,
+                    quantity: line.quantity,
+                    unitPriceMinor: line.unitPriceMinor,
+                  ),
+              ],
+            );
+        if (!mounted) return;
+        NxToast.show(context, message: AppLocalizations.of(context).itemsAddedToCart);
         context.push('/cart');
       },
-      onFailure: (e) async => NxToast.show(context, message: e.message),
+      onFailure: (e) async =>
+          NxToast.show(context, message: localizedCustomerError(context, e)),
     );
   }
 

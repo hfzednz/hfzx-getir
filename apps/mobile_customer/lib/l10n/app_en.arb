@@ -367,5 +367,7 @@
   "contactlessHint": "Leave at the door — no handoff needed.",
   "giftOrderHint": "Hide prices on the receipt for the recipient.",
   "companyInvoice": "Company invoice",
-  "companyInvoiceHint": "Request a corporate invoice for this order."
+  "companyInvoiceHint": "Request a corporate invoice for this order.",
+  "itemsAddedToCart": "Items added to cart",
+  "thoseItemsUnavailable": "Those items are no longer available"
 }

@@ -1096,4 +1096,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get companyInvoiceHint =>
       'Request a corporate invoice for this order.';
+
+  @override
+  String get itemsAddedToCart => 'Items added to cart';
+
+  @override
+  String get thoseItemsUnavailable => 'Those items are no longer available';
 }

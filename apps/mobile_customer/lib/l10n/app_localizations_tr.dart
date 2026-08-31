@@ -1098,4 +1098,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get companyInvoiceHint => 'Bu sipariş için kurumsal fatura isteyin.';
+
+  @override
+  String get itemsAddedToCart => 'Ürünler sepete eklendi';
+
+  @override
+  String get thoseItemsUnavailable => 'Bu ürünler artık mevcut değil';
 }

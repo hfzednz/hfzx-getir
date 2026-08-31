@@ -2215,6 +2215,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request a corporate invoice for this order.'**
   String get companyInvoiceHint;
+
+  /// No description provided for @itemsAddedToCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Items added to cart'**
+  String get itemsAddedToCart;
+
+  /// No description provided for @thoseItemsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Those items are no longer available'**
+  String get thoseItemsUnavailable;
 }
 
 class _AppLocalizationsDelegate

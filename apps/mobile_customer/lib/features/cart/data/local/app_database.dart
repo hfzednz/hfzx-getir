@@ -121,6 +121,8 @@ class AppDatabase extends _$AppDatabase {
           ))
           .go();
 
+  Future<void> clearCartItems() => delete(cartItems).go();
+
   Stream<List<Favorite>> watchFavorites() => select(favorites).watch();
 
   Stream<List<FavoriteEntryRow>> watchFavoriteEntries({String? type}) {

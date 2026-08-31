@@ -30,6 +30,8 @@ class OrderLineItem extends Equatable {
         productId: json['product_id']?.toString() ??
             json['productId']?.toString() ??
             json['sku']?.toString() ??
+            json['skuCode']?.toString() ??
+            json['variantId']?.toString() ??
             '',
         name: json['name']?.toString() ?? json['title']?.toString() ?? '',
         quantity: (json['quantity'] as num?)?.toInt() ??

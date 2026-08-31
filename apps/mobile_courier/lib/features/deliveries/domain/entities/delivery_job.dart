@@ -98,9 +98,14 @@ class DeliveryJob extends Equatable {
   final String? notes;
 
   factory DeliveryJob.fromJson(Map<String, dynamic> json) {
+    final id = json['id']?.toString() ??
+        json['jobId']?.toString() ??
+        json['orderId']?.toString() ??
+        json['order_id']?.toString() ??
+        '';
     return DeliveryJob(
-      id: json['id']?.toString() ?? '',
-      orderId: json['order_id']?.toString() ?? '',
+      id: id,
+      orderId: json['order_id']?.toString() ?? json['orderId']?.toString() ?? id,
       status: DeliveryLifecycleStatus.fromApi(json['status']?.toString()),
       storeName: json['store_name']?.toString() ?? '',
       storeLocation: GeoPoint.fromJson(

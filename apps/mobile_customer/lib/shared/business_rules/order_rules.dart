@@ -53,6 +53,9 @@ OrderLifecycleStatus orderLifecycleStatusFromJson(String? raw) {
     case 'partially_cancelled':
     case 'partially_canceled':
       return OrderLifecycleStatus.partiallyCancelled;
+    case 'cart_created':
+    case 'cart_seeded':
+      return OrderLifecycleStatus.confirmed;
     default:
       return OrderLifecycleStatus.confirmed;
   }
