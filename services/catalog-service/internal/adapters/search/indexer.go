@@ -108,7 +108,7 @@ func (i *Indexer) Search(ctx context.Context, q ports.SearchQuery) (ports.Search
 		must = append(must, map[string]any{
 			"multi_match": map[string]any{
 				"query":  q.Query,
-				"fields": []string{"title^3", "sku^2", "brand", "barcodes"},
+				"fields": []string{"title^3", "sku^2", "brand", "barcodes", "locales.tr.title^3", "locales.en.title^3", "locales.tr.description", "locales.en.description"},
 			},
 		})
 	}
@@ -207,10 +207,145 @@ func (i *Indexer) ReindexAll(ctx context.Context, tenantID uuid.UUID) error {
 	return nil
 }
 
+func foldSearch(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		switch r {
+		case 'ı', 'İ', 'I':
+			b.WriteByte('i')
+		case 'ğ', 'Ğ':
+			b.WriteByte('g')
+		case 'ü', 'Ü':
+			b.WriteByte('u')
+		case 'ş', 'Ş':
+			b.WriteByte('s')
+		case 'ö', 'Ö':
+			b.WriteByte('o')
+		case 'ç', 'Ç':
+			b.WriteByte('c')
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
+func queryVariants(q string) []string {
+	out := []string{q}
+	if strings.HasSuffix(q, "s") && len(q) > 3 {
+		out = append(out, strings.TrimSuffix(q, "s"))
+	}
+	for _, suf := range []string{"ler", "lar", "lari", "leri"} {
+		if strings.HasSuffix(q, suf) && len(q) > len(suf)+2 {
+			out = append(out, strings.TrimSuffix(q, suf))
+		}
+	}
+	return out
+}
+
+func levenshtein(a, b string) int {
+	if a == b {
+		return 0
+	}
+	if a == "" {
+		return len(b)
+	}
+	if b == "" {
+		return len(a)
+	}
+	prev := make([]int, len(b)+1)
+	cur := make([]int, len(b)+1)
+	for j := 0; j <= len(b); j++ {
+		prev[j] = j
+	}
+	for i := 1; i <= len(a); i++ {
+		cur[0] = i
+		for j := 1; j <= len(b); j++ {
+			cost := 1
+			if a[i-1] == b[j-1] {
+				cost = 0
+			}
+			del := prev[j] + 1
+			ins := cur[j-1] + 1
+			sub := prev[j-1] + cost
+			cur[j] = del
+			if ins < cur[j] {
+				cur[j] = ins
+			}
+			if sub < cur[j] {
+				cur[j] = sub
+			}
+		}
+		prev, cur = cur, prev
+	}
+	return prev[len(b)]
+}
+
+func docSearchBlob(doc ports.SearchDocument) string {
+	parts := []string{doc.Title, doc.SKU, doc.Brand, strings.Join(doc.Barcodes, " ")}
+	for _, loc := range doc.Locales {
+		for _, v := range loc {
+			parts = append(parts, v)
+		}
+	}
+	for _, v := range doc.Attributes {
+		switch t := v.(type) {
+		case string:
+			parts = append(parts, t)
+		}
+	}
+	return foldSearch(strings.Join(parts, " "))
+}
+
+func blobMatches(blob, query string) bool {
+	for _, q := range queryVariants(query) {
+		if q == "" {
+			continue
+		}
+		if strings.Contains(blob, q) {
+			return true
+		}
+		for _, tok := range strings.Fields(blob) {
+			if tokenMatches(q, tok) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func tokenMatches(q, tok string) bool {
+	if tok == "" || q == "" {
+		return false
+	}
+	if strings.Contains(tok, q) || (len(tok) >= 3 && strings.Contains(q, tok)) {
+		return true
+	}
+	if len(q) >= 4 && levenshtein(q, tok) <= 1 {
+		return true
+	}
+	n := len(q)
+	if len(tok) < n {
+		n = len(tok)
+	}
+	if n >= 4 {
+		same := 0
+		for i := 0; i < n && q[i] == tok[i]; i++ {
+			same++
+		}
+		if same >= n-1 {
+			return true
+		}
+	}
+	return false
+}
+
 func (i *Indexer) searchMemory(q ports.SearchQuery) (ports.SearchResult, error) {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	query := strings.ToLower(strings.TrimSpace(q.Query))
+	query := foldSearch(q.Query)
 	hits := make([]ports.SearchDocument, 0)
 	for _, doc := range i.docs {
 		if doc.TenantID != q.TenantID {
@@ -219,8 +354,7 @@ func (i *Indexer) searchMemory(q ports.SearchQuery) (ports.SearchResult, error) 
 		if q.Status != nil && doc.Status != *q.Status {
 			continue
 		}
-		if query != "" && !strings.Contains(strings.ToLower(doc.Title), query) &&
-			!strings.Contains(strings.ToLower(doc.SKU), query) {
+		if query != "" && !blobMatches(docSearchBlob(doc), query) {
 			continue
 		}
 		hits = append(hits, doc)
