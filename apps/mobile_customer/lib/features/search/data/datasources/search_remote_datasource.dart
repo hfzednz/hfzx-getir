@@ -42,7 +42,7 @@ class SearchRemoteDataSource {
 
   Future<Result<SearchResult>> semanticSearch(String query, {SearchFilters? filters}) async {
     return _client.get<SearchResult>(
-      '$_basePath/semantic',
+      _basePath,
       queryParameters: {'q': query, ...?filters?.toQueryParams()},
       parser: (json) => _parseResult(json),
     );

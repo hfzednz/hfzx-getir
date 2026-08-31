@@ -14,9 +14,18 @@ class PaymentMethodsRemoteDataSource {
   Future<Result<List<SavedPaymentCard>>> listSavedCards() async {
     return _client.get<List<SavedPaymentCard>>(
       _cardsPath,
-      parser: (json) => (json['cards'] as List<dynamic>? ?? json as List<dynamic>)
-          .map((e) => SavedPaymentCardModel.fromJson(e as Map<String, dynamic>).toEntity())
-          .toList(),
+      parser: (json) {
+        final raw = json is Map<String, dynamic>
+            ? (json['cards'] ?? json['items'])
+            : json;
+        if (raw is! List) return <SavedPaymentCard>[];
+        return [
+          for (final e in raw)
+            if (e is Map<dynamic, dynamic>)
+              SavedPaymentCardModel.fromJson(Map<String, dynamic>.from(e))
+                  .toEntity(),
+        ];
+      },
     );
   }
 

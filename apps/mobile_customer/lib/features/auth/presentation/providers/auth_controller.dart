@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:nexora_core/nexora_core.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../../../routing/route_names.dart';
@@ -17,10 +18,14 @@ class AuthControllerState {
   final bool isLoading;
   final String? error;
 
-  AuthControllerState copyWith({bool? isLoading, String? error}) {
+  AuthControllerState copyWith({
+    bool? isLoading,
+    String? error,
+    bool clearError = false,
+  }) {
     return AuthControllerState(
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
@@ -36,10 +41,21 @@ class AuthController extends StateNotifier<AuthControllerState> {
   Future<void> _onAuthSuccess() => mergeCartAfterLogin(_ref);
 
   Future<bool> requestOtp(String phone) async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, clearError: true);
     final result = await _repo.requestOtp(phone);
-    state = state.copyWith(isLoading: false);
-    return result.isSuccess;
+    return result.fold(
+      onSuccess: (_) {
+        state = state.copyWith(isLoading: false, clearError: true);
+        return true;
+      },
+      onFailure: (err) {
+        state = state.copyWith(
+          isLoading: false,
+          error: customerFacingAuthError(err),
+        );
+        return false;
+      },
+    );
   }
 
   Future<bool> verifyOtp({
@@ -47,11 +63,17 @@ class AuthController extends StateNotifier<AuthControllerState> {
     required String code,
     required BuildContext context,
   }) async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, clearError: true);
     final result = await _repo.verifyOtp(phone: phone, code: code);
-    state = state.copyWith(isLoading: false);
     return result.fold(
       onSuccess: (session) async {
+        if (session.userId.isEmpty || session.accessToken.isEmpty) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Could not complete sign-in. Please try again.',
+          );
+          return false;
+        }
         await _ref.read(authSessionProvider.notifier).setAuthenticated(
               userId: session.userId,
               displayName: session.displayName,
@@ -59,9 +81,16 @@ class AuthController extends StateNotifier<AuthControllerState> {
             );
         await _onAuthSuccess();
         await _maybeEnableBiometric();
+        state = state.copyWith(isLoading: false, clearError: true);
         return true;
       },
-      onFailure: (_) => false,
+      onFailure: (err) {
+        state = state.copyWith(
+          isLoading: false,
+          error: customerFacingAuthError(err),
+        );
+        return false;
+      },
     );
   }
 
@@ -188,8 +217,40 @@ class AuthController extends StateNotifier<AuthControllerState> {
   }
 
   Future<bool> resendOtp(String phone) async {
+    state = state.copyWith(isLoading: true, clearError: true);
     final result = await _repo.resendOtp(phone);
-    return result.isSuccess;
+    return result.fold(
+      onSuccess: (_) {
+        state = state.copyWith(isLoading: false, clearError: true);
+        return true;
+      },
+      onFailure: (err) {
+        state = state.copyWith(
+          isLoading: false,
+          error: customerFacingAuthError(err),
+        );
+        return false;
+      },
+    );
+  }
+}
+
+String customerFacingAuthError(Object err) {
+  final message = err is NexoraException ? err.message : err.toString();
+  final code = err is NexoraException ? err.code.code : '';
+  switch (code) {
+    case 'unauthorized':
+    case 'auth_invalid':
+      return 'That code is incorrect or has expired. Request a new one.';
+    case 'invalid_argument':
+      return 'Enter a valid phone number to receive a verification code.';
+    case 'network_error':
+      return 'Could not reach the server. Please try again.';
+    default:
+      if (message.trim().isEmpty || message.toLowerCase().contains('exception')) {
+        return 'Could not complete verification. Please try again.';
+      }
+      return message;
   }
 }
 

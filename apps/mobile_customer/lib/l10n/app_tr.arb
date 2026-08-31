@@ -85,5 +85,21 @@
   "referralCode": "Referans kodunuz",
   "shareReferral": "Kodu paylaş",
   "termsOfService": "Kullanım Koşulları",
-  "privacyPolicy": "Gizlilik Politikası"
+  "privacyPolicy": "Gizlilik Politikası",
+  "resendOtp": "Kodu yeniden gönder",
+  "resendOtpIn": "{seconds} sn sonra yeniden gönder",
+  "@resendOtpIn": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "enterPhone": "Telefon numaranızı girin",
+  "otpSendFailed": "Doğrulama kodu gönderilemedi. Lütfen tekrar deneyin.",
+  "signOut": "Çıkış yap",
+  "storesTitle": "Mağazalar",
+  "storeOpen": "Açık",
+  "storeClosed": "Kapalı",
+  "payWithCard": "Kart",
+  "payWithCardHint": "Test kartı ile öde",
+  "cashOnDelivery": "Kapıda nakit"
 }

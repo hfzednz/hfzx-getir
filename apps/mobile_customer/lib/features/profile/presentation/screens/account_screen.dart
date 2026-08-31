@@ -32,7 +32,7 @@ class AccountScreen extends ConsumerWidget {
           _tile(context, l10n.supportTitle, RouteNames.support),
           if (session.isAuthenticated)
             ListTile(
-              title: Text(l10n.signIn, style: TextStyle(color: context.nxColors.danger)),
+              title: Text(l10n.signOut, style: TextStyle(color: context.nxColors.danger)),
               onTap: () => ref.read(authControllerProvider.notifier).signOut(),
             )
           else

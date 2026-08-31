@@ -1,5 +1,6 @@
 import 'package:nexora_core/nexora_core.dart';
 
+import '../../../../shared/utils/json_list.dart';
 import '../../domain/entities/favorites_entity.dart';
 import '../models/favorites_model.dart';
 
@@ -14,8 +15,8 @@ class FavoritesRemoteDataSource {
     return _client.get<List<FavoriteEntry>>(
       _listPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
-          .map((e) => FavoriteEntryModel.fromJson(e as Map<String, dynamic>).toEntity())
+      parser: (json) => jsonObjectList(json)
+          .map((e) => FavoriteEntryModel.fromJson(e).toEntity())
           .toList(),
     );
   }

@@ -27,11 +27,18 @@ class OrderLineItem extends Equatable {
 
   factory OrderLineItem.fromJson(Map<String, dynamic> json) => OrderLineItem(
         id: json['id']?.toString() ?? json['line_id']?.toString() ?? '',
-        productId: json['product_id']?.toString() ?? '',
+        productId: json['product_id']?.toString() ??
+            json['productId']?.toString() ??
+            json['sku']?.toString() ??
+            '',
         name: json['name']?.toString() ?? json['title']?.toString() ?? '',
-        quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+        quantity: (json['quantity'] as num?)?.toInt() ??
+            (json['qty'] as num?)?.toInt() ??
+            1,
         unitPriceMinor: (json['unit_price_minor'] as num?)?.toInt() ??
+            (json['unitPriceMinor'] as num?)?.toInt() ??
             (json['price_minor'] as num?)?.toInt() ??
+            (json['priceMinor'] as num?)?.toInt() ??
             0,
         imageUrl: json['image_url']?.toString() ?? json['imageUrl']?.toString(),
         sku: json['sku']?.toString(),
@@ -239,12 +246,17 @@ class Order extends Equatable {
         [];
 
     return Order(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ??
+          json['orderId']?.toString() ??
+          json['order_id']?.toString() ??
+          '',
       status: orderLifecycleStatusFromJson(json['status']?.toString()),
       title: json['title']?.toString() ?? json['name']?.toString() ?? '',
-      items: itemsRaw
-          .map((e) => OrderLineItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      items: [
+        for (final e in itemsRaw)
+          if (e is Map)
+            OrderLineItem.fromJson(Map<String, dynamic>.from(e)),
+      ],
       totals: OrderTotals.fromJson(
         json['totals'] as Map<String, dynamic>? ?? json,
       ),

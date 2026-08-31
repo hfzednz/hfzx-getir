@@ -9,9 +9,19 @@ class TrackingRemoteDataSource {
 
   Future<Result<TrackingSnapshot>> fetchSnapshot(String orderId) async {
     return _client.get<TrackingSnapshot>(
-      '/orders/$orderId/tracking',
+      '/orders/$orderId/track',
       parser: (json) =>
           TrackingSnapshotModel.fromJson(json as Map<String, dynamic>).toEntity(),
+    );
+  }
+
+  Future<Result<String>> issueRealtimeTicket(String orderId) async {
+    return _client.post<String>(
+      '/orders/$orderId/realtime-ticket',
+      parser: (json) {
+        final map = json as Map<String, dynamic>;
+        return map['ticket']?.toString() ?? map['token']?.toString() ?? '';
+      },
     );
   }
 }

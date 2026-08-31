@@ -85,5 +85,21 @@
   "referralCode": "Your referral code",
   "shareReferral": "Share code",
   "termsOfService": "Terms of Service",
-  "privacyPolicy": "Privacy Policy"
+  "privacyPolicy": "Privacy Policy",
+  "resendOtp": "Resend code",
+  "resendOtpIn": "Resend in {seconds}s",
+  "@resendOtpIn": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "enterPhone": "Enter your phone number",
+  "otpSendFailed": "Could not send a verification code. Please try again.",
+  "signOut": "Sign out",
+  "storesTitle": "Stores",
+  "storeOpen": "Open",
+  "storeClosed": "Closed",
+  "payWithCard": "Card",
+  "payWithCardHint": "Pay with a test card",
+  "cashOnDelivery": "Cash on delivery"
 }

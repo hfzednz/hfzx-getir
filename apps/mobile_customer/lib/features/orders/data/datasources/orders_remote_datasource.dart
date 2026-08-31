@@ -1,5 +1,6 @@
 import 'package:nexora_core/nexora_core.dart';
 
+import '../../../../shared/utils/json_list.dart';
 import '../../domain/entities/orders_entity.dart';
 import '../models/orders_model.dart';
 
@@ -22,8 +23,8 @@ class OrdersRemoteDataSource {
     return _client.get<List<Order>>(
       _listPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
-          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>).toEntity())
+      parser: (json) => jsonObjectList(json)
+          .map((e) => OrderModel.fromJson(e).toEntity())
           .toList(),
     );
   }
@@ -119,7 +120,7 @@ class OrdersRemoteDataSource {
   }
 
   Future<Result<String>> fetchRealtimeTicket(String id) async {
-    return _client.get<String>(
+    return _client.post<String>(
       '$_listPath/$id/realtime-ticket',
       parser: (json) {
         final map = json as Map<String, dynamic>;

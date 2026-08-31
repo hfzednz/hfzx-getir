@@ -153,21 +153,38 @@ class SearchResult extends Equatable {
   final int totalCount;
   final String? nextCursor;
 
-  factory SearchResult.fromJson(Map<String, dynamic> json) => SearchResult(
-        id: json['id']?.toString() ?? json['query']?.toString() ?? '',
-        query: json['query']?.toString() ?? '',
-        items: (json['items'] as List<dynamic>? ?? [])
-            .map((e) => ProductSummary.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        suggestions: (json['suggestions'] as List<dynamic>? ?? [])
-            .map((e) => SearchSuggestion.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        appliedFilters: json['filters'] != null
-            ? SearchFilters.fromJson(json['filters'] as Map<String, dynamic>)
-            : const SearchFilters(),
-        totalCount: (json['total_count'] as num?)?.toInt() ?? 0,
-        nextCursor: json['next_cursor']?.toString(),
-      );
+  factory SearchResult.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'] ??
+        json['hits'] ??
+        json['Hits'] ??
+        json['products'] ??
+        json['Products'];
+    final items = <ProductSummary>[];
+    if (rawItems is List) {
+      for (final item in rawItems) {
+        if (item is Map) {
+          items.add(ProductSummary.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    }
+    return SearchResult(
+      id: json['id']?.toString() ?? json['query']?.toString() ?? '',
+      query: json['query']?.toString() ?? json['Query']?.toString() ?? '',
+      items: items,
+      suggestions: (json['suggestions'] as List<dynamic>? ?? [])
+          .map((e) => SearchSuggestion.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      appliedFilters: json['filters'] != null
+          ? SearchFilters.fromJson(json['filters'] as Map<String, dynamic>)
+          : const SearchFilters(),
+      totalCount: (json['total_count'] as num?)?.toInt() ??
+          (json['totalCount'] as num?)?.toInt() ??
+          (json['Total'] as num?)?.toInt() ??
+          (json['total'] as num?)?.toInt() ??
+          items.length,
+      nextCursor: json['next_cursor']?.toString(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

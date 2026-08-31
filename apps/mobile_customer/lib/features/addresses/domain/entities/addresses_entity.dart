@@ -62,6 +62,8 @@ class Address extends Equatable {
     this.isDefault = false,
     this.serviceable = true,
     this.payload = const {},
+    this.recipientName = '',
+    this.recipientPhone = '',
   });
 
   final String id;
@@ -79,6 +81,8 @@ class Address extends Equatable {
   final bool isFavorite;
   final bool isDefault;
   final bool serviceable;
+  final String recipientName;
+  final String recipientPhone;
   final Map<String, dynamic> payload;
 
   static double? _asDouble(dynamic value) {
@@ -114,9 +118,16 @@ class Address extends Equatable {
       lat: _asDouble(json['lat'] ?? json['latitude']),
       lng: _asDouble(json['lng'] ?? json['lon'] ?? json['longitude']),
       cityId: json['city_id']?.toString(),
-      isFavorite: json['is_favorite'] == true,
-      isDefault: json['is_default'] == true,
+      isFavorite: json['is_favorite'] == true || json['isFavorite'] == true,
+      isDefault: json['is_default'] == true || json['isDefault'] == true,
       serviceable: json['serviceable'] != false,
+      recipientName: json['recipient_name']?.toString() ??
+          json['recipientName']?.toString() ??
+          '',
+      recipientPhone: json['phone']?.toString() ??
+          json['recipient_phone']?.toString() ??
+          json['recipientPhone']?.toString() ??
+          '',
       payload: Map<String, dynamic>.from(json),
     );
   }
@@ -138,6 +149,8 @@ class Address extends Equatable {
         'is_favorite': isFavorite,
         'is_default': isDefault,
         'serviceable': serviceable,
+        if (recipientName.isNotEmpty) 'recipient_name': recipientName,
+        if (recipientPhone.isNotEmpty) 'phone': recipientPhone,
       };
 
   Address copyWith({
@@ -156,6 +169,8 @@ class Address extends Equatable {
     bool? isFavorite,
     bool? isDefault,
     bool? serviceable,
+    String? recipientName,
+    String? recipientPhone,
     Map<String, dynamic>? payload,
   }) =>
       Address(
@@ -175,6 +190,8 @@ class Address extends Equatable {
         isFavorite: isFavorite ?? this.isFavorite,
         isDefault: isDefault ?? this.isDefault,
         serviceable: serviceable ?? this.serviceable,
+        recipientName: recipientName ?? this.recipientName,
+        recipientPhone: recipientPhone ?? this.recipientPhone,
         payload: payload ?? this.payload,
       );
 
@@ -195,5 +212,7 @@ class Address extends Equatable {
         isFavorite,
         isDefault,
         serviceable,
+        recipientName,
+        recipientPhone,
       ];
 }

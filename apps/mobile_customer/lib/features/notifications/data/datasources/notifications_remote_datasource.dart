@@ -1,5 +1,6 @@
 import 'package:nexora_core/nexora_core.dart';
 
+import '../../../../shared/utils/json_list.dart';
 import '../../domain/entities/notifications_entity.dart';
 import '../models/notifications_model.dart';
 
@@ -24,10 +25,10 @@ class NotificationsRemoteDataSource {
     return _client.get<List<AppNotification>>(
       _listPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
+      parser: (json) => jsonObjectList(json)
           .map(
             (e) =>
-                AppNotificationModel.fromJson(e as Map<String, dynamic>).toEntity(),
+                AppNotificationModel.fromJson(e).toEntity(),
           )
           .toList(),
     );

@@ -273,7 +273,10 @@ class Cart extends Equatable {
   bool get canCheckout => violations.where((v) => v.severity == 'error').isEmpty;
 
   factory Cart.fromJson(Map<String, dynamic> json) => Cart(
-        id: json['id']?.toString() ?? '',
+        id: json['id']?.toString() ??
+            json['cartId']?.toString() ??
+            json['ID']?.toString() ??
+            '',
         items: (json['items'] as List<dynamic>? ?? [])
             .map((e) => CartLine.fromJson(e as Map<String, dynamic>))
             .toList(),

@@ -27,7 +27,7 @@ class _AuthPhoneScreenState extends ConsumerState<AuthPhoneScreen> {
   Future<void> _submit() async {
     final phone = _controller.text.trim();
     if (phone.isEmpty) {
-      setState(() => _error = 'Enter phone number');
+      setState(() => _error = AppLocalizations.of(context).enterPhone);
       return;
     }
     final ok = await ref.read(authControllerProvider.notifier).requestOtp(phone);
@@ -35,7 +35,8 @@ class _AuthPhoneScreenState extends ConsumerState<AuthPhoneScreen> {
     if (ok) {
       context.push('${RouteNames.authOtp}?phone=${Uri.encodeComponent(phone)}');
     } else {
-      setState(() => _error = 'Failed to send code');
+      setState(() => _error = ref.read(authControllerProvider).error ??
+          AppLocalizations.of(context).otpSendFailed);
     }
   }
 
@@ -55,14 +56,17 @@ class _AuthPhoneScreenState extends ConsumerState<AuthPhoneScreen> {
               controller: _controller,
               label: l10n.phoneLogin,
               keyboardType: TextInputType.phone,
-              error: _error,
+              error: _error ?? auth.error,
             ),
             const SizedBox(height: NxSpacing.s4),
-            NxButton(
-              label: l10n.sendOtp,
-              expand: true,
-              loading: auth.isLoading,
-              onPressed: _submit,
+            SizedBox(
+              height: 48,
+              child: NxButton(
+                label: l10n.sendOtp,
+                expand: true,
+                loading: auth.isLoading,
+                onPressed: _submit,
+              ),
             ),
           ],
         ),

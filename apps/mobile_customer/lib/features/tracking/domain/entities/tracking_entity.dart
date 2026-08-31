@@ -107,17 +107,31 @@ class TrackingSnapshot extends Equatable {
     double? coord(dynamic value) => (value as num?)?.toDouble();
 
     return TrackingSnapshot(
-      orderId: json['order_id']?.toString() ?? json['id']?.toString() ?? '',
+      orderId: json['order_id']?.toString() ??
+          json['orderId']?.toString() ??
+          json['id']?.toString() ??
+          '',
       status: json['status']?.toString() ?? 'unknown',
-      etaMinutes: (json['eta_minutes'] as num?)?.toInt(),
+      etaMinutes: () {
+        final minutes = (json['eta_minutes'] as num?)?.toInt();
+        if (minutes != null) return minutes;
+        final seconds = (json['etaSeconds'] as num?)?.toInt();
+        if (seconds != null && seconds > 0) return (seconds / 60).round();
+        return null;
+      }(),
       etaMin: (json['eta_min'] as num?)?.toInt(),
       etaMax: (json['eta_max'] as num?)?.toInt(),
       courierName: json['courier_name']?.toString() ??
+          json['courierId']?.toString() ??
           courier?['name']?.toString(),
       courierPhone: json['courier_phone']?.toString() ??
           courier?['phone']?.toString(),
-      courierLat: coord(json['courier_lat']) ?? coord(courier?['lat']),
-      courierLng: coord(json['courier_lng']) ?? coord(courier?['lng']),
+      courierLat: coord(json['courier_lat']) ??
+          coord(json['lat']) ??
+          coord(courier?['lat']),
+      courierLng: coord(json['courier_lng']) ??
+          coord(json['lng']) ??
+          coord(courier?['lng']),
       storeLat: coord(json['store_lat']) ?? coord(store?['lat']),
       storeLng: coord(json['store_lng']) ?? coord(store?['lng']),
       destLat: coord(json['dest_lat']) ?? coord(destination?['lat']),

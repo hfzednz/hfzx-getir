@@ -10,6 +10,7 @@ import '../../domain/entities/orders_entity.dart';
 import '../providers/orders_providers.dart';
 import '../../../../di/analytics_providers.dart';
 import '../../../../shared/analytics/analytics_events.dart';
+import '../../../cart/presentation/providers/cart_providers.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
@@ -177,6 +178,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       onPressed: _busy
                           ? null
                           : () => _runAction(() => _cancelOrder(order)),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: NxSpacing.s3),
+                      child: Text(
+                        order.cancellationPolicy.policyText ??
+                            'This order can no longer be cancelled.',
+                        style: NxTypography.captionMd,
+                      ),
                     ),
                   if (order.canPartialCancel) ...[
                     const SizedBox(height: NxSpacing.s3),
@@ -323,12 +333,39 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           idempotencyKey: Idempotency.generate(),
         );
     if (!mounted) return;
-    result.fold(
-      onSuccess: (_) {
+    await result.fold(
+      onSuccess: (seeded) async {
+        final lines = seeded.items.isNotEmpty ? seeded.items : order.items;
+        var added = 0;
+        var skipped = 0;
+        for (final line in lines) {
+          if (line.cancelled || line.productId.isEmpty) {
+            skipped++;
+            continue;
+          }
+          await ref.read(cartRepositoryProvider).addItem(
+                productId: line.productId,
+                title: line.name.isNotEmpty ? line.name : line.productId,
+                imageUrl: line.imageUrl,
+                unitPriceMinor: line.unitPriceMinor,
+                quantity: line.quantity,
+              );
+          added++;
+        }
+        if (!mounted) return;
+        if (added == 0) {
+          NxToast.show(
+            context,
+            message: skipped > 0
+                ? 'Those items are no longer available'
+                : 'Could not add items to cart',
+          );
+          return;
+        }
         NxToast.show(context, message: 'Items added to cart');
         context.push('/cart');
       },
-      onFailure: (e) => NxToast.show(context, message: e.message),
+      onFailure: (e) async => NxToast.show(context, message: e.message),
     );
   }
 

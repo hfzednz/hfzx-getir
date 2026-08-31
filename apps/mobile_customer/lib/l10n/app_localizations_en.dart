@@ -266,4 +266,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get resendOtp => 'Resend code';
+
+  @override
+  String resendOtpIn(int seconds) => 'Resend in ${seconds}s';
+
+  @override
+  String get enterPhone => 'Enter your phone number';
+
+  @override
+  String get otpSendFailed =>
+      'Could not send a verification code. Please try again.';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get storesTitle => 'Stores';
+
+  @override
+  String get storeOpen => 'Open';
+
+  @override
+  String get storeClosed => 'Closed';
+
+  @override
+  String get payWithCard => 'Card';
+
+  @override
+  String get payWithCardHint => 'Pay with a test card';
+
+  @override
+  String get cashOnDelivery => 'Cash on delivery';
 }

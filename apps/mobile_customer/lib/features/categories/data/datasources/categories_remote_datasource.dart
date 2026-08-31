@@ -1,5 +1,6 @@
 import 'package:nexora_core/nexora_core.dart';
 
+import '../../../../shared/utils/json_list.dart';
 import '../../domain/entities/categories_entity.dart';
 import '../models/categories_model.dart';
 
@@ -22,8 +23,8 @@ class CategoriesRemoteDataSource {
     return _client.get<List<Category>>(
       _listPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
-          .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>).toEntity())
+      parser: (json) => jsonObjectList(json)
+          .map((e) => CategoryModel.fromJson(e).toEntity())
           .toList(),
     );
   }

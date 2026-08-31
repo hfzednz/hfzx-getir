@@ -1,5 +1,6 @@
 import 'package:nexora_core/nexora_core.dart';
 
+import '../../../../shared/utils/json_list.dart';
 import '../../domain/entities/addresses_entity.dart';
 import '../models/addresses_model.dart';
 
@@ -22,10 +23,9 @@ class AddressesRemoteDataSource {
     return _client.get<List<Address>>(
       _listPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
-          .map(
-            (e) => AddressModel.fromJson(e as Map<String, dynamic>).toEntity(),
-          )
+      parser: (json) => jsonObjectList(json)
+          .map(AddressModel.fromJson)
+          .map((e) => e.toEntity())
           .toList(),
     );
   }

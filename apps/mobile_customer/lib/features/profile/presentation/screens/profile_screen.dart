@@ -129,10 +129,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _save() async {
     final base = _loaded;
     if (base == null) return;
+    final first = _firstName.text.trim();
+    final last = _lastName.text.trim();
+    if (first.isEmpty || last.isEmpty) {
+      final tr = Localizations.localeOf(context).languageCode == 'tr';
+      NxToast.show(
+        context,
+        message: tr ? 'Ad ve soyad gerekli.' : 'First and last name are required.',
+      );
+      return;
+    }
     await ref.read(profileUpdateProvider.notifier).save(
           base.copyWith(
-            firstName: _firstName.text.trim(),
-            lastName: _lastName.text.trim(),
+            firstName: first,
+            lastName: last,
             displayName: _displayName.text.trim(),
             email: _email.text.trim(),
             phone: _phone.text.trim(),
@@ -144,5 +154,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
         );
+    if (!mounted) return;
+    final saveState = ref.read(profileUpdateProvider);
+    if (!saveState.hasError) {
+      final tr = Localizations.localeOf(context).languageCode == 'tr';
+      NxToast.show(
+        context,
+        message: tr ? 'Profil kaydedildi.' : 'Profile saved.',
+      );
+      ref.invalidate(userProfileProvider);
+    }
   }
 }

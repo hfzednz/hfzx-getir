@@ -31,20 +31,50 @@ final trackingSnapshotProvider =
   );
 });
 
-/// Emits the latest tracking snapshot and refreshes when realtime events
-/// mention [orderId].
+/// Live tracking: authenticated SSE/WS ticket for this order, plus track polling.
+/// Warehouse and courier events arrive on the ticketed realtime socket; poll is
+/// the fallback when the socket is reconnecting.
 final trackingRealtimeProvider =
     StreamProvider.autoDispose.family<TrackingSnapshot, String>((ref, orderId) async* {
   yield await ref.watch(trackingSnapshotProvider(orderId).future);
 
-  final client = ref.watch(realtimeClientProvider);
-  unawaited(client.connect());
+  var closed = false;
+  ref.onDispose(() => closed = true);
 
-  await for (final event in client.events) {
-    if (event is! RealtimeMessageEvent) continue;
-    final payload = event.payload;
-    if (!payload.contains(orderId)) continue;
+  final repo = ref.watch(trackingRepositoryProvider);
+  final env = ref.watch(environmentProvider);
+  final ticketResult = await repo.issueRealtimeTicket(orderId);
+  final ticket = ticketResult.fold(
+    onSuccess: (value) => value,
+    onFailure: (_) => '',
+  );
+
+  RealtimeClient? live;
+  StreamSubscription<RealtimeEvent>? sub;
+  if (ticket.isNotEmpty) {
+    live = RealtimeClient(
+      wsBaseUrl: env.wsUrl,
+      ticketProvider: () async => ticket,
+    );
+    sub = live.events.listen((event) {
+      if (event is RealtimeMessageEvent && !closed) {
+        ref.invalidate(trackingSnapshotProvider(orderId));
+      }
+    });
+    ref.onDispose(() {
+      unawaited(sub?.cancel());
+      unawaited(live?.dispose());
+    });
+    unawaited(live.connect());
+  }
+
+  await for (final _ in Stream<void>.periodic(const Duration(seconds: 3))) {
+    if (closed) return;
     ref.invalidate(trackingSnapshotProvider(orderId));
-    yield await ref.read(trackingSnapshotProvider(orderId).future);
+    try {
+      yield await ref.read(trackingSnapshotProvider(orderId).future);
+    } catch (_) {
+      // Keep the last snapshot on transient track failures.
+    }
   }
 });

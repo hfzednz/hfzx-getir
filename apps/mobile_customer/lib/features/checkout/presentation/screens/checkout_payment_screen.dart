@@ -90,7 +90,8 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
     final canContinue = checkout.paymentType == 'gift_card'
         ? (checkout.giftCardCode != null &&
             checkout.giftCardCode!.trim().isNotEmpty)
-        : checkout.paymentMethodId != null ||
+        : checkout.paymentType == 'card' ||
+            checkout.paymentMethodId != null ||
             checkout.paymentType == 'wallet' ||
             checkout.paymentType == 'cash';
 
@@ -109,6 +110,22 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                       .copyWith(color: colors.textPrimary),
                 ),
                 const SizedBox(height: NxSpacing.s4),
+                _PaymentOptionTile(
+                  selected: _isSelected(
+                    paymentType: checkout.paymentType,
+                    paymentMethodId: checkout.paymentMethodId,
+                    type: 'card',
+                    methodId: 'card',
+                  ),
+                  title: l10n.payWithCard,
+                  subtitle: l10n.payWithCardHint,
+                  icon: Icons.credit_card,
+                  onTap: () => ref.read(checkoutControllerProvider.notifier).setPayment(
+                        paymentType: 'card',
+                        paymentMethodId: 'card',
+                      ),
+                ),
+                const SizedBox(height: NxSpacing.s3),
                 AsyncValueWidget(
                   value: cardsAsync,
                   loading: () => const Padding(
@@ -224,7 +241,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                     paymentMethodId: checkout.paymentMethodId,
                     type: 'cash',
                   ),
-                  title: 'Cash on delivery',
+                  title: l10n.cashOnDelivery,
                   subtitle: 'Pay the courier when your order arrives',
                   icon: Icons.payments_outlined,
                   onTap: () => ref

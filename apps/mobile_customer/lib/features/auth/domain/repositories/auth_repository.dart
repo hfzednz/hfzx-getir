@@ -17,12 +17,32 @@ class AuthTokens extends Equatable {
   final String accessToken;
   final String refreshToken;
 
-  factory AuthTokens.fromJson(Map<String, dynamic> json) => AuthTokens(
-        userId: json['user_id']?.toString() ?? json['id']?.toString() ?? '',
-        displayName: json['display_name']?.toString(),
-        accessToken: json['access_token'] as String,
-        refreshToken: json['refresh_token'] as String,
-      );
+  factory AuthTokens.fromJson(Map<String, dynamic> json) {
+    String pick(List<String> keys) {
+      for (final key in keys) {
+        final v = json[key];
+        if (v == null) continue;
+        final s = v.toString().trim();
+        if (s.isNotEmpty && s != 'null') return s;
+      }
+      return '';
+    }
+
+    final name = pick(const ['displayName', 'display_name']);
+    return AuthTokens(
+      userId: pick(const [
+        'customerId',
+        'principalId',
+        'user_id',
+        'id',
+        'CustomerID',
+        'PrincipalID',
+      ]),
+      displayName: name.isEmpty ? null : name,
+      accessToken: pick(const ['accessToken', 'access_token', 'AccessToken']),
+      refreshToken: pick(const ['refreshToken', 'refresh_token', 'RefreshToken']),
+    );
+  }
 
   @override
   List<Object?> get props => [userId, displayName, accessToken, refreshToken];

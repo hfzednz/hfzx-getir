@@ -63,7 +63,7 @@ import 'app_localizations_tr.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('tr'),
+    Locale('tr')
   ];
 
   /// No description provided for @appTitle.
@@ -613,6 +613,39 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy Policy'**
   String get privacyPolicy;
+
+  /// No description provided for @resendOtp.
+  String get resendOtp;
+
+  /// No description provided for @resendOtpIn.
+  String resendOtpIn(int seconds);
+
+  /// No description provided for @enterPhone.
+  String get enterPhone;
+
+  /// No description provided for @otpSendFailed.
+  String get otpSendFailed;
+
+  /// No description provided for @signOut.
+  String get signOut;
+
+  /// No description provided for @storesTitle.
+  String get storesTitle;
+
+  /// No description provided for @storeOpen.
+  String get storeOpen;
+
+  /// No description provided for @storeClosed.
+  String get storeClosed;
+
+  /// No description provided for @payWithCard.
+  String get payWithCard;
+
+  /// No description provided for @payWithCardHint.
+  String get payWithCardHint;
+
+  /// No description provided for @cashOnDelivery.
+  String get cashOnDelivery;
 }
 
 class _AppLocalizationsDelegate
@@ -642,9 +675,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

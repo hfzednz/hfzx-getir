@@ -30,6 +30,8 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
   final _floorController = TextEditingController();
   final _doorController = TextEditingController();
   final _instructionsController = TextEditingController();
+  final _recipientNameController = TextEditingController();
+  final _recipientPhoneController = TextEditingController();
 
   AddressLabel _label = AddressLabel.home;
   LatLng? _pin;
@@ -49,6 +51,8 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
     _floorController.dispose();
     _doorController.dispose();
     _instructionsController.dispose();
+    _recipientNameController.dispose();
+    _recipientPhoneController.dispose();
     super.dispose();
   }
 
@@ -62,6 +66,8 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
     _floorController.text = address.floor;
     _doorController.text = address.door;
     _instructionsController.text = address.deliveryInstructions;
+    _recipientNameController.text = address.recipientName;
+    _recipientPhoneController.text = address.recipientPhone;
     _isFavorite = address.isFavorite;
     _isDefault = address.isDefault;
     _serviceable = address.serviceable;
@@ -87,6 +93,10 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
           'door': _doorController.text.trim(),
         if (_instructionsController.text.trim().isNotEmpty)
           'delivery_instructions': _instructionsController.text.trim(),
+        if (_recipientNameController.text.trim().isNotEmpty)
+          'recipient_name': _recipientNameController.text.trim(),
+        if (_recipientPhoneController.text.trim().isNotEmpty)
+          'phone': _recipientPhoneController.text.trim(),
         'is_favorite': _isFavorite,
         'is_default': _isDefault,
       };
@@ -294,6 +304,17 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                     label: 'Delivery instructions',
                     controller: _instructionsController,
                     maxLines: 3,
+                  ),
+                  const SizedBox(height: NxSpacing.s3),
+                  NxField(
+                    label: 'Recipient name',
+                    controller: _recipientNameController,
+                  ),
+                  const SizedBox(height: NxSpacing.s3),
+                  NxField(
+                    label: 'Recipient phone',
+                    controller: _recipientPhoneController,
+                    keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   SwitchListTile(

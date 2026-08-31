@@ -1,5 +1,6 @@
 import 'package:nexora_core/nexora_core.dart';
 
+import '../../../../shared/utils/json_list.dart';
 import '../../domain/entities/support_entity.dart';
 import '../models/support_model.dart';
 
@@ -14,8 +15,8 @@ class SupportRemoteDataSource {
   Future<Result<List<SupportFaq>>> fetchFaq() async {
     return _client.get<List<SupportFaq>>(
       _faqPath,
-      parser: (json) => (json as List<dynamic>)
-          .map((e) => SupportFaqModel.fromJson(e as Map<String, dynamic>).toEntity())
+      parser: (json) => jsonObjectList(json)
+          .map((e) => SupportFaqModel.fromJson(e).toEntity())
           .toList(),
     );
   }
@@ -24,8 +25,8 @@ class SupportRemoteDataSource {
     return _client.get<List<SupportTicket>>(
       _ticketsPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
-          .map((e) => SupportTicketModel.fromJson(e as Map<String, dynamic>).toEntity())
+      parser: (json) => jsonObjectList(json)
+          .map((e) => SupportTicketModel.fromJson(e).toEntity())
           .toList(),
     );
   }

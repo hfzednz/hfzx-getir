@@ -16,37 +16,64 @@ class AuthRepositoryImpl implements AuthRepository {
   final PreferencesStore _prefs;
 
   static const _biometricKey = 'biometric_enabled';
+  static const _challengeKey = 'otp_challenge_id';
 
-  @override
-  Future<Result<void>> requestOtp(String phone) async {
-    return _client.post<void>(
-      '/auth/otp/request',
+  Future<Result<void>> _startOtp(String phone) async {
+    final result = await _client.post<Map<String, dynamic>>(
+      '/auth/otp/start',
       data: {'phone': phone},
+      parser: (json) => json as Map<String, dynamic>,
     );
+    if (result.isFailure) {
+      return Failure(result.errorOrNull!);
+    }
+    final body = result.valueOrNull ?? const <String, dynamic>{};
+    final id = (body['challengeId'] ?? body['ChallengeID'] ?? '').toString().trim();
+    if (id.isEmpty) {
+      return const Failure(
+        NexoraValidationException(
+          code: NexoraErrorCode.validationFailed,
+          message: 'Could not start verification. Please try again.',
+        ),
+      );
+    }
+    await _prefs.set(_challengeKey, id);
+    return const Success(null);
   }
 
   @override
-  Future<Result<void>> resendOtp(String phone) async {
-    return _client.post<void>(
-      '/auth/otp/resend',
-      data: {'phone': phone},
-    );
-  }
+  Future<Result<void>> requestOtp(String phone) => _startOtp(phone);
+
+  @override
+  Future<Result<void>> resendOtp(String phone) => _startOtp(phone);
 
   @override
   Future<Result<AuthTokens>> verifyOtp({
     required String phone,
     required String code,
   }) async {
+    final challengeId = _prefs.get<String>(_challengeKey) ?? '';
+    if (challengeId.isEmpty) {
+      return const Failure(
+        NexoraValidationException(
+          code: NexoraErrorCode.validationFailed,
+          message: 'Verification expired. Please request a new code.',
+        ),
+      );
+    }
     final result = await _client.post<Map<String, dynamic>>(
       '/auth/otp/verify',
-      data: {'phone': phone, 'code': code},
+      data: {'challengeId': challengeId, 'code': code},
       parser: (json) => json as Map<String, dynamic>,
     );
     if (result.isFailure) {
       return Failure(result.errorOrNull!);
     }
-    return _persistTokens(result.valueOrNull!);
+    final persisted = await _persistTokens(result.valueOrNull!);
+    if (persisted.isSuccess) {
+      await _prefs.remove(_challengeKey);
+    }
+    return persisted;
   }
 
   @override
@@ -253,6 +280,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   Future<Result<AuthTokens>> _persistTokens(Map<String, dynamic> json) async {
     final tokens = AuthTokens.fromJson(json);
+    if (tokens.accessToken.isEmpty || tokens.userId.isEmpty) {
+      return const Failure(
+        NexoraAuthException(
+          code: NexoraErrorCode.authInvalid,
+          message: 'Sign-in did not return a customer session.',
+        ),
+      );
+    }
     await _tokenStore.saveTokens(
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,

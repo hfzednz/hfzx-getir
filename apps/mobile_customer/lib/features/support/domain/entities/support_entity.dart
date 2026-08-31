@@ -79,7 +79,7 @@ class SupportTicket extends Equatable {
   factory SupportTicket.fromJson(Map<String, dynamic> json) {
     final messagesRaw = json['messages'] as List<dynamic>? ?? json['timeline'] as List<dynamic>?;
     return SupportTicket(
-      id: json['id']?.toString() ?? '',
+        id: json['id']?.toString() ?? json['ticketId']?.toString() ?? '',
       subject: json['subject']?.toString() ?? json['title']?.toString() ?? '',
       status: SupportTicketStatus.values.asNameMap()[json['status']?.toString()] ??
           SupportTicketStatus.open,

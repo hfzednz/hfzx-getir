@@ -12,6 +12,8 @@ abstract final class RouteNames {
   static const authEmailVerify = '/auth/email-verify';
   static const shell = '/shell';
   static const home = '/home';
+  static const stores = '/stores';
+  static const storeDetail = '/stores/:storeId';
   static const categories = '/categories';
   static const categoryDetail = '/categories/:categoryId';
   static const search = '/search';

@@ -28,6 +28,7 @@ import '../features/legal/presentation/screens/legal_screen.dart';
 import '../features/loyalty/presentation/screens/loyalty_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../features/splash/presentation/screens/splash_screen.dart';
 import '../features/orders/presentation/screens/order_detail_screen.dart';
 import '../features/orders/presentation/screens/orders_screen.dart';
 import '../features/product/presentation/screens/product_screen.dart';
@@ -45,7 +46,8 @@ import '../features/settings/presentation/screens/security_settings_screen.dart'
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/theme_settings_screen.dart';
 import '../features/shell/presentation/screens/shell_scaffold.dart';
-import '../features/splash/presentation/screens/splash_screen.dart';
+import '../features/stores/presentation/screens/store_detail_screen.dart';
+import '../features/stores/presentation/screens/stores_screen.dart';
 import '../features/support/presentation/screens/support_assistant_screen.dart';
 import '../features/support/presentation/screens/support_screen.dart';
 import '../features/support/presentation/screens/support_ticket_detail_screen.dart';
@@ -179,6 +181,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (_, __) => const AccountScreen(),
               ),
             ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: RouteNames.stores,
+        builder: (_, __) => const StoresScreen(),
+        routes: [
+          GoRoute(
+            path: ':storeId',
+            builder: (_, state) => StoreDetailScreen(
+              storeId: state.pathParameters['storeId']!,
+            ),
           ),
         ],
       ),

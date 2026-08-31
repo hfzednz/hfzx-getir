@@ -126,8 +126,8 @@ class Category extends Equatable {
     }
 
     return Category(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? json['name']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['ID']?.toString() ?? '',
+      title: json['title']?.toString() ?? json['name']?.toString() ?? json['Name']?.toString() ?? '',
       slug: json['slug']?.toString(),
       imageUrl: json['image_url']?.toString(),
       iconUrl: json['icon_url']?.toString(),

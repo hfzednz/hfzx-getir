@@ -34,6 +34,12 @@ class SearchQuery {
 
 final searchFiltersProvider = StateProvider<SearchFilters>((ref) => const SearchFilters());
 
+final catalogBrowseProvider =
+    FutureProvider.autoDispose<List<ProductSummary>>((ref) async {
+  final result = await ref.watch(semanticSearchUseCaseProvider).call('');
+  return result.fold(onSuccess: (v) => v.items, onFailure: (e) => throw e);
+});
+
 final searchResultsProvider =
     FutureProvider.family.autoDispose<List<ProductSummary>, SearchQuery>((ref, query) async {
   if (query.text.trim().length < 2) return [];

@@ -64,6 +64,14 @@ class CartIdNotifier extends StateNotifier<String?> {
     return id;
   }
 
+  /// Replaces the local cart id with the one the BFF actually created.
+  Future<void> adopt(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty || trimmed == state) return;
+    await _prefs.set(cartIdPrefsKey, trimmed);
+    state = trimmed;
+  }
+
   /// Called once a cart is consumed (order placed) so the next cart is a new one.
   Future<void> clear() async {
     await _prefs.remove(cartIdPrefsKey);
@@ -80,66 +88,51 @@ final cartRepositoryProvider = Provider<CartLocalRepository>((ref) {
     ref.watch(databaseProvider),
     ref.watch(apiClientProvider),
     ref.watch(cartCloudRepositoryProvider),
-    ref.watch(mutationOutboxProvider),
-    ref.watch(syncEngineProvider),
     ref.watch(analyticsTrackerProvider),
     ensureCartId: () => ref.read(cartIdProvider.notifier).ensure(),
+    adoptCartId: (id) => ref.read(cartIdProvider.notifier).adopt(id),
   );
 });
 
-/// Offline-first cart: Drift is local SoR; mutations enqueue to Hive outbox.
+/// Offline-first cart: Drift is local SoR; lines POST to BFF `/cart/items`.
 class CartLocalRepository {
   CartLocalRepository(
     this._db,
     this._client,
     this._remote,
-    this._outbox,
-    this._syncEngine,
     this._analytics, {
     Future<String> Function()? ensureCartId,
-  }) : _ensureCartId = ensureCartId;
+    Future<void> Function(String id)? adoptCartId,
+  })  : _ensureCartId = ensureCartId,
+        _adoptCartId = adoptCartId;
 
   final Future<String> Function()? _ensureCartId;
+  final Future<void> Function(String id)? _adoptCartId;
 
   final AppDatabase _db;
   final ApiClient _client;
   final CartRepository _remote;
-  final MutationOutbox _outbox;
-  final SyncEngine _syncEngine;
   final AnalyticsTracker _analytics;
-  final _uuid = const Uuid();
 
   Future<void> _enqueueSync() async {
+    final cartId = await _ensureCartId?.call() ?? '';
+    if (cartId.isEmpty) return;
     final items = await _db.select(_db.cartItems).get();
-    final body = {
-      'items': items
-          .map(
-            (i) => {
-              'product_id': i.productId,
-              if (i.variantId != null) 'variant_id': i.variantId,
-              'quantity': i.quantity,
-              'unit_price_minor': i.unitPriceMinor,
-              'currency': i.currency,
-              if (i.notes != null) 'notes': i.notes,
-            },
-          )
-          .toList(),
-    };
-
-    await _outbox.enqueue(
-      PendingMutation(
-        clientMutationId: _uuid.v4(),
-        idempotencyKey: _uuid.v4(),
-        method: 'POST',
-        path: '/cart/sync',
-        body: body,
-        createdAt: DateTime.now().toUtc(),
-      ),
-    );
-
-    // Best-effort immediate flush when online.
-    // ignore: unawaited_futures
-    _syncEngine.flush();
+    for (final item in items) {
+      final result = await _remote.mutate(
+        body: {
+          'cartId': cartId,
+          'sku': item.productId,
+          'qty': item.quantity,
+          'unitMinor': item.unitPriceMinor,
+        },
+      );
+      if (result case Success(:final value)) {
+        if (value.id.isNotEmpty && value.id != 'local') {
+          await _adoptCartId?.call(value.id);
+        }
+      }
+    }
   }
 
   Future<void> addItem({

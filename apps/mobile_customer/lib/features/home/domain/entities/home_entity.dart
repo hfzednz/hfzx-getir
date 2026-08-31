@@ -84,16 +84,20 @@ class HomeProduct extends Equatable {
   final String? deepLink;
 
   factory HomeProduct.fromJson(Map<String, dynamic> json) => HomeProduct(
-        id: json['id']?.toString() ?? '',
+        id: json['id']?.toString() ??
+            json['productId']?.toString() ??
+            json['sku']?.toString() ??
+            '',
         title: json['title']?.toString() ?? json['name']?.toString() ?? '',
         priceMinor: (json['price_minor'] as num?)?.toInt() ??
+            (json['priceMinor'] as num?)?.toInt() ??
             (json['unit_price_minor'] as num?)?.toInt() ??
             0,
         currency: json['currency']?.toString() ?? 'TRY',
-        imageUrl: json['image_url']?.toString(),
+        imageUrl: json['image_url']?.toString() ?? json['imageUrl']?.toString(),
         unitMeta: json['unit_meta']?.toString(),
         compareAtMinor: (json['compare_at_minor'] as num?)?.toInt(),
-        deepLink: json['deep_link']?.toString(),
+        deepLink: json['deep_link']?.toString() ?? json['deepLink']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -150,14 +154,17 @@ class HomeWidgetConfig extends Equatable {
 }
 
 class HomeFeed extends Equatable {
-  const HomeFeed({this.widgets = const []});
+  const HomeFeed({this.widgets = const [], this.serviceable = true});
 
   final List<HomeWidgetConfig> widgets;
+  final bool serviceable;
 
   factory HomeFeed.fromJson(Map<String, dynamic> json) {
+    final serviceable = json['serviceable'] != false;
     final widgetsRaw = json['widgets'] as List<dynamic>? ?? [];
     if (widgetsRaw.isNotEmpty) {
       return HomeFeed(
+        serviceable: serviceable,
         widgets: widgetsRaw
             .map((e) => HomeWidgetConfig.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -182,9 +189,10 @@ class HomeFeed extends Equatable {
       }
     }
     if (products.isEmpty) {
-      return const HomeFeed();
+      return HomeFeed(serviceable: serviceable);
     }
     return HomeFeed(
+      serviceable: serviceable,
       widgets: [
         HomeWidgetConfig(
           id: 'bff-home',
@@ -198,8 +206,9 @@ class HomeFeed extends Equatable {
 
   Map<String, dynamic> toJson() => {
         'widgets': widgets.map((e) => e.toJson()).toList(),
+        'serviceable': serviceable,
       };
 
   @override
-  List<Object?> get props => [widgets];
+  List<Object?> get props => [widgets, serviceable];
 }

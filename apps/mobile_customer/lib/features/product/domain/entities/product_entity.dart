@@ -303,9 +303,20 @@ class ProductSummary extends Equatable {
   final ProductStockStatus stockStatus;
 
   factory ProductSummary.fromJson(Map<String, dynamic> json) => ProductSummary(
-        id: json['id']?.toString() ?? '',
-        title: json['title']?.toString() ?? json['name']?.toString() ?? '',
-        priceMinor: (json['price_minor'] as num?)?.toInt() ?? 0,
+        id: json['id']?.toString() ??
+            json['productId']?.toString() ??
+            json['ProductID']?.toString() ??
+            json['sku']?.toString() ??
+            json['SKU']?.toString() ??
+            '',
+        title: json['title']?.toString() ??
+            json['Title']?.toString() ??
+            json['name']?.toString() ??
+            json['sku']?.toString() ??
+            '',
+        priceMinor: (json['price_minor'] as num?)?.toInt() ??
+            (json['priceMinor'] as num?)?.toInt() ??
+            0,
         currency: json['currency']?.toString() ?? 'TRY',
         imageUrl: json['image_url']?.toString() ??
             (json['images'] as List<dynamic>?)?.firstOrNull?.toString(),
@@ -416,6 +427,9 @@ class Product extends Equatable {
   String? get primaryImageUrl => images.isNotEmpty ? images.first : null;
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    if (json['product'] is Map) {
+      json = Map<String, dynamic>.from(json['product'] as Map);
+    }
     List<ProductSummary> parseSummaries(String key) =>
         (json[key] as List<dynamic>? ?? [])
             .map((e) => ProductSummary.fromJson(e as Map<String, dynamic>))
@@ -427,9 +441,16 @@ class Product extends Equatable {
         .toList();
 
     return Product(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? json['name']?.toString() ?? '',
-      description: json['description']?.toString(),
+      id: json['id']?.toString() ??
+          json['ID']?.toString() ??
+          json['productId']?.toString() ??
+          '',
+      title: json['title']?.toString() ??
+          json['Title']?.toString() ??
+          json['name']?.toString() ??
+          '',
+      description: json['description']?.toString() ??
+          json['Description']?.toString(),
       images: imageList,
       videos: (json['videos'] as List<dynamic>? ?? [])
           .map((e) => ProductMedia.fromJson(e as Map<String, dynamic>))
@@ -450,8 +471,10 @@ class Product extends Equatable {
           .map((e) => e.toString())
           .toList(),
       origin: json['origin']?.toString(),
-      brand: json['brand']?.toString(),
-      priceMinor: (json['price_minor'] as num?)?.toInt() ?? 0,
+      brand: json['brand']?.toString() ?? json['Brand']?.toString(),
+      priceMinor: (json['price_minor'] as num?)?.toInt() ??
+          (json['priceMinor'] as num?)?.toInt() ??
+          0,
       compareAtMinor: (json['compare_at_minor'] as num?)?.toInt(),
       currency: json['currency']?.toString() ?? 'TRY',
       discountPercent: (json['discount_percent'] as num?)?.toInt(),

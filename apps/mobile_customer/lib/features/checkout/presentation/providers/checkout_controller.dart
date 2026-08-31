@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_core/nexora_core.dart';
 
 import '../../../../di/analytics_providers.dart';
+import '../../../../di/providers.dart';
+import '../../../../shared/errors/customer_facing_error.dart';
 import '../../../../shared/analytics/analytics_events.dart';
 import '../../../../shared/business_rules/checkout_rules.dart';
 import '../../../../shared/business_rules/payment_rules.dart';
@@ -277,10 +279,26 @@ class CheckoutController extends Notifier<CheckoutState> {
 
   Map<String, dynamic> buildCheckoutBody() {
     final s = state;
+    final address = _selectedAddress();
     return {
       if (_cartId != null) 'cartId': _cartId,
       if (_principalId != null) 'principalId': _principalId,
       if (s.addressId != null) 'address_id': s.addressId,
+      if (address != null)
+        'address': {
+          'label': address.title,
+          'line1': address.formatted,
+          'city': (address.payload['city'] ?? address.cityId ?? '').toString(),
+          'country': (address.payload['country'] ?? '').toString(),
+          'phone': address.recipientPhone.isNotEmpty
+              ? address.recipientPhone
+              : (address.payload['phone'] ??
+                      address.payload['recipient_phone'] ??
+                      '')
+                  .toString(),
+          'lat': address.lat ?? 0,
+          'lng': address.lng ?? 0,
+        },
       'payment': {
         'type': s.paymentType,
         if (s.paymentMethodId != null) 'payment_method_id': s.paymentMethodId,
@@ -312,8 +330,35 @@ class CheckoutController extends Notifier<CheckoutState> {
       if (s.verifiedQuoteId != null) 'quote_id': s.verifiedQuoteId,
       if (s.verifiedQuoteId == null && s.quote?.quoteId != null)
         'quote_id': s.quote!.quoteId,
+      if (s.quote?.quoteId != null) 'sessionId': s.quote!.quoteId,
     };
   }
+
+  Address? _selectedAddress() {
+    final id = state.addressId;
+    if (id == null) return null;
+    final addresses = ref.read(addressesListProvider).maybeWhen(
+          data: (list) => list,
+          orElse: () => const <Address>[],
+        );
+    for (final a in addresses) {
+      if (a.id == id) return a;
+    }
+    return null;
+  }
+
+  String _facing(Object error) => customerFacingError(
+        error,
+        languageCode: ref.read(localeCodeProvider),
+      );
+
+  String _facingText(String message) => customerFacingError(
+        NexoraValidationException(
+          code: NexoraErrorCode.validationFailed,
+          message: message,
+        ),
+        languageCode: ref.read(localeCodeProvider),
+      );
 
   Future<void> refreshQuote() async {
     if (state.addressId == null) return;
@@ -334,7 +379,7 @@ class CheckoutController extends Notifier<CheckoutState> {
       onFailure: (error) {
         state = state.copyWith(
           isLoading: false,
-          errorMessage: error.message,
+          errorMessage: _facing(error),
           clearQuote: true,
         );
       },
@@ -380,10 +425,10 @@ class CheckoutController extends Notifier<CheckoutState> {
   /// Message describing why checkout cannot run, or null when cart and session are known.
   String? _identityBlocker() {
     if (_cartId == null) {
-      return 'Add something to your cart before checking out.';
+      return _facingText('Add something to your cart before checking out.');
     }
     if (_principalId == null) {
-      return 'Sign in to complete your order.';
+      return _facingText('Sign in to complete your order.');
     }
     return null;
   }
@@ -395,16 +440,12 @@ class CheckoutController extends Notifier<CheckoutState> {
       return false;
     }
     if (state.addressId == null) {
-      state = state.copyWith(errorMessage: 'Select a delivery address to continue.');
-      return false;
-    }
-    if (state.paymentMethodId == null && state.paymentType == 'card') {
-      state = state.copyWith(errorMessage: 'Select a payment method to continue.');
+      state = state.copyWith(errorMessage: _facingText('Select a delivery address to continue.'));
       return false;
     }
     if (state.paymentType == 'gift_card' &&
         (state.giftCardCode == null || state.giftCardCode!.trim().isEmpty)) {
-      state = state.copyWith(errorMessage: 'Enter a gift card code to continue.');
+      state = state.copyWith(errorMessage: _facingText('Enter a gift card code to continue.'));
       return false;
     }
 
@@ -481,7 +522,7 @@ class CheckoutController extends Notifier<CheckoutState> {
           return true;
         },
         onFailure: (error) {
-          state = state.copyWith(isLoading: false, errorMessage: error.message);
+          state = state.copyWith(isLoading: false, errorMessage: _facing(error));
           return false;
         },
       );
@@ -545,7 +586,7 @@ class CheckoutController extends Notifier<CheckoutState> {
           state = state.copyWith(
             isLoading: false,
             lastPaymentSessionId: session.id,
-            errorMessage: 'Payment failed — you can retry',
+            errorMessage: _facingText('Payment failed — you can retry'),
             quote: session.quote ?? state.quote,
           );
           try {
@@ -615,7 +656,7 @@ class CheckoutController extends Notifier<CheckoutState> {
         }
         state = state.copyWith(
           isLoading: false,
-          errorMessage: error.message,
+          errorMessage: _facing(error),
           lastPaymentSessionId:
               sessionIdFromDetails ?? state.lastPaymentSessionId,
         );
@@ -678,7 +719,7 @@ class CheckoutController extends Notifier<CheckoutState> {
           state = state.copyWith(
             isLoading: false,
             lastPaymentSessionId: session.id,
-            errorMessage: 'Payment failed — you can retry',
+            errorMessage: _facingText('Payment failed — you can retry'),
           );
           return false;
         }
@@ -718,7 +759,7 @@ class CheckoutController extends Notifier<CheckoutState> {
         );
         state = state.copyWith(
           isLoading: false,
-          errorMessage: error.message,
+          errorMessage: _facing(error),
           lastPaymentSessionId: sessionId,
         );
         return false;

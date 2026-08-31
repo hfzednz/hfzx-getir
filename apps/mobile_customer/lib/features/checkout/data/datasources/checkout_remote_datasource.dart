@@ -35,13 +35,34 @@ class CheckoutRemoteDataSource {
     final paymentType = body['paymentMethod'] ??
         (payment is Map ? payment['type'] : null) ??
         'card';
-    return {
+    final sessionId = _id(body, 'sessionId', 'session_id') ??
+        _id(body, 'quoteId', 'quote_id');
+    final out = <String, dynamic>{
       'cartId': cartId,
       'principalId': principalId,
       'paymentMethod': paymentType.toString(),
-      if (body['sessionId'] != null || body['session_id'] != null)
-        'sessionId': (body['sessionId'] ?? body['session_id']).toString(),
+      if (sessionId != null) 'sessionId': sessionId,
     };
+    final address = body['address'];
+    if (address is Map) {
+      final map = Map<String, dynamic>.from(address);
+      final line1 = (map['line1'] ?? map['formatted'] ?? map['address_line'] ?? '')
+          .toString();
+      final lat = (map['lat'] as num?)?.toDouble() ?? 0;
+      final lng = (map['lng'] as num?)?.toDouble() ?? 0;
+      if (line1.isNotEmpty || lat != 0 || lng != 0) {
+        out['address'] = {
+          'label': (map['label'] ?? map['title'] ?? '').toString(),
+          'line1': line1,
+          'city': (map['city'] ?? '').toString(),
+          'country': (map['country'] ?? '').toString(),
+          'phone': (map['phone'] ?? map['recipient_phone'] ?? '').toString(),
+          'lat': lat,
+          'lng': lng,
+        };
+      }
+    }
+    return out;
   }
 
   Future<Result<CheckoutSession>> fetch({String? id}) async {
@@ -64,14 +85,15 @@ class CheckoutRemoteDataSource {
       _ordersPath,
       queryParameters: params,
       parser: (json) {
-        final items = json is Map
-            ? (json['items'] ?? json['Items'] ?? json['orders'] ?? [])
+        final raw = json is Map<String, dynamic>
+            ? (json['items'] ?? json['Items'] ?? json['orders'])
             : json;
-        if (items is! List) return <CheckoutSession>[];
-        return items
-            .whereType<Map>()
-            .map((e) => CheckoutSession.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
+        if (raw is! List) return <CheckoutSession>[];
+        return [
+          for (final e in raw)
+            if (e is Map<dynamic, dynamic>)
+              CheckoutSession.fromJson(Map<String, dynamic>.from(e)),
+        ];
       },
     );
   }

@@ -80,9 +80,12 @@ class UserProfile extends Equatable {
   }
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        id: json['id']?.toString() ?? '',
-        firstName: json['first_name']?.toString() ?? '',
-        lastName: json['last_name']?.toString() ?? '',
+        id: json['id']?.toString() ??
+            json['customerId']?.toString() ??
+            json['customer_id']?.toString() ??
+            '',
+        firstName: json['first_name']?.toString() ?? json['firstName']?.toString() ?? '',
+        lastName: json['last_name']?.toString() ?? json['lastName']?.toString() ?? '',
         displayName: json['display_name']?.toString() ?? json['name']?.toString() ?? '',
         email: json['email']?.toString() ?? '',
         phone: json['phone']?.toString() ?? '',

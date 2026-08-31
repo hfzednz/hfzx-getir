@@ -1,6 +1,7 @@
 import 'package:nexora_core/nexora_core.dart';
 
 import '../../../../shared/business_rules/coupon_rules.dart';
+import '../../../../shared/utils/json_list.dart';
 import '../../../../shared/validators/coupon_validator.dart';
 import '../../domain/entities/coupons_entity.dart';
 import '../models/coupons_model.dart';
@@ -17,8 +18,8 @@ class CouponsRemoteDataSource {
     return _client.get<List<Coupon>>(
       _listPath,
       queryParameters: params,
-      parser: (json) => (json as List<dynamic>)
-          .map((e) => CouponModel.fromJson(e as Map<String, dynamic>).toEntity())
+      parser: (json) => jsonObjectList(json)
+          .map((e) => CouponModel.fromJson(e).toEntity())
           .toList(),
     );
   }

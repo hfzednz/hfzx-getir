@@ -266,4 +266,38 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get privacyPolicy => 'Gizlilik Politikası';
+
+  @override
+  String get resendOtp => 'Kodu yeniden gönder';
+
+  @override
+  String resendOtpIn(int seconds) => '$seconds sn sonra yeniden gönder';
+
+  @override
+  String get enterPhone => 'Telefon numaranızı girin';
+
+  @override
+  String get otpSendFailed =>
+      'Doğrulama kodu gönderilemedi. Lütfen tekrar deneyin.';
+
+  @override
+  String get signOut => 'Çıkış yap';
+
+  @override
+  String get storesTitle => 'Mağazalar';
+
+  @override
+  String get storeOpen => 'Açık';
+
+  @override
+  String get storeClosed => 'Kapalı';
+
+  @override
+  String get payWithCard => 'Kart';
+
+  @override
+  String get payWithCardHint => 'Test kartı ile öde';
+
+  @override
+  String get cashOnDelivery => 'Kapıda nakit';
 }
