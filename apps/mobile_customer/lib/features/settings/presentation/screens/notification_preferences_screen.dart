@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_design/nexora_design.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/errors/error_copy.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../notifications/domain/entities/notifications_entity.dart';
@@ -34,18 +36,22 @@ class _NotificationPreferencesScreenState
       onSuccess: (prefs) {
         setState(() => _draft = prefs);
         ref.invalidate(notificationPreferencesProvider);
-        NxToast.show(context, message: 'Preferences saved');
+        NxToast.show(context, message: AppLocalizations.of(context).preferencesSaved);
       },
-      onFailure: (e) => NxToast.show(context, message: e.message),
+      onFailure: (e) => NxToast.show(
+        context,
+        message: localizedCustomerError(context, e),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final prefsAsync = ref.watch(notificationPreferencesProvider);
 
     return Scaffold(
-      appBar: const NxTopBar(title: 'Notification preferences'),
+      appBar: NxTopBar(title: l10n.notificationPreferences),
       body: AsyncValueWidget(
         value: prefsAsync,
         data: (prefs) {
@@ -56,14 +62,14 @@ class _NotificationPreferencesScreenState
             padding: const EdgeInsets.all(NxSpacing.s4),
             children: [
               SwitchListTile(
-                title: const Text('Push notifications'),
+                title: Text(l10n.pushNotifications),
                 value: draft.pushEnabled,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(pushEnabled: v),
                 ),
               ),
               SwitchListTile(
-                title: const Text('Email notifications'),
+                title: Text(l10n.emailNotifications),
                 value: draft.emailEnabled,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(emailEnabled: v),
@@ -71,36 +77,36 @@ class _NotificationPreferencesScreenState
               ),
               const Divider(),
               SwitchListTile(
-                title: const Text('Order updates'),
-                subtitle: const Text('Transactional'),
+                title: Text(l10n.orderUpdates),
+                subtitle: Text(l10n.transactional),
                 value: draft.transactional,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(transactional: v),
                 ),
               ),
               SwitchListTile(
-                title: const Text('Delivery alerts'),
+                title: Text(l10n.deliveryAlerts),
                 value: draft.delivery,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(delivery: v),
                 ),
               ),
               SwitchListTile(
-                title: const Text('Promotions'),
+                title: Text(l10n.promotionsPref),
                 value: draft.promo,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(promo: v),
                 ),
               ),
               SwitchListTile(
-                title: const Text('Price drops'),
+                title: Text(l10n.priceDrops),
                 value: draft.priceDrop,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(priceDrop: v),
                 ),
               ),
               SwitchListTile(
-                title: const Text('Back in stock'),
+                title: Text(l10n.backInStock),
                 value: draft.restock,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(restock: v),
@@ -108,7 +114,7 @@ class _NotificationPreferencesScreenState
               ),
               const SizedBox(height: NxSpacing.s4),
               NxButton(
-                label: 'Save preferences',
+                label: l10n.savePreferences,
                 expand: true,
                 loading: _saving,
                 disabled: _saving,
@@ -118,7 +124,7 @@ class _NotificationPreferencesScreenState
           );
         },
         error: (e, _) => ErrorView(
-          message: e.toString(),
+          message: localizedCustomerError(context, e),
           onRetry: () => ref.invalidate(notificationPreferencesProvider),
         ),
       ),

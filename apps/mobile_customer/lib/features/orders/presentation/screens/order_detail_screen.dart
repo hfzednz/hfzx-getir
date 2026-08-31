@@ -12,6 +12,8 @@ import '../providers/orders_providers.dart';
 import '../../../../di/analytics_providers.dart';
 import '../../../../shared/analytics/analytics_events.dart';
 import '../../../cart/presentation/providers/cart_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
+import '../../../../shared/widgets/error_view.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
@@ -270,7 +272,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           ],
         ),
         loading: () => const Center(child: NxSpinner()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorView(message: localizedCustomerError(context, e)),
       ),
     );
   }

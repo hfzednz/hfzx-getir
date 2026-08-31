@@ -39,12 +39,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (!mounted) return;
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset email sent')),
+        SnackBar(content: Text(AppLocalizations.of(context).passwordResetEmailSent)),
       );
       context.pop();
     } else {
       final err = ref.read(accountLifecycleControllerProvider).error;
-      setState(() => _error = err ?? 'Failed to send reset email');
+      setState(() => _error = err ?? AppLocalizations.of(context).failedToSendResetEmail);
     }
   }
 
@@ -54,14 +54,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final state = ref.watch(accountLifecycleControllerProvider);
 
     return Scaffold(
-      appBar: NxTopBar(title: 'Forgot password'),
+      appBar: NxTopBar(title: l10n.forgotPassword),
       body: Padding(
         padding: const EdgeInsets.all(NxSpacing.s4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Enter your email and we will send you a reset link.',
+              l10n.forgotPasswordHint,
               style: NxTypography.bodyMd,
             ),
             const SizedBox(height: NxSpacing.s4),
@@ -73,14 +73,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
             const SizedBox(height: NxSpacing.s4),
             NxButton(
-              label: 'Send reset link',
+              label: l10n.sendResetLink,
               expand: true,
               loading: state.isLoading,
               onPressed: _submit,
             ),
             TextButton(
               onPressed: () => context.push(RouteNames.authResetPassword),
-              child: const Text('Already have a reset token?'),
+              child: Text(l10n.alreadyHaveResetToken),
             ),
           ],
         ),

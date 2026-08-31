@@ -18,8 +18,8 @@ class PrivacySettingsScreen extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.shield_outlined),
-            title: const Text('Privacy controls'),
-            subtitle: const Text('Marketing, analytics, and personalization'),
+            title: Text(l10n.privacyControls),
+            subtitle: Text(l10n.privacySubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(RouteNames.settingsPrivacyControls),
           ),
@@ -38,7 +38,7 @@ class PrivacySettingsScreen extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.cookie_outlined),
-            title: const Text('Cookie policy'),
+            title: Text(l10n.cookiePolicy),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/legal/cookies'),
           ),

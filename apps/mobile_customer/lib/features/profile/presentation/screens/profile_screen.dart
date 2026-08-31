@@ -9,6 +9,7 @@ import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../providers/profile_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -121,7 +122,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           );
         },
-        error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(userProfileProvider)),
+        error: (e, _) => ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(userProfileProvider)),
       ),
     );
   }

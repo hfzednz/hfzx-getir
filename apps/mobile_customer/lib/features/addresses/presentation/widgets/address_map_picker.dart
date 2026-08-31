@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:nexora_design/nexora_design.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Full-screen-ish sheet to pick a delivery pin on the map.
 class AddressMapPicker extends StatefulWidget {
   const AddressMapPicker({
@@ -29,6 +31,7 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.nxColors;
     return Column(
       children: [
@@ -38,7 +41,7 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
             children: [
               Expanded(
                 child: Text(
-                  'Pin your address',
+                  l10n.pinYourAddress,
                   style: NxTypography.headlineSm.copyWith(
                     color: colors.textPrimary,
                   ),
@@ -90,7 +93,7 @@ class _AddressMapPickerState extends State<AddressMapPicker> {
         Padding(
           padding: const EdgeInsets.all(NxSpacing.s4),
           child: NxButton(
-            label: 'Use this location',
+            label: l10n.useThisLocation,
             expand: true,
             onPressed: () => widget.onConfirm(_center),
           ),

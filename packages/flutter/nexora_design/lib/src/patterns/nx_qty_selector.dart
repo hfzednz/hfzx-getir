@@ -18,6 +18,8 @@ class NxQtySelector extends StatelessWidget {
     this.max = 99,
     this.size = NxQtySelectorSize.md,
     this.semanticLabel,
+    this.increaseSemanticLabel,
+    this.decreaseSemanticLabel,
   });
 
   final int quantity;
@@ -27,6 +29,8 @@ class NxQtySelector extends StatelessWidget {
   final int max;
   final NxQtySelectorSize size;
   final String? semanticLabel;
+  final String? increaseSemanticLabel;
+  final String? decreaseSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +53,7 @@ class NxQtySelector extends StatelessWidget {
               icon: const Icon(Icons.remove),
               size: buttonSize,
               onPressed: quantity <= min ? null : onDecrement,
-              semanticLabel: 'Decrease quantity',
+              semanticLabel: decreaseSemanticLabel ?? 'Decrease quantity',
               disabled: quantity <= min,
             ),
             SizedBox(
@@ -64,7 +68,7 @@ class NxQtySelector extends StatelessWidget {
               icon: const Icon(Icons.add),
               size: buttonSize,
               onPressed: quantity >= max ? null : onIncrement,
-              semanticLabel: 'Increase quantity',
+              semanticLabel: increaseSemanticLabel ?? 'Increase quantity',
               disabled: quantity >= max,
             ),
           ],

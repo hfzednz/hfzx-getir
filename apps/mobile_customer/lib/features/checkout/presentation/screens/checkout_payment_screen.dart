@@ -8,6 +8,7 @@ import '../../../../routing/route_names.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../providers/checkout_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class CheckoutPaymentScreen extends ConsumerStatefulWidget {
   const CheckoutPaymentScreen({super.key});
@@ -174,7 +175,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                   error: (e, _) => Padding(
                     padding: const EdgeInsets.only(bottom: NxSpacing.s3),
                     child: ErrorView(
-                      message: e.toString(),
+                      message: localizedCustomerError(context, e),
                       onRetry: () =>
                           ref.invalidate(paymentMethodsListProvider),
                     ),
@@ -217,7 +218,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                     type: 'wallet',
                   ),
                   title: l10n.walletTitle,
-                  subtitle: 'Pay from your NEXORA wallet balance',
+                  subtitle: l10n.walletPayHint,
                   icon: Icons.account_balance_wallet_outlined,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
@@ -228,7 +229,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                 ),
                 const SizedBox(height: NxSpacing.s3),
                 NxField(
-                  label: 'Wallet amount (optional)',
+                  label: l10n.walletAmountOptional,
                   controller: _walletAmountController,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
@@ -242,7 +243,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                     type: 'cash',
                   ),
                   title: l10n.cashOnDelivery,
-                  subtitle: 'Pay the courier when your order arrives',
+                  subtitle: l10n.cashPayHint,
                   icon: Icons.payments_outlined,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
@@ -255,8 +256,8 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                     paymentMethodId: checkout.paymentMethodId,
                     type: 'gift_card',
                   ),
-                  title: 'Gift card',
-                  subtitle: 'Redeem a gift card balance',
+                  title: l10n.giftCard,
+                  subtitle: l10n.giftCardRedeemHint,
                   icon: Icons.card_giftcard_outlined,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
@@ -268,7 +269,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                 if (checkout.paymentType == 'gift_card') ...[
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Gift card code',
+                    label: l10n.giftCardCode,
                     controller: _giftCardController,
                     onChanged: (value) => ref
                         .read(checkoutControllerProvider.notifier)
@@ -278,8 +279,10 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                 if (checkout.lastPaymentSessionId != null) ...[
                   const SizedBox(height: NxSpacing.s5),
                   Text(
-                    checkout.errorMessage ??
-                        'Previous payment failed. You can retry.',
+                    localizedCustomerError(
+                      context,
+                      checkout.errorMessage ?? l10n.previousPaymentFailed,
+                    ),
                     style: NxTypography.bodySm.copyWith(color: colors.danger),
                   ),
                   const SizedBox(height: NxSpacing.s3),

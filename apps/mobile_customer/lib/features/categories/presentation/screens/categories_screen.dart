@@ -9,6 +9,7 @@ import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/categories_entity.dart';
 import '../providers/categories_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key, this.id});
@@ -47,7 +48,7 @@ class CategoriesScreen extends ConsumerWidget {
           );
         },
         error: (e, _) => ErrorView(
-          message: e.toString(),
+          message: localizedCustomerError(context, e),
           onRetry: () => ref.invalidate(categoriesListProvider),
         ),
       ),

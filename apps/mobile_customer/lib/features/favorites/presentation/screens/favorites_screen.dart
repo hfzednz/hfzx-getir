@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_design/nexora_design.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/errors/error_copy.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
+import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/favorites_entity.dart';
 import '../providers/favorites_providers.dart';
 
@@ -27,10 +29,10 @@ class FavoritesScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(NxSpacing.s4),
             child: Row(
               children: [
-                _FilterChip(label: 'All', selected: filter == null, onTap: () => ref.read(favoriteTypeFilterProvider.notifier).state = null),
+                _FilterChip(label: l10n.allFilter, selected: filter == null, onTap: () => ref.read(favoriteTypeFilterProvider.notifier).state = null),
                 ...FavoriteType.values.map(
                   (t) => _FilterChip(
-                    label: t.name,
+                    label: _favoriteTypeLabel(l10n, t),
                     selected: filter == t,
                     onTap: () => ref.read(favoriteTypeFilterProvider.notifier).state = t,
                   ),
@@ -64,7 +66,7 @@ class FavoritesScreen extends ConsumerWidget {
                               ? Image.network(item.imageUrl!, width: 48, height: 48, fit: BoxFit.cover)
                               : Icon(_iconForType(item.type)),
                           title: Text(item.title.isNotEmpty ? item.title : item.targetId),
-                          subtitle: Text('${item.type.name}${item.subtitle.isNotEmpty ? ' · ${item.subtitle}' : ''}'),
+                          subtitle: Text('${_favoriteTypeLabel(l10n, item.type)}${item.subtitle.isNotEmpty ? ' · ${item.subtitle}' : ''}'),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete_outline),
                             onPressed: () => ref.read(favoritesRepositoryProvider).remove(item.id),
@@ -75,7 +77,10 @@ class FavoritesScreen extends ConsumerWidget {
                   ),
                 );
               },
-              error: (e, _) => Center(child: Text(e.toString())),
+              error: (e, _) => ErrorView(
+                message: localizedCustomerError(context, e),
+                onRetry: () => ref.invalidate(favoritesSyncProvider),
+              ),
             ),
           ),
         ],
@@ -91,6 +96,14 @@ class FavoritesScreen extends ConsumerWidget {
         FavoriteType.store => Icons.store_outlined,
       };
 }
+
+String _favoriteTypeLabel(AppLocalizations l10n, FavoriteType type) => switch (type) {
+      FavoriteType.product => l10n.favoriteProduct,
+      FavoriteType.brand => l10n.favoriteBrand,
+      FavoriteType.category => l10n.favoriteCategory,
+      FavoriteType.search => l10n.favoriteSearch,
+      FavoriteType.store => l10n.favoriteStore,
+    };
 
 class _FilterChip extends StatelessWidget {
   const _FilterChip({required this.label, required this.selected, required this.onTap});

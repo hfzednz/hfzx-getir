@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../providers/city_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class CityScreen extends ConsumerWidget {
   const CityScreen({super.key, this.id});
@@ -60,7 +61,7 @@ class CityScreen extends ConsumerWidget {
           );
         },
         error: (e, _) => ErrorView(
-          message: e.toString(),
+          message: localizedCustomerError(context, e),
           onRetry: () => ref.invalidate(cityListProvider),
         ),
       ),

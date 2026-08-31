@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_design/nexora_design.dart';
 
 import '../../../../di/providers.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class AccessibilitySettingsScreen extends ConsumerStatefulWidget {
   const AccessibilitySettingsScreen({super.key});
@@ -42,30 +43,30 @@ class _AccessibilitySettingsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final textScaler = MediaQuery.textScalerOf(context);
 
     return Scaffold(
-      appBar: const NxTopBar(title: 'Accessibility'),
+      appBar: NxTopBar(title: l10n.accessibility),
       body: ListView(
         children: [
           SwitchListTile(
-            title: const Text('High contrast'),
-            subtitle: const Text('Increase contrast for text and controls'),
+            title: Text(l10n.highContrast),
+            subtitle: Text(l10n.highContrastHint),
             value: _highContrastValue,
             onChanged: _setHighContrast,
           ),
           SwitchListTile(
-            title: const Text('Reduce motion'),
-            subtitle: const Text('Prefer less animation where supported'),
+            title: Text(l10n.reduceMotion),
+            subtitle: Text(l10n.reduceMotionHint),
             value: _reducedMotionValue,
             onChanged: _setReducedMotion,
           ),
           ListTile(
-            title: const Text('Text size'),
+            title: Text(l10n.textSize),
             subtitle: Text(
-              'Follows your device text scale '
-              '(${textScaler.scale(1.0).toStringAsFixed(2)}×). '
-              'Change it in system accessibility settings.',
+              '${l10n.textSizeFollowsDevice} '
+              '(${textScaler.scale(1.0).toStringAsFixed(2)}×)',
             ),
           ),
         ],

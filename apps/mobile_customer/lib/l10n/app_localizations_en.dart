@@ -565,4 +565,535 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackingCompleted => 'Delivered';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get giftCardCode => 'Gift card code';
+
+  @override
+  String get walletAmount => 'Wallet amount (₺)';
+
+  @override
+  String get loyaltyRedeem => 'Loyalty points to redeem';
+
+  @override
+  String get redeem => 'Redeem';
+
+  @override
+  String get tax => 'Tax';
+
+  @override
+  String get discount => 'Discount';
+
+  @override
+  String get couponsAndPayments => 'Coupons and payments';
+
+  @override
+  String get promotions => 'Promotions';
+
+  @override
+  String get couponApplied => 'Coupon applied';
+
+  @override
+  String get couponInvalid => 'This coupon is not valid';
+
+  @override
+  String get validateInventory => 'Check availability';
+
+  @override
+  String get highContrastHint => 'Increase contrast for text and controls';
+
+  @override
+  String get reduceMotionHint => 'Prefer less animation where supported';
+
+  @override
+  String get textSizeFollowsDevice =>
+      'Follows your device text size. Change it in system accessibility settings.';
+
+  @override
+  String get savePreferences => 'Save preferences';
+
+  @override
+  String get preferencesSaved => 'Preferences saved';
+
+  @override
+  String get notificationPreferences => 'Notification preferences';
+
+  @override
+  String get pushNotifications => 'Push notifications';
+
+  @override
+  String get emailNotifications => 'Email notifications';
+
+  @override
+  String get orderUpdates => 'Order updates';
+
+  @override
+  String get transactional => 'Order and payment messages';
+
+  @override
+  String get deliveryAlerts => 'Delivery alerts';
+
+  @override
+  String get promotionsPref => 'Promotions';
+
+  @override
+  String get priceDrops => 'Price drops';
+
+  @override
+  String get backInStock => 'Back in stock';
+
+  @override
+  String get trustedDevices => 'Trusted devices';
+
+  @override
+  String get trustedDevicesHint => 'Review and sign out devices';
+
+  @override
+  String get biometricHint => 'Unlock the app with your face or fingerprint';
+
+  @override
+  String get privacySubtitle => 'Marketing, analytics, and personalization';
+
+  @override
+  String get cookiePolicy => 'Cookie policy';
+
+  @override
+  String get marketingEmail => 'Marketing email';
+
+  @override
+  String get smsMarketing => 'SMS marketing';
+
+  @override
+  String get personalization => 'Personalization';
+
+  @override
+  String get optOutAnalytics => 'Opt out of analytics';
+
+  @override
+  String get shareWithPartners => 'Share with partners';
+
+  @override
+  String get comment => 'Comment';
+
+  @override
+  String get addPhotos => 'Add photos';
+
+  @override
+  String get submitReview => 'Submit review';
+
+  @override
+  String get inviteCode => 'Invite code';
+
+  @override
+  String get claimInvite => 'Claim invite';
+
+  @override
+  String get stackable => 'Can be combined with other offers';
+
+  @override
+  String get applyFilters => 'Apply filters';
+
+  @override
+  String get brandsComma => 'Brands (comma-separated)';
+
+  @override
+  String get sort => 'Sort';
+
+  @override
+  String get availabilityFilter => 'Availability';
+
+  @override
+  String get chooseFromGallery => 'Choose from gallery';
+
+  @override
+  String get takePhoto => 'Take a photo';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get openLiveChat => 'Open live chat';
+
+  @override
+  String get ticketTitle => 'Ticket';
+
+  @override
+  String get allFilter => 'All';
+
+  @override
+  String get topUpWallet => 'Top up wallet';
+
+  @override
+  String get amountTry => 'Amount (₺)';
+
+  @override
+  String get topUp => 'Top up';
+
+  @override
+  String get transactionHistory => 'Transaction history';
+
+  @override
+  String get availableBalance => 'Available balance';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get verificationCode => 'Verification code';
+
+  @override
+  String get verifyEmail => 'Verify email';
+
+  @override
+  String get skipForNow => 'Skip for now';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get sendResetLink => 'Send reset link';
+
+  @override
+  String get alreadyHaveResetToken => 'Already have a reset token?';
+
+  @override
+  String get resetToken => 'Reset token';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmPassword => 'Confirm password';
+
+  @override
+  String get updatePassword => 'Update password';
+
+  @override
+  String get requestDataExport => 'Request data export';
+
+  @override
+  String get reasonOptional => 'Reason (optional)';
+
+  @override
+  String get cannotBeUndone => 'I understand this cannot be undone';
+
+  @override
+  String get useThisLocation => 'Use this location';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get increaseQuantity => 'Increase quantity';
+
+  @override
+  String get decreaseQuantity => 'Decrease quantity';
+
+  @override
+  String quantityLabel(int count) {
+    return 'Quantity $count';
+  }
+
+  @override
+  String get walletAmountOptional => 'Wallet amount (optional)';
+
+  @override
+  String get giftCard => 'Gift card';
+
+  @override
+  String get nameLabel => 'Name';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get openSourceLicenses => 'Open source licenses';
+
+  @override
+  String get companyName => 'Company name';
+
+  @override
+  String get taxId => 'Tax ID';
+
+  @override
+  String get taxOffice => 'Tax office';
+
+  @override
+  String get giftMessage => 'Gift message';
+
+  @override
+  String get supportAssistant => 'Support assistant';
+
+  @override
+  String get favoriteProduct => 'Products';
+
+  @override
+  String get favoriteStore => 'Stores';
+
+  @override
+  String get favoriteBrand => 'Brands';
+
+  @override
+  String get favoriteCategory => 'Categories';
+
+  @override
+  String get favoriteSearch => 'Searches';
+
+  @override
+  String get estimate => 'Estimate';
+
+  @override
+  String get couponLabel => 'Coupon';
+
+  @override
+  String get smartReorder => 'Smart reorder';
+
+  @override
+  String get budgetOptimize => 'Optimize budget';
+
+  @override
+  String get fixCartBeforeCheckout => 'Fix cart issues before checkout';
+
+  @override
+  String get walletApplied => 'Wallet applied';
+
+  @override
+  String get loyaltyPointsApplied => 'Loyalty points applied';
+
+  @override
+  String get itemUnavailableTitle => 'If an item is unavailable';
+
+  @override
+  String get substitutionPreference => 'Substitution preference';
+
+  @override
+  String get allowSubstitutions => 'Allow substitutions';
+
+  @override
+  String get allowSubstitutionsHint =>
+      'Replace with a similar item automatically';
+
+  @override
+  String get contactMe => 'Contact me';
+
+  @override
+  String get contactMeHint => 'Call before replacing anything';
+
+  @override
+  String get doNotSubstitute => 'Do not substitute';
+
+  @override
+  String get doNotSubstituteHint => 'Skip or refund unavailable items';
+
+  @override
+  String get outOfStockRule => 'Out of stock rule';
+
+  @override
+  String get replaceWithSimilar => 'Replace with similar';
+
+  @override
+  String get replaceWithSimilarHint => 'Find a close match when possible';
+
+  @override
+  String get refundItem => 'Refund item';
+
+  @override
+  String get refundItemHint => 'Remove the item and refund its price';
+
+  @override
+  String get cancelIfMissing => 'Cancel the whole order if anything is missing';
+
+  @override
+  String get allergens => 'Allergens';
+
+  @override
+  String get privacySettingsSaved => 'Privacy settings saved';
+
+  @override
+  String get giftCardApplied => 'Gift card applied';
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get enterVerificationCode => 'Enter the verification code';
+
+  @override
+  String get emailVerified => 'Email verified';
+
+  @override
+  String get enterCodeFromEmail =>
+      'Enter the verification code from your email.';
+
+  @override
+  String enterCodeSentTo(String email) {
+    return 'Enter the code we sent to $email.';
+  }
+
+  @override
+  String get forgotPasswordHint =>
+      'Enter your email and we will send you a reset link.';
+
+  @override
+  String get passwordResetEmailSent => 'Password reset email sent';
+
+  @override
+  String get failedToSendResetEmail =>
+      'Could not send a reset email. Please try again.';
+
+  @override
+  String get deleteAccountPermanent =>
+      'This action is permanent. Your orders and personal data will be scheduled for deletion.';
+
+  @override
+  String get confirmAccountDeletion => 'Please confirm account deletion';
+
+  @override
+  String get failedToDeleteAccount =>
+      'Could not delete the account. Please try again.';
+
+  @override
+  String get dataExportRequested => 'Data export requested';
+
+  @override
+  String get failedToRequestExport =>
+      'Could not request a data export. Please try again.';
+
+  @override
+  String get openReviewFromOrder =>
+      'Open this screen from an order to submit a review';
+
+  @override
+  String get rateYourOrder => 'Rate your order';
+
+  @override
+  String get rateCourier => 'Rate courier';
+
+  @override
+  String get frequentlyAskedQuestions => 'Frequently asked questions';
+
+  @override
+  String get helpFaqPlaceQ => 'How do I place an order?';
+
+  @override
+  String get helpFaqPlaceA =>
+      'Browse categories or search for products, add items to your cart, then checkout with a delivery address and payment method.';
+
+  @override
+  String get helpFaqEtaQ => 'What are delivery times?';
+
+  @override
+  String get helpFaqEtaA =>
+      'ETA is shown on product and checkout screens based on your city and selected address. Most orders arrive within the estimated window.';
+
+  @override
+  String get helpFaqTrackQ => 'How do I track my order?';
+
+  @override
+  String get helpFaqTrackA =>
+      'Open Orders from your account, select the order, then tap Track. You will see live status updates until delivery.';
+
+  @override
+  String get helpFaqRefundQ => 'How do refunds work?';
+
+  @override
+  String get helpFaqRefundA =>
+      'If an item is missing or damaged, open the order and contact Support. Approved refunds return to your original payment method or wallet.';
+
+  @override
+  String get helpFaqScheduleQ => 'Can I schedule a delivery?';
+
+  @override
+  String get helpFaqScheduleA =>
+      'Yes. During checkout choose Schedule delivery and pick an available slot for your address.';
+
+  @override
+  String get helpFaqCouponQ => 'How do coupons and loyalty points work?';
+
+  @override
+  String get helpFaqCouponA =>
+      'Apply a coupon on checkout. Loyalty points accumulate on eligible orders and can be redeemed where shown in your wallet or loyalty screen.';
+
+  @override
+  String get contactBeforeSubstituting => 'Contact before substituting';
+
+  @override
+  String get pinYourAddress => 'Pin your address';
+
+  @override
+  String get rateProducts => 'Rate products';
+
+  @override
+  String get verifiedPurchase => 'Verified purchase';
+
+  @override
+  String get resetPassword => 'Reset password';
+
+  @override
+  String get resetTokenRequired => 'Reset token is required';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get passwordUpdated => 'Password updated';
+
+  @override
+  String get failedToResetPassword =>
+      'Could not reset the password. Please try again.';
+
+  @override
+  String get anyAvailability => 'Any';
+
+  @override
+  String get lowStock => 'Low stock';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account? Sign in';
+
+  @override
+  String get needAnAccount => 'Need an account? Register';
+
+  @override
+  String get cashback => 'Cashback';
+
+  @override
+  String get promoCredit => 'Promo';
+
+  @override
+  String get walletPayHint => 'Pay from your wallet balance';
+
+  @override
+  String get cashPayHint => 'Pay the courier when your order arrives';
+
+  @override
+  String get giftCardRedeemHint => 'Redeem a gift card balance';
+
+  @override
+  String get previousPaymentFailed => 'Previous payment failed. You can retry.';
+
+  @override
+  String get reviewYourOrder => 'Review your order';
+
+  @override
+  String get contactlessHint => 'Leave at the door — no handoff needed.';
+
+  @override
+  String get giftOrderHint => 'Hide prices on the receipt for the recipient.';
+
+  @override
+  String get companyInvoice => 'Company invoice';
+
+  @override
+  String get companyInvoiceHint =>
+      'Request a corporate invoice for this order.';
 }

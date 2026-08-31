@@ -27,7 +27,7 @@ class _PrivacyControlsScreenState extends ConsumerState<PrivacyControlsScreen> {
     if (ok) {
       ref.invalidate(privacyControlsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Privacy settings saved')),
+        SnackBar(content: Text(AppLocalizations.of(context).privacySettingsSaved)),
       );
     }
   }
@@ -61,38 +61,38 @@ class _PrivacyControlsScreenState extends ConsumerState<PrivacyControlsScreen> {
             padding: const EdgeInsets.all(NxSpacing.s4),
             children: [
               SwitchListTile(
-                title: const Text('Marketing email'),
+                title: Text(l10n.marketingEmail),
                 value: draft.marketingEmail,
                 onChanged: (v) =>
                     setState(() => _draft = draft.copyWith(marketingEmail: v)),
               ),
               SwitchListTile(
-                title: const Text('Push notifications'),
+                title: Text(l10n.pushNotifications),
                 value: draft.marketingPush,
                 onChanged: (v) =>
                     setState(() => _draft = draft.copyWith(marketingPush: v)),
               ),
               SwitchListTile(
-                title: const Text('SMS marketing'),
+                title: Text(l10n.smsMarketing),
                 value: draft.marketingSms,
                 onChanged: (v) =>
                     setState(() => _draft = draft.copyWith(marketingSms: v)),
               ),
               SwitchListTile(
-                title: const Text('Personalization'),
+                title: Text(l10n.personalization),
                 value: draft.personalization,
                 onChanged: (v) =>
                     setState(() => _draft = draft.copyWith(personalization: v)),
               ),
               SwitchListTile(
-                title: const Text('Opt out of analytics'),
+                title: Text(l10n.optOutAnalytics),
                 value: draft.analyticsOptOut,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(analyticsOptOut: v),
                 ),
               ),
               SwitchListTile(
-                title: const Text('Share with partners'),
+                title: Text(l10n.shareWithPartners),
                 value: draft.shareWithPartners,
                 onChanged: (v) => setState(
                   () => _draft = draft.copyWith(shareWithPartners: v),
@@ -100,7 +100,7 @@ class _PrivacyControlsScreenState extends ConsumerState<PrivacyControlsScreen> {
               ),
               const SizedBox(height: NxSpacing.s4),
               NxButton(
-                label: l10n.continueLabel,
+                label: l10n.save,
                 expand: true,
                 loading: lifecycle.isLoading,
                 onPressed: _save,

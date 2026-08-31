@@ -1195,6 +1195,1026 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delivered'**
   String get trackingCompleted;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @giftCardCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift card code'**
+  String get giftCardCode;
+
+  /// No description provided for @walletAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet amount (₺)'**
+  String get walletAmount;
+
+  /// No description provided for @loyaltyRedeem.
+  ///
+  /// In en, this message translates to:
+  /// **'Loyalty points to redeem'**
+  String get loyaltyRedeem;
+
+  /// No description provided for @redeem.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem'**
+  String get redeem;
+
+  /// No description provided for @tax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get tax;
+
+  /// No description provided for @discount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get discount;
+
+  /// No description provided for @couponsAndPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupons and payments'**
+  String get couponsAndPayments;
+
+  /// No description provided for @promotions.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotions'**
+  String get promotions;
+
+  /// No description provided for @couponApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon applied'**
+  String get couponApplied;
+
+  /// No description provided for @couponInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This coupon is not valid'**
+  String get couponInvalid;
+
+  /// No description provided for @validateInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Check availability'**
+  String get validateInventory;
+
+  /// No description provided for @highContrastHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase contrast for text and controls'**
+  String get highContrastHint;
+
+  /// No description provided for @reduceMotionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer less animation where supported'**
+  String get reduceMotionHint;
+
+  /// No description provided for @textSizeFollowsDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your device text size. Change it in system accessibility settings.'**
+  String get textSizeFollowsDevice;
+
+  /// No description provided for @savePreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Save preferences'**
+  String get savePreferences;
+
+  /// No description provided for @preferencesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences saved'**
+  String get preferencesSaved;
+
+  /// No description provided for @notificationPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences'**
+  String get notificationPreferences;
+
+  /// No description provided for @pushNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get pushNotifications;
+
+  /// No description provided for @emailNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Email notifications'**
+  String get emailNotifications;
+
+  /// No description provided for @orderUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Order updates'**
+  String get orderUpdates;
+
+  /// No description provided for @transactional.
+  ///
+  /// In en, this message translates to:
+  /// **'Order and payment messages'**
+  String get transactional;
+
+  /// No description provided for @deliveryAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery alerts'**
+  String get deliveryAlerts;
+
+  /// No description provided for @promotionsPref.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotions'**
+  String get promotionsPref;
+
+  /// No description provided for @priceDrops.
+  ///
+  /// In en, this message translates to:
+  /// **'Price drops'**
+  String get priceDrops;
+
+  /// No description provided for @backInStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Back in stock'**
+  String get backInStock;
+
+  /// No description provided for @trustedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted devices'**
+  String get trustedDevices;
+
+  /// No description provided for @trustedDevicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and sign out devices'**
+  String get trustedDevicesHint;
+
+  /// No description provided for @biometricHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the app with your face or fingerprint'**
+  String get biometricHint;
+
+  /// No description provided for @privacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing, analytics, and personalization'**
+  String get privacySubtitle;
+
+  /// No description provided for @cookiePolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Cookie policy'**
+  String get cookiePolicy;
+
+  /// No description provided for @marketingEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing email'**
+  String get marketingEmail;
+
+  /// No description provided for @smsMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS marketing'**
+  String get smsMarketing;
+
+  /// No description provided for @personalization.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalization'**
+  String get personalization;
+
+  /// No description provided for @optOutAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Opt out of analytics'**
+  String get optOutAnalytics;
+
+  /// No description provided for @shareWithPartners.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with partners'**
+  String get shareWithPartners;
+
+  /// No description provided for @comment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get comment;
+
+  /// No description provided for @addPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photos'**
+  String get addPhotos;
+
+  /// No description provided for @submitReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit review'**
+  String get submitReview;
+
+  /// No description provided for @inviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get inviteCode;
+
+  /// No description provided for @claimInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim invite'**
+  String get claimInvite;
+
+  /// No description provided for @stackable.
+  ///
+  /// In en, this message translates to:
+  /// **'Can be combined with other offers'**
+  String get stackable;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get applyFilters;
+
+  /// No description provided for @brandsComma.
+  ///
+  /// In en, this message translates to:
+  /// **'Brands (comma-separated)'**
+  String get brandsComma;
+
+  /// No description provided for @sort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sort;
+
+  /// No description provided for @availabilityFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability'**
+  String get availabilityFilter;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get takePhoto;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @openLiveChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open live chat'**
+  String get openLiveChat;
+
+  /// No description provided for @ticketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket'**
+  String get ticketTitle;
+
+  /// No description provided for @allFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allFilter;
+
+  /// No description provided for @topUpWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Top up wallet'**
+  String get topUpWallet;
+
+  /// No description provided for @amountTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (₺)'**
+  String get amountTry;
+
+  /// No description provided for @topUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Top up'**
+  String get topUp;
+
+  /// No description provided for @transactionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction history'**
+  String get transactionHistory;
+
+  /// No description provided for @availableBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Available balance'**
+  String get availableBalance;
+
+  /// No description provided for @pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pending;
+
+  /// No description provided for @verificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code'**
+  String get verificationCode;
+
+  /// No description provided for @verifyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify email'**
+  String get verifyEmail;
+
+  /// No description provided for @skipForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get skipForNow;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get sendResetLink;
+
+  /// No description provided for @alreadyHaveResetToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have a reset token?'**
+  String get alreadyHaveResetToken;
+
+  /// No description provided for @resetToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset token'**
+  String get resetToken;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPassword;
+
+  /// No description provided for @updatePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Update password'**
+  String get updatePassword;
+
+  /// No description provided for @requestDataExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Request data export'**
+  String get requestDataExport;
+
+  /// No description provided for @reasonOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get reasonOptional;
+
+  /// No description provided for @cannotBeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand this cannot be undone'**
+  String get cannotBeUndone;
+
+  /// No description provided for @useThisLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this location'**
+  String get useThisLocation;
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// No description provided for @increaseQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase quantity'**
+  String get increaseQuantity;
+
+  /// No description provided for @decreaseQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease quantity'**
+  String get decreaseQuantity;
+
+  /// No description provided for @quantityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity {count}'**
+  String quantityLabel(int count);
+
+  /// No description provided for @walletAmountOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet amount (optional)'**
+  String get walletAmountOptional;
+
+  /// No description provided for @giftCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift card'**
+  String get giftCard;
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get nameLabel;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// No description provided for @openSourceLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source licenses'**
+  String get openSourceLicenses;
+
+  /// No description provided for @companyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name'**
+  String get companyName;
+
+  /// No description provided for @taxId.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax ID'**
+  String get taxId;
+
+  /// No description provided for @taxOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax office'**
+  String get taxOffice;
+
+  /// No description provided for @giftMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift message'**
+  String get giftMessage;
+
+  /// No description provided for @supportAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Support assistant'**
+  String get supportAssistant;
+
+  /// No description provided for @favoriteProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get favoriteProduct;
+
+  /// No description provided for @favoriteStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Stores'**
+  String get favoriteStore;
+
+  /// No description provided for @favoriteBrand.
+  ///
+  /// In en, this message translates to:
+  /// **'Brands'**
+  String get favoriteBrand;
+
+  /// No description provided for @favoriteCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get favoriteCategory;
+
+  /// No description provided for @favoriteSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Searches'**
+  String get favoriteSearch;
+
+  /// No description provided for @estimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate'**
+  String get estimate;
+
+  /// No description provided for @couponLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon'**
+  String get couponLabel;
+
+  /// No description provided for @smartReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart reorder'**
+  String get smartReorder;
+
+  /// No description provided for @budgetOptimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Optimize budget'**
+  String get budgetOptimize;
+
+  /// No description provided for @fixCartBeforeCheckout.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix cart issues before checkout'**
+  String get fixCartBeforeCheckout;
+
+  /// No description provided for @walletApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet applied'**
+  String get walletApplied;
+
+  /// No description provided for @loyaltyPointsApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Loyalty points applied'**
+  String get loyaltyPointsApplied;
+
+  /// No description provided for @itemUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If an item is unavailable'**
+  String get itemUnavailableTitle;
+
+  /// No description provided for @substitutionPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Substitution preference'**
+  String get substitutionPreference;
+
+  /// No description provided for @allowSubstitutions.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow substitutions'**
+  String get allowSubstitutions;
+
+  /// No description provided for @allowSubstitutionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with a similar item automatically'**
+  String get allowSubstitutionsHint;
+
+  /// No description provided for @contactMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact me'**
+  String get contactMe;
+
+  /// No description provided for @contactMeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Call before replacing anything'**
+  String get contactMeHint;
+
+  /// No description provided for @doNotSubstitute.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not substitute'**
+  String get doNotSubstitute;
+
+  /// No description provided for @doNotSubstituteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip or refund unavailable items'**
+  String get doNotSubstituteHint;
+
+  /// No description provided for @outOfStockRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock rule'**
+  String get outOfStockRule;
+
+  /// No description provided for @replaceWithSimilar.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with similar'**
+  String get replaceWithSimilar;
+
+  /// No description provided for @replaceWithSimilarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a close match when possible'**
+  String get replaceWithSimilarHint;
+
+  /// No description provided for @refundItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund item'**
+  String get refundItem;
+
+  /// No description provided for @refundItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the item and refund its price'**
+  String get refundItemHint;
+
+  /// No description provided for @cancelIfMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel the whole order if anything is missing'**
+  String get cancelIfMissing;
+
+  /// No description provided for @allergens.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergens'**
+  String get allergens;
+
+  /// No description provided for @privacySettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy settings saved'**
+  String get privacySettingsSaved;
+
+  /// No description provided for @giftCardApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift card applied'**
+  String get giftCardApplied;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccount;
+
+  /// No description provided for @enterVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the verification code'**
+  String get enterVerificationCode;
+
+  /// No description provided for @emailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified'**
+  String get emailVerified;
+
+  /// No description provided for @enterCodeFromEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the verification code from your email.'**
+  String get enterCodeFromEmail;
+
+  /// No description provided for @enterCodeSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code we sent to {email}.'**
+  String enterCodeSentTo(String email);
+
+  /// No description provided for @forgotPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we will send you a reset link.'**
+  String get forgotPasswordHint;
+
+  /// No description provided for @passwordResetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent'**
+  String get passwordResetEmailSent;
+
+  /// No description provided for @failedToSendResetEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send a reset email. Please try again.'**
+  String get failedToSendResetEmail;
+
+  /// No description provided for @deleteAccountPermanent.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is permanent. Your orders and personal data will be scheduled for deletion.'**
+  String get deleteAccountPermanent;
+
+  /// No description provided for @confirmAccountDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm account deletion'**
+  String get confirmAccountDeletion;
+
+  /// No description provided for @failedToDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Please try again.'**
+  String get failedToDeleteAccount;
+
+  /// No description provided for @dataExportRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Data export requested'**
+  String get dataExportRequested;
+
+  /// No description provided for @failedToRequestExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not request a data export. Please try again.'**
+  String get failedToRequestExport;
+
+  /// No description provided for @openReviewFromOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open this screen from an order to submit a review'**
+  String get openReviewFromOrder;
+
+  /// No description provided for @rateYourOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate your order'**
+  String get rateYourOrder;
+
+  /// No description provided for @rateCourier.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate courier'**
+  String get rateCourier;
+
+  /// No description provided for @frequentlyAskedQuestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently asked questions'**
+  String get frequentlyAskedQuestions;
+
+  /// No description provided for @helpFaqPlaceQ.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I place an order?'**
+  String get helpFaqPlaceQ;
+
+  /// No description provided for @helpFaqPlaceA.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse categories or search for products, add items to your cart, then checkout with a delivery address and payment method.'**
+  String get helpFaqPlaceA;
+
+  /// No description provided for @helpFaqEtaQ.
+  ///
+  /// In en, this message translates to:
+  /// **'What are delivery times?'**
+  String get helpFaqEtaQ;
+
+  /// No description provided for @helpFaqEtaA.
+  ///
+  /// In en, this message translates to:
+  /// **'ETA is shown on product and checkout screens based on your city and selected address. Most orders arrive within the estimated window.'**
+  String get helpFaqEtaA;
+
+  /// No description provided for @helpFaqTrackQ.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I track my order?'**
+  String get helpFaqTrackQ;
+
+  /// No description provided for @helpFaqTrackA.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Orders from your account, select the order, then tap Track. You will see live status updates until delivery.'**
+  String get helpFaqTrackA;
+
+  /// No description provided for @helpFaqRefundQ.
+  ///
+  /// In en, this message translates to:
+  /// **'How do refunds work?'**
+  String get helpFaqRefundQ;
+
+  /// No description provided for @helpFaqRefundA.
+  ///
+  /// In en, this message translates to:
+  /// **'If an item is missing or damaged, open the order and contact Support. Approved refunds return to your original payment method or wallet.'**
+  String get helpFaqRefundA;
+
+  /// No description provided for @helpFaqScheduleQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I schedule a delivery?'**
+  String get helpFaqScheduleQ;
+
+  /// No description provided for @helpFaqScheduleA.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. During checkout choose Schedule delivery and pick an available slot for your address.'**
+  String get helpFaqScheduleA;
+
+  /// No description provided for @helpFaqCouponQ.
+  ///
+  /// In en, this message translates to:
+  /// **'How do coupons and loyalty points work?'**
+  String get helpFaqCouponQ;
+
+  /// No description provided for @helpFaqCouponA.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply a coupon on checkout. Loyalty points accumulate on eligible orders and can be redeemed where shown in your wallet or loyalty screen.'**
+  String get helpFaqCouponA;
+
+  /// No description provided for @contactBeforeSubstituting.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact before substituting'**
+  String get contactBeforeSubstituting;
+
+  /// No description provided for @pinYourAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin your address'**
+  String get pinYourAddress;
+
+  /// No description provided for @rateProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate products'**
+  String get rateProducts;
+
+  /// No description provided for @verifiedPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified purchase'**
+  String get verifiedPurchase;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get resetPassword;
+
+  /// No description provided for @resetTokenRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset token is required'**
+  String get resetTokenRequired;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @passwordUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated'**
+  String get passwordUpdated;
+
+  /// No description provided for @failedToResetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reset the password. Please try again.'**
+  String get failedToResetPassword;
+
+  /// No description provided for @anyAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get anyAvailability;
+
+  /// No description provided for @lowStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get lowStock;
+
+  /// No description provided for @register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register;
+
+  /// No description provided for @alreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get alreadyHaveAccount;
+
+  /// No description provided for @needAnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Need an account? Register'**
+  String get needAnAccount;
+
+  /// No description provided for @cashback.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashback'**
+  String get cashback;
+
+  /// No description provided for @promoCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Promo'**
+  String get promoCredit;
+
+  /// No description provided for @walletPayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay from your wallet balance'**
+  String get walletPayHint;
+
+  /// No description provided for @cashPayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the courier when your order arrives'**
+  String get cashPayHint;
+
+  /// No description provided for @giftCardRedeemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem a gift card balance'**
+  String get giftCardRedeemHint;
+
+  /// No description provided for @previousPaymentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous payment failed. You can retry.'**
+  String get previousPaymentFailed;
+
+  /// No description provided for @reviewYourOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your order'**
+  String get reviewYourOrder;
+
+  /// No description provided for @contactlessHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave at the door — no handoff needed.'**
+  String get contactlessHint;
+
+  /// No description provided for @giftOrderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide prices on the receipt for the recipient.'**
+  String get giftOrderHint;
+
+  /// No description provided for @companyInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Company invoice'**
+  String get companyInvoice;
+
+  /// No description provided for @companyInvoiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a corporate invoice for this order.'**
+  String get companyInvoiceHint;
 }
 
 class _AppLocalizationsDelegate

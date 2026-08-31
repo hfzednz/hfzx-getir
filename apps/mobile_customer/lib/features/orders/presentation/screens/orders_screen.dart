@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../providers/orders_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key, this.id});
@@ -60,7 +61,7 @@ class OrdersScreen extends ConsumerWidget {
           );
         },
         error: (e, _) => ErrorView(
-          message: e.toString(),
+          message: localizedCustomerError(context, e),
           onRetry: () => ref.invalidate(ordersListProvider),
         ),
       ),

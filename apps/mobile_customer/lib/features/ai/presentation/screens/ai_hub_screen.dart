@@ -5,6 +5,7 @@ import 'package:nexora_design/nexora_design.dart';
 
 import '../../../../routing/route_names.dart';
 import '../providers/ai_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class AiHubScreen extends ConsumerStatefulWidget {
   const AiHubScreen({super.key});
@@ -68,7 +69,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               ],
             ),
             loading: () => const Center(child: NxSpinner()),
-            error: (e, _) => Text(e.toString()),
+            error: (e, _) => Text(localizedCustomerError(context, e)),
           ),
           const SizedBox(height: NxSpacing.s6),
           Text('Recipes', style: NxTypography.headlineSm),
@@ -127,7 +128,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               );
             },
             loading: () => const Center(child: NxSpinner()),
-            error: (e, _) => Text(e.toString()),
+            error: (e, _) => Text(localizedCustomerError(context, e)),
           ),
           const SizedBox(height: NxSpacing.s6),
           Text('Reorder prediction', style: NxTypography.headlineSm),
@@ -153,7 +154,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               );
             },
             loading: () => const Center(child: NxSpinner()),
-            error: (e, _) => Text(e.toString()),
+            error: (e, _) => Text(localizedCustomerError(context, e)),
           ),
           const SizedBox(height: NxSpacing.s2),
           NxButton(

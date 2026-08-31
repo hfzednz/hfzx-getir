@@ -7,6 +7,7 @@ import '../../../../di/analytics_providers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/route_names.dart';
 import '../../../../shared/analytics/analytics_events.dart';
+import '../../../../shared/errors/error_copy.dart';
 import '../../../../shared/utils/idempotency.dart';
 import '../../../../shared/utils/money.dart';
 import '../../domain/entities/checkout_entity.dart';
@@ -58,16 +59,18 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
         _ => currency,
       };
 
-  String _substitutionLabel(SubstitutionPreference pref) => switch (pref) {
-        SubstitutionPreference.allow => 'Allow substitutions',
-        SubstitutionPreference.contact => 'Contact before substituting',
-        SubstitutionPreference.reject => 'Do not substitute',
+  String _substitutionLabel(AppLocalizations l10n, SubstitutionPreference pref) =>
+      switch (pref) {
+        SubstitutionPreference.allow => l10n.allowSubstitutions,
+        SubstitutionPreference.contact => l10n.contactBeforeSubstituting,
+        SubstitutionPreference.reject => l10n.doNotSubstitute,
       };
 
-  String _oosLabel(OutOfStockReplacementRule rule) => switch (rule) {
-        OutOfStockReplacementRule.similar => 'Replace with similar',
-        OutOfStockReplacementRule.refund => 'Refund item',
-        OutOfStockReplacementRule.cancel => 'Cancel order',
+  String _oosLabel(AppLocalizations l10n, OutOfStockReplacementRule rule) =>
+      switch (rule) {
+        OutOfStockReplacementRule.similar => l10n.replaceWithSimilar,
+        OutOfStockReplacementRule.refund => l10n.refundItem,
+        OutOfStockReplacementRule.cancel => l10n.cancelOrder,
       };
 
   Future<void> _placeOrder() async {
@@ -79,7 +82,7 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
       final message = ref.read(checkoutControllerProvider).errorMessage;
       if (message != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
+          SnackBar(content: Text(localizedCustomerError(context, message))),
         );
       }
       return;
@@ -105,7 +108,7 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
       final message = ref.read(checkoutControllerProvider).errorMessage;
       if (message != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
+          SnackBar(content: Text(localizedCustomerError(context, message))),
         );
       }
       return;
@@ -137,7 +140,7 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
               padding: const EdgeInsets.all(NxSpacing.s4),
               children: [
                 Text(
-                  'Review your order',
+                  l10n.reviewYourOrder,
                   style: NxTypography.headlineSm
                       .copyWith(color: colors.textPrimary),
                 ),
@@ -236,12 +239,12 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
                 ),
                 const SizedBox(height: NxSpacing.s1),
                 Text(
-                  _substitutionLabel(checkout.substitutionPreference),
+                  _substitutionLabel(l10n, checkout.substitutionPreference),
                   style: NxTypography.bodySm
                       .copyWith(color: colors.textSecondary),
                 ),
                 Text(
-                  _oosLabel(checkout.outOfStockRule),
+                  _oosLabel(l10n, checkout.outOfStockRule),
                   style: NxTypography.bodySm
                       .copyWith(color: colors.textSecondary),
                 ),
@@ -277,7 +280,7 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
                     checkout.giftMessage!.trim().isNotEmpty) ...[
                   const SizedBox(height: NxSpacing.s3),
                   Text(
-                    'Gift message',
+                    l10n.giftMessage,
                     style:
                         NxTypography.titleSm.copyWith(color: colors.textPrimary),
                   ),
@@ -292,7 +295,7 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: NxSpacing.s3),
                     child: Text(
-                      'Installments: ${checkout.installmentCount}x',
+                      '${l10n.installments}: ${checkout.installmentCount}x',
                       style: NxTypography.bodySm
                           .copyWith(color: colors.textSecondary),
                     ),
@@ -302,7 +305,7 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: NxSpacing.s2),
                     child: Text(
-                      'Gift card applied',
+                      l10n.giftCardApplied,
                       style: NxTypography.bodySm
                           .copyWith(color: colors.textSecondary),
                     ),
@@ -328,7 +331,7 @@ class _CheckoutReviewScreenState extends ConsumerState<CheckoutReviewScreen> {
                 NxButton(
                   key: const ValueKey('place-order'),
                   label: l10n.placeOrder,
-                  semanticLabel: 'Place order',
+                  semanticLabel: l10n.placeOrder,
                   expand: true,
                   loading: checkout.isLoading,
                   onPressed: checkout.isLoading ? null : _placeOrder,

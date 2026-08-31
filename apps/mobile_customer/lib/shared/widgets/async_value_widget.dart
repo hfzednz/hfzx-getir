@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_design/nexora_design.dart';
 
+import '../errors/error_copy.dart';
+import 'error_view.dart';
+
 typedef AsyncDataBuilder<T> = Widget Function(T data);
 
 class AsyncValueWidget<T> extends StatelessWidget {
@@ -22,12 +25,10 @@ class AsyncValueWidget<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return value.when(
       data: (d) => data(d),
-      loading: () =>
-          loading?.call() ??
-          const Center(child: NxSpinner()),
+      loading: () => loading?.call() ?? const Center(child: NxSpinner()),
       error: (e, st) =>
           error?.call(e, st) ??
-          Center(child: Text(e.toString())),
+          ErrorView(message: localizedCustomerError(context, e)),
     );
   }
 }

@@ -44,13 +44,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.accessibility_new_outlined),
-            title: const Text('Accessibility'),
+            title: Text(l10n.accessibility),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(RouteNames.settingsA11y),
           ),
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
-            title: const Text('Notifications'),
+            title: Text(l10n.notificationsTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(RouteNames.settingsNotifications),
           ),

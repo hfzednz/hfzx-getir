@@ -13,6 +13,8 @@ import '../../../../shared/utils/money.dart';
 import '../../domain/entities/search_entity.dart';
 import '../../../product/domain/entities/product_entity.dart';
 import '../providers/search_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
+import '../../../../shared/widgets/error_view.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -145,12 +147,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choose from gallery'),
+              title: Text(l10n.chooseFromGallery),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Take a photo'),
+              title: Text(l10n.takePhoto),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
           ],
@@ -233,7 +235,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.tune),
-                  tooltip: 'Filters',
+                  tooltip: l10n.filters,
                   onPressed: _showFiltersSheet,
                 ),
                 IconButton(
@@ -296,7 +298,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: results.when(
                 data: (items) => _ProductResultsList(items: items),
                 loading: () => const Center(child: NxSpinner()),
-                error: (e, _) => Center(child: Text(e.toString())),
+                error: (e, _) => ErrorView(message: localizedCustomerError(context, e)),
               ),
             ),
         ],
@@ -439,19 +441,20 @@ class _SearchFiltersSheetState extends State<_SearchFiltersSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(NxSpacing.s4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Filters', style: NxTypography.headlineSm),
+          Text(l10n.filters, style: NxTypography.headlineSm),
           const SizedBox(height: NxSpacing.s4),
-          NxField(label: 'Brands (comma-separated)', controller: _brandsController),
+          NxField(label: l10n.brandsComma, controller: _brandsController),
           const SizedBox(height: NxSpacing.s3),
           DropdownButtonFormField<SearchSort>(
             value: _sort,
-            decoration: const InputDecoration(labelText: 'Sort'),
+            decoration: InputDecoration(labelText: l10n.sort),
             items: SearchSort.values
                 .map((s) => DropdownMenuItem(value: s, child: Text(searchSortToJson(s))))
                 .toList(),
@@ -460,17 +463,17 @@ class _SearchFiltersSheetState extends State<_SearchFiltersSheet> {
           const SizedBox(height: NxSpacing.s3),
           DropdownButtonFormField<ProductStockStatus?>(
             value: _availability,
-            decoration: const InputDecoration(labelText: 'Availability'),
-            items: const [
-              DropdownMenuItem(value: null, child: Text('Any')),
-              DropdownMenuItem(value: ProductStockStatus.inStock, child: Text('In stock')),
-              DropdownMenuItem(value: ProductStockStatus.low, child: Text('Low stock')),
+            decoration: InputDecoration(labelText: l10n.availabilityFilter),
+            items: [
+              DropdownMenuItem(value: null, child: Text(l10n.anyAvailability)),
+              DropdownMenuItem(value: ProductStockStatus.inStock, child: Text(l10n.inStock)),
+              DropdownMenuItem(value: ProductStockStatus.low, child: Text(l10n.lowStock)),
             ],
             onChanged: (v) => setState(() => _availability = v),
           ),
           const SizedBox(height: NxSpacing.s6),
           NxButton(
-            label: 'Apply filters',
+            label: l10n.applyFilters,
             expand: true,
             onPressed: () {
               widget.onApply(

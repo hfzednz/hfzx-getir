@@ -7,6 +7,7 @@ import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/loyalty_entity.dart';
 import '../providers/loyalty_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class LoyaltyScreen extends ConsumerWidget {
   const LoyaltyScreen({super.key});
@@ -40,31 +41,31 @@ class LoyaltyScreen extends ConsumerWidget {
                   child: Text('Milestones', style: NxTypography.headlineSm),
                 ),
               ),
-              _buildMilestones(milestonesAsync, ref),
+              _buildMilestones(context, milestonesAsync, ref),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(NxSpacing.s4, NxSpacing.s4, NxSpacing.s4, NxSpacing.s2),
                   child: Text('Achievements', style: NxTypography.headlineSm),
                 ),
               ),
-              _buildAchievements(achievementsAsync, ref),
+              _buildAchievements(context, achievementsAsync, ref),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(NxSpacing.s4, NxSpacing.s4, NxSpacing.s4, NxSpacing.s2),
                   child: Text('Badges', style: NxTypography.headlineSm),
                 ),
               ),
-              _buildBadges(badgesAsync, ref),
+              _buildBadges(context, badgesAsync, ref),
               const SliverToBoxAdapter(child: SizedBox(height: NxSpacing.s6)),
             ],
           ),
-          error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(loyaltyAccountProvider)),
+          error: (e, _) => ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(loyaltyAccountProvider)),
         ),
       ),
     );
   }
 
-  Widget _buildMilestones(AsyncValue<List<LoyaltyMilestone>> async, WidgetRef ref) {
+  Widget _buildMilestones(BuildContext context, AsyncValue<List<LoyaltyMilestone>> async, WidgetRef ref) {
     return async.when(
       data: (items) => SliverList.separated(
         itemCount: items.length,
@@ -85,11 +86,11 @@ class LoyaltyScreen extends ConsumerWidget {
         },
       ),
       loading: () => const SliverToBoxAdapter(child: Center(child: NxSpinner())),
-      error: (e, _) => SliverToBoxAdapter(child: ErrorView(message: e.toString(), onRetry: () => ref.invalidate(loyaltyMilestonesProvider))),
+      error: (e, _) => SliverToBoxAdapter(child: ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(loyaltyMilestonesProvider))),
     );
   }
 
-  Widget _buildAchievements(AsyncValue<List<LoyaltyAchievement>> async, WidgetRef ref) {
+  Widget _buildAchievements(BuildContext context, AsyncValue<List<LoyaltyAchievement>> async, WidgetRef ref) {
     return async.when(
       data: (items) => SliverList.separated(
         itemCount: items.length,
@@ -119,11 +120,11 @@ class LoyaltyScreen extends ConsumerWidget {
         },
       ),
       loading: () => const SliverToBoxAdapter(child: Center(child: NxSpinner())),
-      error: (e, _) => SliverToBoxAdapter(child: ErrorView(message: e.toString(), onRetry: () => ref.invalidate(loyaltyAchievementsProvider))),
+      error: (e, _) => SliverToBoxAdapter(child: ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(loyaltyAchievementsProvider))),
     );
   }
 
-  Widget _buildBadges(AsyncValue<List<LoyaltyBadge>> async, WidgetRef ref) {
+  Widget _buildBadges(BuildContext context, AsyncValue<List<LoyaltyBadge>> async, WidgetRef ref) {
     return async.when(
       data: (items) {
         if (items.isEmpty) {
@@ -146,7 +147,7 @@ class LoyaltyScreen extends ConsumerWidget {
         );
       },
       loading: () => const SliverToBoxAdapter(child: Center(child: NxSpinner())),
-      error: (e, _) => SliverToBoxAdapter(child: ErrorView(message: e.toString(), onRetry: () => ref.invalidate(loyaltyBadgesProvider))),
+      error: (e, _) => SliverToBoxAdapter(child: ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(loyaltyBadgesProvider))),
     );
   }
 }

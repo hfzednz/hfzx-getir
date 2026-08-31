@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:nexora_design/nexora_design.dart';
 
 import '../providers/categories_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
+import '../../../../shared/widgets/error_view.dart';
 
 class CategoryDetailScreen extends ConsumerWidget {
   const CategoryDetailScreen({super.key, required this.categoryId});
@@ -35,7 +37,7 @@ class CategoryDetailScreen extends ConsumerWidget {
           },
         ),
         loading: () => const Center(child: NxSpinner()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorView(message: localizedCustomerError(context, e)),
       ),
     );
   }

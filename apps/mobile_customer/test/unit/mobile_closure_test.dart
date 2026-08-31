@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nexora_customer/features/home/domain/entities/home_entity.dart';
 import 'package:nexora_customer/features/home/presentation/home_history.dart';
 import 'package:nexora_customer/features/orders/domain/entities/orders_entity.dart';
 import 'package:nexora_customer/features/product/domain/entities/product_entity.dart';
 import 'package:nexora_customer/features/search/domain/entities/search_entity.dart';
 import 'package:nexora_customer/features/stores/domain/entities/store_entity.dart';
 import 'package:nexora_customer/features/tracking/domain/entities/tracking_entity.dart';
+import 'package:nexora_customer/shared/errors/customer_facing_error.dart';
 import 'package:nexora_customer/shared/realtime/sse_parser.dart';
 import 'package:nexora_core/nexora_core.dart';
 
@@ -92,5 +92,24 @@ void main() {
     );
     expect(ticket.ticket, 'abc');
     expect(ticket.topic, 'order:o1');
+  });
+
+  test('customer-facing errors hide raw transport text', () {
+    expect(
+      customerFacingError('Unauthorized', languageCode: 'tr'),
+      contains('Oturumunuz'),
+    );
+    expect(
+      customerFacingError('coupon expired', languageCode: 'en'),
+      contains('expired'),
+    );
+    expect(
+      customerFacingError('DioException: timeout', languageCode: 'en'),
+      contains('connection'),
+    );
+    expect(
+      customerFacingError('Invalid argument', languageCode: 'tr'),
+      isNot(contains('Invalid argument')),
+    );
   });
 }

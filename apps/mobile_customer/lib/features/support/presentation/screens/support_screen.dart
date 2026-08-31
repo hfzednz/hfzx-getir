@@ -9,6 +9,7 @@ import '../../../../routing/route_names.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../providers/support_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class SupportScreen extends ConsumerWidget {
   const SupportScreen({super.key, this.orderId});
@@ -77,7 +78,7 @@ class SupportScreen extends ConsumerWidget {
                 ),
               ),
               error: (e, _) => SliverToBoxAdapter(
-                child: ErrorView(message: e.toString(), onRetry: () => ref.invalidate(supportFaqProvider)),
+                child: ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(supportFaqProvider)),
               ),
             ),
             SliverToBoxAdapter(
@@ -113,7 +114,7 @@ class SupportScreen extends ConsumerWidget {
               ),
               loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
               error: (e, _) => SliverToBoxAdapter(
-                child: ErrorView(message: e.toString(), onRetry: () => ref.invalidate(supportTicketsProvider)),
+                child: ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(supportTicketsProvider)),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 80)),

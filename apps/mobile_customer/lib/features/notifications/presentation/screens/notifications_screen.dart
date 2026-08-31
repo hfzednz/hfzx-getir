@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nexora_design/nexora_design.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/errors/error_copy.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/notifications_entity.dart';
@@ -25,7 +26,7 @@ class NotificationsScreen extends ConsumerWidget {
         actions: [
           NxIconButton(
             icon: const Icon(Icons.done_all),
-            semanticLabel: 'Mark all read',
+            semanticLabel: l10n.markAllRead,
             onPressed: () async {
               await ref.read(markAllNotificationsReadUseCaseProvider).call();
               ref.invalidate(notificationsListProvider);
@@ -100,7 +101,7 @@ class NotificationsScreen extends ConsumerWidget {
           );
         },
         error: (e, _) => ErrorView(
-          message: e.toString(),
+          message: localizedCustomerError(context, e),
           onRetry: () => ref.invalidate(notificationsListProvider),
         ),
       ),

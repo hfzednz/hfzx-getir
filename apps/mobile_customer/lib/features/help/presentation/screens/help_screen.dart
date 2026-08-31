@@ -10,51 +10,26 @@ class HelpScreen extends StatelessWidget {
 
   final String? id;
 
-  static const _faqs = <(String question, String answer)>[
-    (
-      'How do I place an order?',
-      'Browse categories or search for products, add items to your cart, '
-          'then checkout with a delivery address and payment method.',
-    ),
-    (
-      'What are delivery times?',
-      'ETA is shown on product and checkout screens based on your city and '
-          'selected address. Most orders arrive within the estimated window.',
-    ),
-    (
-      'How do I track my order?',
-      'Open Orders from your account, select the order, then tap Track. '
-          'You will see live status updates until delivery.',
-    ),
-    (
-      'How do refunds work?',
-      'If an item is missing or damaged, open the order and contact Support. '
-          'Approved refunds return to your original payment method or wallet.',
-    ),
-    (
-      'Can I schedule a delivery?',
-      'Yes. During checkout choose Schedule delivery and pick an available slot '
-          'for your address.',
-    ),
-    (
-      'How do coupons and loyalty points work?',
-      'Apply a coupon on checkout. Loyalty points accumulate on eligible orders '
-          'and can be redeemed where shown in your wallet or loyalty screen.',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final faqs = <(String, String)>[
+      (l10n.helpFaqPlaceQ, l10n.helpFaqPlaceA),
+      (l10n.helpFaqEtaQ, l10n.helpFaqEtaA),
+      (l10n.helpFaqTrackQ, l10n.helpFaqTrackA),
+      (l10n.helpFaqRefundQ, l10n.helpFaqRefundA),
+      (l10n.helpFaqScheduleQ, l10n.helpFaqScheduleA),
+      (l10n.helpFaqCouponQ, l10n.helpFaqCouponA),
+    ];
 
     return Scaffold(
       appBar: NxTopBar(title: l10n.helpTitle),
       body: ListView(
         padding: const EdgeInsets.all(NxSpacing.s4),
         children: [
-          Text('Frequently asked questions', style: NxTypography.headlineSm),
+          Text(l10n.frequentlyAskedQuestions, style: NxTypography.headlineSm),
           const SizedBox(height: NxSpacing.s3),
-          ..._faqs.map(
+          ...faqs.map(
             (faq) => Padding(
               padding: const EdgeInsets.only(bottom: NxSpacing.s2),
               child: NxCard(
@@ -84,7 +59,7 @@ class HelpScreen extends StatelessWidget {
           ),
           const SizedBox(height: NxSpacing.s3),
           NxButton(
-            label: 'Support assistant',
+            label: l10n.supportAssistant,
             expand: true,
             variant: NxButtonVariant.secondary,
             onPressed: () => context.push(RouteNames.supportAssistant),

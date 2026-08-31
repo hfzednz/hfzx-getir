@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_design/nexora_design.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/formatters.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/support_entity.dart';
 import '../providers/support_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class SupportTicketDetailScreen extends ConsumerWidget {
   const SupportTicketDetailScreen({super.key, required this.ticketId});
@@ -16,10 +18,11 @@ class SupportTicketDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final ticketAsync = ref.watch(supportTicketProvider(ticketId));
 
     return Scaffold(
-      appBar: NxTopBar(title: 'Ticket'),
+      appBar: NxTopBar(title: l10n.ticketTitle),
       body: AsyncValueWidget(
         value: ticketAsync,
         data: (ticket) => Column(
@@ -28,7 +31,7 @@ class SupportTicketDetailScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.all(NxSpacing.s4),
                 child: NxButton(
-                  label: 'Open live chat',
+                  label: l10n.openLiveChat,
                   onPressed: () => launchUrl(Uri.parse(ticket.liveChatUrl!), mode: LaunchMode.externalApplication),
                 ),
               ),
@@ -41,7 +44,7 @@ class SupportTicketDetailScreen extends ConsumerWidget {
             ),
           ],
         ),
-        error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(supportTicketProvider(ticketId))),
+        error: (e, _) => ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(supportTicketProvider(ticketId))),
       ),
     );
   }

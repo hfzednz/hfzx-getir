@@ -191,7 +191,7 @@ class _CheckoutScheduleScreenState
                         .copyWith(color: colors.textPrimary),
                   ),
                   subtitle: Text(
-                    'Leave at the door — no handoff needed.',
+                    l10n.contactlessHint,
                     style: NxTypography.bodySm
                         .copyWith(color: colors.textSecondary),
                   ),
@@ -210,7 +210,7 @@ class _CheckoutScheduleScreenState
                         .copyWith(color: colors.textPrimary),
                   ),
                   subtitle: Text(
-                    'Hide prices on the receipt for the recipient.',
+                    l10n.giftOrderHint,
                     style: NxTypography.bodySm
                         .copyWith(color: colors.textSecondary),
                   ),
@@ -223,7 +223,7 @@ class _CheckoutScheduleScreenState
                 if (checkout.gift) ...[
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Gift message',
+                    label: l10n.giftMessage,
                     controller: _giftMessageController,
                     maxLines: 3,
                     onChanged: (value) => ref
@@ -233,20 +233,20 @@ class _CheckoutScheduleScreenState
                 ],
                 const SizedBox(height: NxSpacing.s5),
                 Text(
-                  'If an item is unavailable',
+                  l10n.itemUnavailableTitle,
                   style: NxTypography.titleMd.copyWith(color: colors.textPrimary),
                 ),
                 const SizedBox(height: NxSpacing.s2),
                 Text(
-                  'Substitution preference',
+                  l10n.substitutionPreference,
                   style: NxTypography.bodySm.copyWith(color: colors.textSecondary),
                 ),
                 const SizedBox(height: NxSpacing.s2),
                 _OptionTile(
                   selected: checkout.substitutionPreference ==
                       SubstitutionPreference.allow,
-                  title: 'Allow substitutions',
-                  subtitle: 'Replace with a similar item automatically',
+                  title: l10n.allowSubstitutions,
+                  subtitle: l10n.allowSubstitutionsHint,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
                       .setSubstitution(preference: SubstitutionPreference.allow),
@@ -255,8 +255,8 @@ class _CheckoutScheduleScreenState
                 _OptionTile(
                   selected: checkout.substitutionPreference ==
                       SubstitutionPreference.contact,
-                  title: 'Contact me',
-                  subtitle: 'Call before replacing anything',
+                  title: l10n.contactMe,
+                  subtitle: l10n.contactMeHint,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
                       .setSubstitution(
@@ -267,8 +267,8 @@ class _CheckoutScheduleScreenState
                 _OptionTile(
                   selected: checkout.substitutionPreference ==
                       SubstitutionPreference.reject,
-                  title: 'Do not substitute',
-                  subtitle: 'Skip or refund unavailable items',
+                  title: l10n.doNotSubstitute,
+                  subtitle: l10n.doNotSubstituteHint,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
                       .setSubstitution(
@@ -277,15 +277,15 @@ class _CheckoutScheduleScreenState
                 ),
                 const SizedBox(height: NxSpacing.s4),
                 Text(
-                  'Out of stock rule',
+                  l10n.outOfStockRule,
                   style: NxTypography.bodySm.copyWith(color: colors.textSecondary),
                 ),
                 const SizedBox(height: NxSpacing.s2),
                 _OptionTile(
                   selected:
                       checkout.outOfStockRule == OutOfStockReplacementRule.similar,
-                  title: 'Replace with similar',
-                  subtitle: 'Find a close match when possible',
+                  title: l10n.replaceWithSimilar,
+                  subtitle: l10n.replaceWithSimilarHint,
                   enabled: checkout.substitutionPreference !=
                       SubstitutionPreference.reject,
                   onTap: () => ref
@@ -298,8 +298,8 @@ class _CheckoutScheduleScreenState
                 _OptionTile(
                   selected:
                       checkout.outOfStockRule == OutOfStockReplacementRule.refund,
-                  title: 'Refund item',
-                  subtitle: 'Remove the item and refund its price',
+                  title: l10n.refundItem,
+                  subtitle: l10n.refundItemHint,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
                       .setSubstitution(
@@ -310,8 +310,8 @@ class _CheckoutScheduleScreenState
                 _OptionTile(
                   selected:
                       checkout.outOfStockRule == OutOfStockReplacementRule.cancel,
-                  title: 'Cancel order',
-                  subtitle: 'Cancel the whole order if anything is missing',
+                  title: l10n.cancelOrder,
+                  subtitle: l10n.cancelIfMissing,
                   onTap: () => ref
                       .read(checkoutControllerProvider.notifier)
                       .setSubstitution(
@@ -322,12 +322,12 @@ class _CheckoutScheduleScreenState
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
-                    'Company invoice',
+                    l10n.companyInvoice,
                     style: NxTypography.titleSm
                         .copyWith(color: colors.textPrimary),
                   ),
                   subtitle: Text(
-                    'Request a corporate invoice for this order.',
+                    l10n.companyInvoiceHint,
                     style: NxTypography.bodySm
                         .copyWith(color: colors.textSecondary),
                   ),
@@ -343,19 +343,19 @@ class _CheckoutScheduleScreenState
                 if (checkout.wantInvoice) ...[
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Company name',
+                    label: l10n.companyName,
                     controller: _companyNameController,
                     onChanged: (_) => _syncInvoiceFields(),
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Tax ID',
+                    label: l10n.taxId,
                     controller: _taxIdController,
                     onChanged: (_) => _syncInvoiceFields(),
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Tax office',
+                    label: l10n.taxOffice,
                     controller: _taxOfficeController,
                     onChanged: (_) => _syncInvoiceFields(),
                   ),

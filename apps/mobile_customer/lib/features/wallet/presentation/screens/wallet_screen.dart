@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_design/nexora_design.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/errors/error_copy.dart';
 import '../../../../shared/utils/formatters.dart';
 import '../../../../shared/utils/money.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
@@ -35,7 +36,7 @@ class WalletScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(NxSpacing.s4, NxSpacing.s4, NxSpacing.s4, NxSpacing.s2),
-                  child: Text('Transaction history', style: NxTypography.headlineSm),
+                  child: Text(l10n.transactionHistory, style: NxTypography.headlineSm),
                 ),
               ),
               AsyncValueWidget(
@@ -57,13 +58,13 @@ class WalletScreen extends ConsumerWidget {
                   );
                 },
                 error: (e, _) => SliverToBoxAdapter(
-                  child: ErrorView(message: e.toString(), onRetry: () => ref.invalidate(walletTransactionsProvider)),
+                  child: ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(walletTransactionsProvider)),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: NxSpacing.s6)),
             ],
           ),
-          error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(walletAccountProvider)),
+          error: (e, _) => ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(walletAccountProvider)),
         ),
       ),
     );
@@ -71,25 +72,26 @@ class WalletScreen extends ConsumerWidget {
 
   Future<void> _showTopUp(BuildContext context, WidgetRef ref, WalletAccount account) async {
     if (!account.topUpEnabled) return;
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     final amount = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Top up wallet'),
+        title: Text(l10n.topUpWallet),
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(labelText: 'Amount (₺)'),
+          decoration: InputDecoration(labelText: l10n.amountTry),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           FilledButton(
             onPressed: () {
               final major = double.tryParse(controller.text.replaceAll(',', '.'));
               if (major == null || major <= 0) return;
               Navigator.pop(ctx, (major * 100).round());
             },
-            child: const Text('Top up'),
+            child: Text(l10n.topUp),
           ),
         ],
       ),
@@ -108,6 +110,7 @@ class _BalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(NxSpacing.s4),
       child: NxCard(
@@ -116,13 +119,13 @@ class _BalanceCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Available balance', style: NxTypography.captionMd),
+              Text(l10n.availableBalance, style: NxTypography.captionMd),
               const SizedBox(height: NxSpacing.s1),
               Text(account.balance.format(), style: NxTypography.displayLg),
               if (account.pendingMinor > 0) ...[
                 const SizedBox(height: NxSpacing.s2),
                 Text(
-                  'Pending: ${Money(minorUnits: account.pendingMinor, currency: account.currency).format()}',
+                  '${l10n.pending}: ${Money(minorUnits: account.pendingMinor, currency: account.currency).format()}',
                   style: NxTypography.captionMd,
                 ),
               ],
@@ -134,18 +137,18 @@ class _BalanceCard extends StatelessWidget {
                   if (account.cashbackMinor > 0)
                     NxChip(
                       label:
-                          'Cashback ${Money(minorUnits: account.cashbackMinor, currency: account.currency).format()}',
+                          '${l10n.cashback} ${Money(minorUnits: account.cashbackMinor, currency: account.currency).format()}',
                     ),
                   if (account.promoCreditMinor > 0)
                     NxChip(
                       label:
-                          'Promo ${Money(minorUnits: account.promoCreditMinor, currency: account.currency).format()}',
+                          '${l10n.promoCredit} ${Money(minorUnits: account.promoCreditMinor, currency: account.currency).format()}',
                     ),
                 ],
               ),
               if (account.topUpEnabled) ...[
                 const SizedBox(height: NxSpacing.s4),
-                NxButton(label: 'Top up', onPressed: onTopUp, variant: NxButtonVariant.secondary),
+                NxButton(label: l10n.topUp, onPressed: onTopUp, variant: NxButtonVariant.secondary),
               ],
             ],
           ),

@@ -8,6 +8,7 @@ import '../../../../di/analytics_providers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/route_names.dart';
 import '../../../../shared/analytics/analytics_events.dart';
+import '../../../../shared/errors/error_copy.dart';
 import '../../../../shared/utils/formatters.dart';
 import '../../../../shared/utils/money.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
@@ -60,7 +61,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           if (!mounted) return;
           NxToast.show(
             context,
-            message: e.message,
+            message: localizedCustomerError(context, e),
             variant: NxToastVariant.danger,
           );
         },
@@ -154,7 +155,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Promotions', style: NxTypography.headlineSm),
+                      Text(l10n.promotions, style: NxTypography.headlineSm),
                       ...cart.promotions.map(
                         (promo) => ListTile(
                           dense: true,
@@ -176,8 +177,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ? NxBannerVariant.success
                         : NxBannerVariant.danger,
                     message: cart.coupon!.valid
-                        ? 'Coupon ${cart.coupon!.code} applied'
-                        : 'Coupon ${cart.coupon!.code} invalid',
+                        ? '${l10n.couponApplied}: ${cart.coupon!.code}'
+                        : '${l10n.couponInvalid}: ${cart.coupon!.code}',
                   ),
                 ),
               Expanded(
@@ -216,6 +217,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                               NxQtySelector(
                                 quantity: item.quantity,
                                 max: item.maxQty ?? 99,
+                                semanticLabel: l10n.quantityLabel(item.quantity),
+                                increaseSemanticLabel: l10n.increaseQuantity,
+                                decreaseSemanticLabel: l10n.decreaseQuantity,
                                 onIncrement: () => repo.updateQuantity(
                                   item.productId,
                                   item.quantity + 1,
@@ -233,7 +237,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       );
                     }),
                     const SizedBox(height: NxSpacing.s4),
-                    Text('Coupons & payments', style: NxTypography.headlineSm),
+                    Text(l10n.couponsAndPayments, style: NxTypography.headlineSm),
                     const SizedBox(height: NxSpacing.s3),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -246,7 +250,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ),
                         const SizedBox(width: NxSpacing.s2),
                         NxButton(
-                          label: 'Apply',
+                          label: l10n.apply,
                           variant: NxButtonVariant.secondary,
                           loading: _tenderBusy,
                           onPressed: () {
@@ -261,7 +265,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         if (cart.coupon != null) ...[
                           const SizedBox(width: NxSpacing.s2),
                           NxButton(
-                            label: 'Remove',
+                            label: l10n.remove,
                             variant: NxButtonVariant.tertiary,
                             loading: _tenderBusy,
                             onPressed: () => _runTender(repo.removeCoupon),
@@ -275,13 +279,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       children: [
                         Expanded(
                           child: NxField(
-                            label: 'Gift card code',
+                            label: l10n.giftCardCode,
                             controller: _giftCardController,
                           ),
                         ),
                         const SizedBox(width: NxSpacing.s2),
                         NxButton(
-                          label: 'Apply',
+                          label: l10n.apply,
                           variant: NxButtonVariant.secondary,
                           loading: _tenderBusy,
                           onPressed: () {
@@ -296,7 +300,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       const SizedBox(height: NxSpacing.s2),
                       ...cart.giftCards.map(
                         (g) => Text(
-                          'Gift card ${g.code}: -${Formatters.money(Money(minorUnits: g.appliedMinor, currency: cart.currency))}',
+                          '${l10n.giftCard} ${g.code}: -${Formatters.money(Money(minorUnits: g.appliedMinor, currency: cart.currency))}',
                           style: NxTypography.captionMd,
                         ),
                       ),
@@ -307,14 +311,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       children: [
                         Expanded(
                           child: NxField(
-                            label: 'Wallet amount (₺)',
+                            label: l10n.walletAmount,
                             controller: _walletController,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           ),
                         ),
                         const SizedBox(width: NxSpacing.s2),
                         NxButton(
-                          label: 'Apply',
+                          label: l10n.apply,
                           variant: NxButtonVariant.secondary,
                           loading: _tenderBusy,
                           onPressed: () {
@@ -331,7 +335,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     if (cart.walletAppliedMinor > 0) ...[
                       const SizedBox(height: NxSpacing.s2),
                       Text(
-                        'Wallet applied: -${Formatters.money(Money(minorUnits: cart.walletAppliedMinor, currency: cart.currency))}',
+                        '${l10n.walletApplied}: -${Formatters.money(Money(minorUnits: cart.walletAppliedMinor, currency: cart.currency))}',
                         style: NxTypography.captionMd,
                       ),
                     ],
@@ -341,14 +345,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       children: [
                         Expanded(
                           child: NxField(
-                            label: 'Loyalty points to redeem',
+                            label: l10n.loyaltyRedeem,
                             controller: _loyaltyController,
                             keyboardType: TextInputType.number,
                           ),
                         ),
                         const SizedBox(width: NxSpacing.s2),
                         NxButton(
-                          label: 'Redeem',
+                          label: l10n.redeem,
                           variant: NxButtonVariant.secondary,
                           loading: _tenderBusy,
                           onPressed: () {
@@ -364,22 +368,22 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     if (cart.loyaltyPointsToRedeem > 0) ...[
                       const SizedBox(height: NxSpacing.s2),
                       Text(
-                        'Loyalty points applied: ${cart.loyaltyPointsToRedeem}',
+                        '${l10n.loyaltyPointsApplied}: ${cart.loyaltyPointsToRedeem}',
                         style: NxTypography.captionMd,
                       ),
                     ],
                     const SizedBox(height: NxSpacing.s4),
-                    Text('Estimate', style: NxTypography.headlineSm),
+                    Text(l10n.estimate, style: NxTypography.headlineSm),
                     const SizedBox(height: NxSpacing.s2),
                     _EstimateLine(
-                      label: 'Subtotal',
+                      label: l10n.subtotal,
                       amount: Formatters.money(
                         Money(minorUnits: cart.subtotalMinor, currency: cart.currency),
                       ),
                     ),
                     if (cart.deliveryFeeEstimateMinor != null)
                       _EstimateLine(
-                        label: 'Delivery',
+                        label: l10n.deliveryFee,
                         amount: Formatters.money(
                           Money(
                             minorUnits: cart.deliveryFeeEstimateMinor!,
@@ -389,25 +393,25 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       ),
                     if (cart.taxEstimateMinor != null)
                       _EstimateLine(
-                        label: 'Tax',
+                        label: l10n.tax,
                         amount: Formatters.money(
                           Money(minorUnits: cart.taxEstimateMinor!, currency: cart.currency),
                         ),
                       ),
                     if (cart.coupon != null && cart.coupon!.discountMinor > 0)
                       _EstimateLine(
-                        label: 'Coupon',
+                        label: l10n.couponLabel,
                         amount:
                             '-${Formatters.money(Money(minorUnits: cart.coupon!.discountMinor, currency: cart.currency))}',
                       ),
                     _EstimateLine(
-                      label: 'Total',
+                      label: l10n.total,
                       amount: Formatters.money(total),
                       emphasized: true,
                     ),
                     const SizedBox(height: NxSpacing.s3),
                     NxButton(
-                      label: 'Validate inventory',
+                      label: l10n.validateInventory,
                       variant: NxButtonVariant.tertiary,
                       expand: true,
                       loading: _tenderBusy,
@@ -422,7 +426,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   children: [
                     Expanded(
                       child: NxButton(
-                        label: 'Smart reorder',
+                        label: l10n.smartReorder,
                         variant: NxButtonVariant.secondary,
                         onPressed: () => ref.invalidate(aiReorderPredictionProvider),
                       ),
@@ -430,7 +434,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     const SizedBox(width: NxSpacing.s2),
                     Expanded(
                       child: NxButton(
-                        label: 'Budget optimize',
+                        label: l10n.budgetOptimize,
                         variant: NxButtonVariant.secondary,
                         onPressed: () => ref.read(aiRepositoryProvider).budgetOptimization(
                               budgetMinor: cart.totalMinor,
@@ -444,7 +448,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: NxSpacing.s4),
                   child: Text(
-                    'Estimated delivery: ${Formatters.etaMinutes(cart.etaMinutes!)}',
+                    '${l10n.deliveryEta}: ${Formatters.etaMinutes(cart.etaMinutes!)}',
                     style: NxTypography.captionMd,
                   ),
                 ),
@@ -455,7 +459,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   if (!cart.canCheckout) {
                     NxToast.show(
                       context,
-                      message: 'Fix cart issues before checkout',
+                      message: l10n.fixCartBeforeCheckout,
                       variant: NxToastVariant.danger,
                     );
                     return;

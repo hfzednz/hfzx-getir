@@ -6,6 +6,8 @@ import '../../../../shared/utils/formatters.dart';
 import '../../../../shared/utils/money.dart';
 import '../../domain/entities/ai_entity.dart';
 import '../providers/ai_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
+import '../../../../shared/widgets/error_view.dart';
 
 class AiRecipesScreen extends ConsumerWidget {
   const AiRecipesScreen({super.key});
@@ -35,7 +37,7 @@ class AiRecipesScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: NxSpinner()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorView(message: localizedCustomerError(context, e)),
       ),
     );
   }

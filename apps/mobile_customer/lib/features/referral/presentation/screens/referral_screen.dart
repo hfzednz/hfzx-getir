@@ -9,6 +9,7 @@ import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/referral_entity.dart';
 import '../providers/referral_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class ReferralScreen extends ConsumerStatefulWidget {
   const ReferralScreen({super.key});
@@ -161,13 +162,13 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                 },
                 loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
                 error: (e, _) => SliverToBoxAdapter(
-                  child: ErrorView(message: e.toString(), onRetry: () => ref.invalidate(referralInvitesProvider)),
+                  child: ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(referralInvitesProvider)),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: NxSpacing.s6)),
             ],
           ),
-          error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(referralInfoProvider)),
+          error: (e, _) => ErrorView(message: localizedCustomerError(context, e), onRetry: () => ref.invalidate(referralInfoProvider)),
         ),
       ),
     );

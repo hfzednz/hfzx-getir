@@ -9,6 +9,7 @@ import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../domain/entities/coupons_entity.dart';
 import '../providers/coupons_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class CouponsScreen extends ConsumerStatefulWidget {
   const CouponsScreen({super.key, this.promoCode});
@@ -60,7 +61,7 @@ class _CouponsScreenState extends ConsumerState<CouponsScreen> {
                 ),
                 const SizedBox(width: NxSpacing.s2),
                 NxButton(
-                  label: 'Apply',
+                  label: l10n.apply,
                   loading: applyState.isLoading,
                   onPressed: () => ref.read(couponApplyControllerProvider.notifier).apply(
                         code: _codeController.text,
@@ -75,7 +76,7 @@ class _CouponsScreenState extends ConsumerState<CouponsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: NxSpacing.s4),
               child: NxBanner(
-                title: 'Coupon applied',
+                title: l10n.couponApplied,
                 message: applyState.value!.message.isNotEmpty
                     ? applyState.value!.message
                     : '${applyState.value!.coupon.code} — ${Money(minorUnits: applyState.value!.discountMinor, currency: 'TRY').format()} off',
@@ -102,7 +103,7 @@ class _CouponsScreenState extends ConsumerState<CouponsScreen> {
                 );
               },
               error: (e, _) => ErrorView(
-                message: e.toString(),
+                message: localizedCustomerError(context, e),
                 onRetry: () => ref.invalidate(couponsListProvider),
               ),
             ),
@@ -120,8 +121,9 @@ class _CouponCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final discountLabel = coupon.discountType == CouponDiscountType.percent
-        ? '${coupon.discountValue}% off'
+        ? '${coupon.discountValue}%'
         : Money(minorUnits: coupon.discountValue, currency: coupon.currency).format();
 
     return NxCard(
@@ -131,9 +133,9 @@ class _CouponCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(coupon.code),
-            if (coupon.stackable) const Text('Stackable with other promos'),
+            if (coupon.stackable) Text(l10n.stackable),
             if (coupon.minOrderMinor > 0)
-              Text('Min order ${Money(minorUnits: coupon.minOrderMinor, currency: coupon.currency).format()}'),
+              Text('${l10n.minOrder} ${Money(minorUnits: coupon.minOrderMinor, currency: coupon.currency).format()}'),
           ],
         ),
         trailing: Column(
@@ -141,7 +143,7 @@ class _CouponCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(discountLabel, style: NxTypography.headlineSm),
-            if (coupon.stackable) NxChip(label: 'Stackable'),
+            if (coupon.stackable) NxChip(label: l10n.stackable),
           ],
         ),
       ),

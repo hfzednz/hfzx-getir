@@ -30,7 +30,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
   Future<void> _delete() async {
     if (!_confirmed) {
-      setState(() => _error = 'Please confirm account deletion');
+      setState(() => _error = AppLocalizations.of(context).confirmAccountDeletion);
       return;
     }
     final ok = await ref
@@ -42,7 +42,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       if (mounted) context.go(RouteNames.auth);
     } else {
       final err = ref.read(accountLifecycleControllerProvider).error;
-      setState(() => _error = err ?? 'Failed to delete account');
+      setState(() => _error = err ?? AppLocalizations.of(context).failedToDeleteAccount);
     }
   }
 
@@ -54,7 +54,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ok ? 'Data export requested' : 'Failed to request export',
+          ok
+              ? AppLocalizations.of(context).dataExportRequested
+              : AppLocalizations.of(context).failedToRequestExport,
         ),
       ),
     );
@@ -74,7 +76,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'This action is permanent. Your orders and personal data will be scheduled for deletion.',
+              l10n.deleteAccountPermanent,
               style: NxTypography.bodyMd.copyWith(
                 color: context.nxColors.danger,
               ),
@@ -82,7 +84,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
             if (session.isAuthenticated) ...[
               const SizedBox(height: NxSpacing.s4),
               NxButton(
-                label: 'Request data export',
+                label: l10n.requestDataExport,
                 variant: NxButtonVariant.secondary,
                 expand: true,
                 loading: lifecycle.isLoading,
@@ -92,7 +94,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
             const SizedBox(height: NxSpacing.s4),
             NxField(
               controller: _reasonController,
-              label: 'Reason (optional)',
+              label: l10n.reasonOptional,
               maxLines: 3,
               error: _error,
             ),
@@ -100,7 +102,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
             CheckboxListTile(
               value: _confirmed,
               onChanged: (v) => setState(() => _confirmed = v ?? false),
-              title: const Text('I understand this cannot be undone'),
+              title: Text(l10n.cannotBeUndone),
               controlAffinity: ListTileControlAffinity.leading,
             ),
             const Spacer(),

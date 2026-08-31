@@ -71,7 +71,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.code_outlined),
-            title: const Text('Open source licenses'),
+            title: Text(l10n.openSourceLicenses),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => showLicensePage(
               context: context,

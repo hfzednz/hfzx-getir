@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../providers/checkout_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class CheckoutScreen extends ConsumerWidget {
   const CheckoutScreen({super.key, this.id});
@@ -51,7 +52,7 @@ class CheckoutScreen extends ConsumerWidget {
           );
         },
         error: (e, _) => ErrorView(
-          message: e.toString(),
+          message: localizedCustomerError(context, e),
           onRetry: () => ref.invalidate(checkoutListProvider),
         ),
       ),

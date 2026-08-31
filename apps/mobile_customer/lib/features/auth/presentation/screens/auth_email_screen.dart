@@ -66,7 +66,7 @@ class _AuthEmailScreenState extends ConsumerState<AuthEmailScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
-      appBar: NxTopBar(title: _registerMode ? 'Create account' : l10n.emailLogin),
+      appBar: NxTopBar(title: _registerMode ? l10n.createAccount : l10n.emailLogin),
       body: Padding(
         padding: const EdgeInsets.all(NxSpacing.s4),
         child: Column(
@@ -75,7 +75,7 @@ class _AuthEmailScreenState extends ConsumerState<AuthEmailScreen> {
             if (_registerMode) ...[
               NxField(
                 controller: _nameController,
-                label: 'Name',
+                label: l10n.nameLabel,
               ),
               const SizedBox(height: NxSpacing.s3),
             ],
@@ -87,12 +87,12 @@ class _AuthEmailScreenState extends ConsumerState<AuthEmailScreen> {
             const SizedBox(height: NxSpacing.s3),
             NxField(
               controller: _passwordController,
-              label: 'Password',
+              label: l10n.passwordLabel,
               obscureText: true,
             ),
             const SizedBox(height: NxSpacing.s4),
             NxButton(
-              label: _registerMode ? 'Register' : l10n.signIn,
+              label: _registerMode ? l10n.register : l10n.signIn,
               expand: true,
               loading: auth.isLoading,
               onPressed: _submit,
@@ -101,14 +101,14 @@ class _AuthEmailScreenState extends ConsumerState<AuthEmailScreen> {
             if (!_registerMode)
               TextButton(
                 onPressed: () => context.push(RouteNames.authForgotPassword),
-                child: const Text('Forgot password?'),
+                child: Text(l10n.forgotPassword),
               ),
             TextButton(
               onPressed: () => setState(() => _registerMode = !_registerMode),
               child: Text(
                 _registerMode
-                    ? 'Already have an account? Sign in'
-                    : 'Need an account? Register',
+                    ? l10n.alreadyHaveAccount
+                    : l10n.needAnAccount,
               ),
             ),
           ],

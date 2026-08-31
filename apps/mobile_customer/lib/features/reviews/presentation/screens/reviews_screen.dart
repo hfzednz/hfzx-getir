@@ -10,6 +10,7 @@ import '../../../../shared/widgets/error_view.dart';
 import '../../../orders/domain/entities/orders_entity.dart';
 import '../../../orders/presentation/providers/orders_providers.dart';
 import '../providers/reviews_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class ReviewsScreen extends ConsumerStatefulWidget {
   const ReviewsScreen({super.key, this.orderId});
@@ -58,7 +59,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
     if (orderId == null) {
       return Scaffold(
         appBar: NxTopBar(title: l10n.reviewsTitle),
-        body: const Center(child: Text('Open from an order to submit a review')),
+        body: Center(child: Text(l10n.openReviewFromOrder)),
       );
     }
 
@@ -74,14 +75,14 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(NxSpacing.s4),
         children: [
-          Text('Rate your order', style: NxTypography.headlineSm),
+          Text(l10n.rateYourOrder, style: NxTypography.headlineSm),
           _StarRow(rating: _orderRating, onChanged: (v) => setState(() => _orderRating = v)),
           const SizedBox(height: NxSpacing.s4),
-          Text('Rate courier', style: NxTypography.headlineSm),
+          Text(l10n.rateCourier, style: NxTypography.headlineSm),
           _StarRow(rating: _courierRating, onChanged: (v) => setState(() => _courierRating = v)),
           if (orderItems.isNotEmpty) ...[
             const SizedBox(height: NxSpacing.s4),
-            Text('Rate products', style: NxTypography.headlineSm),
+            Text(l10n.rateProducts, style: NxTypography.headlineSm),
             const SizedBox(height: NxSpacing.s2),
             ...orderItems.map((item) {
               final key = item.productId.isNotEmpty ? item.productId : item.id;
@@ -104,7 +105,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
           const SizedBox(height: NxSpacing.s4),
           TextField(
             controller: _commentController,
-            decoration: const InputDecoration(labelText: 'Comment', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: l10n.comment, border: const OutlineInputBorder()),
             maxLines: 4,
           ),
           const SizedBox(height: NxSpacing.s3),
@@ -112,20 +113,20 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
             spacing: NxSpacing.s2,
             children: [
               ..._photos.map((p) => Image.file(File(p.path), width: 72, height: 72, fit: BoxFit.cover)),
-              OutlinedButton.icon(onPressed: _pickPhotos, icon: const Icon(Icons.photo), label: const Text('Add photos')),
+              OutlinedButton.icon(onPressed: _pickPhotos, icon: const Icon(Icons.photo), label: Text(l10n.addPhotos)),
             ],
           ),
           const SizedBox(height: NxSpacing.s4),
           NxBanner(
-            title: 'Verified purchase',
-            message: 'This review will be marked as verified for order $orderId',
+            title: l10n.verifiedPurchase,
+            message: '${l10n.verifiedPurchase} $orderId',
             variant: NxBannerVariant.info,
           ),
           const SizedBox(height: NxSpacing.s4),
           if (submitState.hasError)
-            ErrorView(message: submitState.error.toString(), onRetry: () => ref.invalidate(reviewSubmitProvider)),
+            ErrorView(message: localizedCustomerError(context, submitState.error!), onRetry: () => ref.invalidate(reviewSubmitProvider)),
           NxButton(
-            label: 'Submit review',
+            label: l10n.submitReview,
             loading: submitState.isLoading,
             onPressed: () => ref.read(reviewSubmitProvider.notifier).submit(
                   orderId: orderId,

@@ -35,7 +35,7 @@ class _SecuritySettingsScreenState
         children: [
           SwitchListTile(
             title: Text(l10n.biometricUnlock),
-            subtitle: const Text('Use Face ID / fingerprint to unlock the app'),
+            subtitle: Text(l10n.biometricHint),
             value: _biometricEnabled,
             onChanged: (enabled) async {
               final repo = ref.read(authRepositoryProvider);
@@ -50,8 +50,8 @@ class _SecuritySettingsScreenState
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.devices_outlined),
-            title: const Text('Trusted devices'),
-            subtitle: const Text('Review and revoke signed-in devices'),
+            title: Text(l10n.trustedDevices),
+            subtitle: Text(l10n.trustedDevicesHint),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(RouteNames.settingsDevices),
           ),

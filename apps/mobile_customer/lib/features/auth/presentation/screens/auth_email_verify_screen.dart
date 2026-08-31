@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexora_design/nexora_design.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/route_names.dart';
 import '../providers/account_lifecycle_providers.dart';
 
@@ -30,7 +31,7 @@ class _AuthEmailVerifyScreenState extends ConsumerState<AuthEmailVerifyScreen> {
   Future<void> _verify() async {
     final code = _codeController.text.trim();
     if (code.isEmpty) {
-      setState(() => _error = 'Enter the verification code');
+      setState(() => _error = AppLocalizations.of(context).enterVerificationCode);
       return;
     }
     setState(() {
@@ -44,7 +45,7 @@ class _AuthEmailVerifyScreenState extends ConsumerState<AuthEmailVerifyScreen> {
       onSuccess: (_) async {
         NxToast.show(
           context,
-          message: 'Email verified',
+          message: AppLocalizations.of(context).emailVerified,
           variant: NxToastVariant.success,
         );
         if (mounted) context.go(RouteNames.home);
@@ -57,8 +58,9 @@ class _AuthEmailVerifyScreenState extends ConsumerState<AuthEmailVerifyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: const NxTopBar(title: 'Verify email'),
+      appBar: NxTopBar(title: l10n.verifyEmail),
       body: Padding(
         padding: const EdgeInsets.all(NxSpacing.s4),
         child: Column(
@@ -66,27 +68,27 @@ class _AuthEmailVerifyScreenState extends ConsumerState<AuthEmailVerifyScreen> {
           children: [
             Text(
               widget.email != null
-                  ? 'Enter the code we sent to ${widget.email}.'
-                  : 'Enter the verification code from your email.',
+                  ? l10n.enterCodeSentTo(widget.email!)
+                  : l10n.enterCodeFromEmail,
               style: NxTypography.bodyMd,
             ),
             const SizedBox(height: NxSpacing.s4),
             NxField(
               controller: _codeController,
-              label: 'Verification code',
+              label: l10n.verificationCode,
               keyboardType: TextInputType.number,
               error: _error,
             ),
             const SizedBox(height: NxSpacing.s4),
             NxButton(
-              label: 'Verify email',
+              label: l10n.verifyEmail,
               expand: true,
               loading: _loading,
               onPressed: _verify,
             ),
             TextButton(
               onPressed: () => context.go(RouteNames.home),
-              child: const Text('Skip for now'),
+              child: Text(l10n.skipForNow),
             ),
           ],
         ),

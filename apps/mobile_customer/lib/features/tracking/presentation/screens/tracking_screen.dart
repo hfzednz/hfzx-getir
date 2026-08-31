@@ -11,6 +11,7 @@ import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/offline_banner.dart';
 import '../../domain/entities/tracking_entity.dart';
 import '../providers/tracking_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class TrackingScreen extends ConsumerWidget {
   const TrackingScreen({super.key, required this.orderId});
@@ -270,7 +271,7 @@ class TrackingScreen extends ConsumerWidget {
               },
               loading: () => const Center(child: NxSpinner()),
               error: (e, _) => ErrorView(
-                message: e.toString(),
+                message: localizedCustomerError(context, e),
                 onRetry: () {
                   ref.invalidate(trackingSnapshotProvider(orderId));
                   ref.invalidate(trackingRealtimeProvider(orderId));

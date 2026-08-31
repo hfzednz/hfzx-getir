@@ -10,6 +10,7 @@ import '../../../../shared/widgets/error_view.dart';
 import '../../../addresses/domain/entities/addresses_entity.dart';
 import '../../../addresses/presentation/providers/addresses_providers.dart';
 import '../providers/checkout_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
 
 class CheckoutAddressScreen extends ConsumerWidget {
   const CheckoutAddressScreen({super.key});
@@ -111,7 +112,7 @@ class CheckoutAddressScreen extends ConsumerWidget {
                 );
               },
               error: (e, _) => ErrorView(
-                message: e.toString(),
+                message: localizedCustomerError(context, e),
                 onRetry: () => ref.invalidate(addressesListProvider),
               ),
             ),

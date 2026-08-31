@@ -12,6 +12,8 @@ import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../domain/entities/product_entity.dart';
 import '../providers/product_providers.dart';
 import '../../../ai/presentation/providers/ai_providers.dart';
+import '../../../../shared/errors/error_copy.dart';
+import '../../../../shared/widgets/error_view.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({super.key, required this.productId});
@@ -206,7 +208,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                       ],
                       if (p.allergens.isNotEmpty) ...[
                         const SizedBox(height: NxSpacing.s4),
-                        _SectionList(title: 'Allergens', items: p.allergens),
+                        _SectionList(title: l10n.allergens, items: p.allergens),
                       ],
                       if (p.origin != null) ...[
                         const SizedBox(height: NxSpacing.s4),
@@ -382,7 +384,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
           );
         },
         loading: () => const Center(child: NxSpinner()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorView(message: localizedCustomerError(context, e)),
       ),
     );
   }

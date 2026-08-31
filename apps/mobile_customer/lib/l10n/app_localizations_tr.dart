@@ -565,4 +565,537 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get trackingCompleted => 'Teslim edildi';
+
+  @override
+  String get apply => 'Uygula';
+
+  @override
+  String get remove => 'Kaldır';
+
+  @override
+  String get giftCardCode => 'Hediye kartı kodu';
+
+  @override
+  String get walletAmount => 'Cüzdan tutarı (₺)';
+
+  @override
+  String get loyaltyRedeem => 'Kullanılacak puan';
+
+  @override
+  String get redeem => 'Kullan';
+
+  @override
+  String get tax => 'Vergi';
+
+  @override
+  String get discount => 'İndirim';
+
+  @override
+  String get couponsAndPayments => 'Kuponlar ve ödemeler';
+
+  @override
+  String get promotions => 'Kampanyalar';
+
+  @override
+  String get couponApplied => 'Kupon uygulandı';
+
+  @override
+  String get couponInvalid => 'Bu kupon geçersiz';
+
+  @override
+  String get validateInventory => 'Stok durumunu kontrol et';
+
+  @override
+  String get highContrastHint => 'Metin ve düğmeler için kontrastı artır';
+
+  @override
+  String get reduceMotionHint =>
+      'Desteklenen yerlerde daha az animasyon kullan';
+
+  @override
+  String get textSizeFollowsDevice =>
+      'Cihazınızın yazı boyutunu kullanır. Sistem erişilebilirlik ayarlarından değiştirebilirsiniz.';
+
+  @override
+  String get savePreferences => 'Tercihleri kaydet';
+
+  @override
+  String get preferencesSaved => 'Tercihler kaydedildi';
+
+  @override
+  String get notificationPreferences => 'Bildirim tercihleri';
+
+  @override
+  String get pushNotifications => 'Anlık bildirimler';
+
+  @override
+  String get emailNotifications => 'E-posta bildirimleri';
+
+  @override
+  String get orderUpdates => 'Sipariş güncellemeleri';
+
+  @override
+  String get transactional => 'Sipariş ve ödeme mesajları';
+
+  @override
+  String get deliveryAlerts => 'Teslimat uyarıları';
+
+  @override
+  String get promotionsPref => 'Kampanyalar';
+
+  @override
+  String get priceDrops => 'Fiyat düşüşleri';
+
+  @override
+  String get backInStock => 'Stoka dönüş';
+
+  @override
+  String get trustedDevices => 'Güvenilir cihazlar';
+
+  @override
+  String get trustedDevicesHint =>
+      'Oturum açık cihazları görüntüleyin ve çıkış yapın';
+
+  @override
+  String get biometricHint => 'Uygulamayı yüzünüz veya parmak izinizle açın';
+
+  @override
+  String get privacySubtitle => 'Pazarlama, analitik ve kişiselleştirme';
+
+  @override
+  String get cookiePolicy => 'Çerez politikası';
+
+  @override
+  String get marketingEmail => 'Pazarlama e-postası';
+
+  @override
+  String get smsMarketing => 'SMS pazarlama';
+
+  @override
+  String get personalization => 'Kişiselleştirme';
+
+  @override
+  String get optOutAnalytics => 'Analitiği kapat';
+
+  @override
+  String get shareWithPartners => 'İş ortaklarıyla paylaş';
+
+  @override
+  String get comment => 'Yorum';
+
+  @override
+  String get addPhotos => 'Fotoğraf ekle';
+
+  @override
+  String get submitReview => 'Değerlendirmeyi gönder';
+
+  @override
+  String get inviteCode => 'Davet kodu';
+
+  @override
+  String get claimInvite => 'Daveti kullan';
+
+  @override
+  String get stackable => 'Diğer tekliflerle birlikte kullanılabilir';
+
+  @override
+  String get applyFilters => 'Filtreleri uygula';
+
+  @override
+  String get brandsComma => 'Markalar (virgülle ayırın)';
+
+  @override
+  String get sort => 'Sırala';
+
+  @override
+  String get availabilityFilter => 'Stok durumu';
+
+  @override
+  String get chooseFromGallery => 'Galeriden seç';
+
+  @override
+  String get takePhoto => 'Fotoğraf çek';
+
+  @override
+  String get filters => 'Filtreler';
+
+  @override
+  String get openLiveChat => 'Canlı sohbeti aç';
+
+  @override
+  String get ticketTitle => 'Talep';
+
+  @override
+  String get allFilter => 'Tümü';
+
+  @override
+  String get topUpWallet => 'Cüzdana yükle';
+
+  @override
+  String get amountTry => 'Tutar (₺)';
+
+  @override
+  String get topUp => 'Yükle';
+
+  @override
+  String get transactionHistory => 'İşlem geçmişi';
+
+  @override
+  String get availableBalance => 'Kullanılabilir bakiye';
+
+  @override
+  String get pending => 'Beklemede';
+
+  @override
+  String get verificationCode => 'Doğrulama kodu';
+
+  @override
+  String get verifyEmail => 'E-postayı doğrula';
+
+  @override
+  String get skipForNow => 'Şimdilik atla';
+
+  @override
+  String get forgotPassword => 'Şifrenizi mi unuttunuz?';
+
+  @override
+  String get sendResetLink => 'Sıfırlama bağlantısı gönder';
+
+  @override
+  String get alreadyHaveResetToken => 'Sıfırlama kodunuz var mı?';
+
+  @override
+  String get resetToken => 'Sıfırlama kodu';
+
+  @override
+  String get newPassword => 'Yeni şifre';
+
+  @override
+  String get confirmPassword => 'Şifreyi doğrula';
+
+  @override
+  String get updatePassword => 'Şifreyi güncelle';
+
+  @override
+  String get requestDataExport => 'Veri çıktısı iste';
+
+  @override
+  String get reasonOptional => 'Neden (isteğe bağlı)';
+
+  @override
+  String get cannotBeUndone => 'Bu işlemin geri alınamayacağını anlıyorum';
+
+  @override
+  String get useThisLocation => 'Bu konumu kullan';
+
+  @override
+  String get somethingWentWrong => 'Bir sorun oluştu';
+
+  @override
+  String get increaseQuantity => 'Miktarı artır';
+
+  @override
+  String get decreaseQuantity => 'Miktarı azalt';
+
+  @override
+  String quantityLabel(int count) {
+    return 'Adet $count';
+  }
+
+  @override
+  String get walletAmountOptional => 'Cüzdan tutarı (isteğe bağlı)';
+
+  @override
+  String get giftCard => 'Hediye kartı';
+
+  @override
+  String get nameLabel => 'Ad';
+
+  @override
+  String get passwordLabel => 'Şifre';
+
+  @override
+  String get openSourceLicenses => 'Açık kaynak lisansları';
+
+  @override
+  String get companyName => 'Şirket adı';
+
+  @override
+  String get taxId => 'Vergi numarası';
+
+  @override
+  String get taxOffice => 'Vergi dairesi';
+
+  @override
+  String get giftMessage => 'Hediye notu';
+
+  @override
+  String get supportAssistant => 'Destek asistanı';
+
+  @override
+  String get favoriteProduct => 'Ürünler';
+
+  @override
+  String get favoriteStore => 'Mağazalar';
+
+  @override
+  String get favoriteBrand => 'Markalar';
+
+  @override
+  String get favoriteCategory => 'Kategoriler';
+
+  @override
+  String get favoriteSearch => 'Aramalar';
+
+  @override
+  String get estimate => 'Tahmini tutar';
+
+  @override
+  String get couponLabel => 'Kupon';
+
+  @override
+  String get smartReorder => 'Akıllı tekrar sipariş';
+
+  @override
+  String get budgetOptimize => 'Bütçeyi optimize et';
+
+  @override
+  String get fixCartBeforeCheckout =>
+      'Ödemeye geçmeden önce sepet sorunlarını giderin';
+
+  @override
+  String get walletApplied => 'Cüzdan uygulandı';
+
+  @override
+  String get loyaltyPointsApplied => 'Puanlar uygulandı';
+
+  @override
+  String get itemUnavailableTitle => 'Ürün yoksa';
+
+  @override
+  String get substitutionPreference => 'Yedek ürün tercihi';
+
+  @override
+  String get allowSubstitutions => 'Yedek ürüne izin ver';
+
+  @override
+  String get allowSubstitutionsHint => 'Benzer bir ürünle otomatik değiştir';
+
+  @override
+  String get contactMe => 'Beni ara';
+
+  @override
+  String get contactMeHint => 'Değiştirmeden önce arayın';
+
+  @override
+  String get doNotSubstitute => 'Yedek ürün kullanma';
+
+  @override
+  String get doNotSubstituteHint => 'Eksik ürünleri atla veya iade et';
+
+  @override
+  String get outOfStockRule => 'Stok yok kuralı';
+
+  @override
+  String get replaceWithSimilar => 'Benzeriyle değiştir';
+
+  @override
+  String get replaceWithSimilarHint => 'Mümkünse yakın bir alternatif bul';
+
+  @override
+  String get refundItem => 'Ürünü iade et';
+
+  @override
+  String get refundItemHint => 'Ürünü kaldır ve tutarını iade et';
+
+  @override
+  String get cancelIfMissing => 'Eksik ürün varsa siparişin tamamını iptal et';
+
+  @override
+  String get allergens => 'Alerjenler';
+
+  @override
+  String get privacySettingsSaved => 'Gizlilik ayarları kaydedildi';
+
+  @override
+  String get giftCardApplied => 'Hediye kartı uygulandı';
+
+  @override
+  String get createAccount => 'Hesap oluştur';
+
+  @override
+  String get enterVerificationCode => 'Doğrulama kodunu girin';
+
+  @override
+  String get emailVerified => 'E-posta doğrulandı';
+
+  @override
+  String get enterCodeFromEmail => 'E-postanızdaki doğrulama kodunu girin.';
+
+  @override
+  String enterCodeSentTo(String email) {
+    return '$email adresine gönderdiğimiz kodu girin.';
+  }
+
+  @override
+  String get forgotPasswordHint =>
+      'E-posta adresinizi girin, size bir sıfırlama bağlantısı gönderelim.';
+
+  @override
+  String get passwordResetEmailSent => 'Şifre sıfırlama e-postası gönderildi';
+
+  @override
+  String get failedToSendResetEmail =>
+      'Sıfırlama e-postası gönderilemedi. Lütfen tekrar deneyin.';
+
+  @override
+  String get deleteAccountPermanent =>
+      'Bu işlem kalıcıdır. Siparişleriniz ve kişisel verileriniz silinmek üzere planlanır.';
+
+  @override
+  String get confirmAccountDeletion => 'Lütfen hesap silmeyi onaylayın';
+
+  @override
+  String get failedToDeleteAccount =>
+      'Hesap silinemedi. Lütfen tekrar deneyin.';
+
+  @override
+  String get dataExportRequested => 'Veri çıktısı isteği alındı';
+
+  @override
+  String get failedToRequestExport =>
+      'Veri çıktısı istenemedi. Lütfen tekrar deneyin.';
+
+  @override
+  String get openReviewFromOrder =>
+      'Değerlendirme göndermek için bu ekranı bir siparişten açın';
+
+  @override
+  String get rateYourOrder => 'Siparişinizi puanlayın';
+
+  @override
+  String get rateCourier => 'Kuryeyi puanlayın';
+
+  @override
+  String get frequentlyAskedQuestions => 'Sıkça sorulan sorular';
+
+  @override
+  String get helpFaqPlaceQ => 'Nasıl sipariş veririm?';
+
+  @override
+  String get helpFaqPlaceA =>
+      'Kategorilere bakın veya ürün arayın, sepete ekleyin, ardından teslimat adresi ve ödeme yöntemiyle ödemeyi tamamlayın.';
+
+  @override
+  String get helpFaqEtaQ => 'Teslimat süreleri nedir?';
+
+  @override
+  String get helpFaqEtaA =>
+      'Tahmini süre ürün ve ödeme ekranlarında şehrinize ve seçili adrese göre gösterilir. Çoğu sipariş bu pencere içinde gelir.';
+
+  @override
+  String get helpFaqTrackQ => 'Siparişimi nasıl takip ederim?';
+
+  @override
+  String get helpFaqTrackA =>
+      'Hesabınızdan Siparişler’i açın, siparişi seçin ve Takip’e dokunun. Teslimata kadar canlı durum güncellemelerini görürsünüz.';
+
+  @override
+  String get helpFaqRefundQ => 'İadeler nasıl çalışır?';
+
+  @override
+  String get helpFaqRefundA =>
+      'Eksik veya hasarlı bir ürün varsa siparişi açıp Destek’e yazın. Onaylanan iadeler orijinal ödeme yönteminize veya cüzdanınıza döner.';
+
+  @override
+  String get helpFaqScheduleQ => 'Teslimatı planlayabilir miyim?';
+
+  @override
+  String get helpFaqScheduleA =>
+      'Evet. Ödeme sırasında Teslimatı planla’yı seçip adresiniz için uygun bir saat seçin.';
+
+  @override
+  String get helpFaqCouponQ => 'Kuponlar ve puanlar nasıl çalışır?';
+
+  @override
+  String get helpFaqCouponA =>
+      'Ödemede kupon uygulayın. Puanlar uygun siparişlerde birikir ve cüzdan veya sadakat ekranında gösterilen yerlerde kullanılabilir.';
+
+  @override
+  String get contactBeforeSubstituting => 'Değiştirmeden önce iletişime geç';
+
+  @override
+  String get pinYourAddress => 'Adresinizi işaretleyin';
+
+  @override
+  String get rateProducts => 'Ürünleri puanlayın';
+
+  @override
+  String get verifiedPurchase => 'Doğrulanmış alışveriş';
+
+  @override
+  String get resetPassword => 'Şifreyi sıfırla';
+
+  @override
+  String get resetTokenRequired => 'Sıfırlama kodu gerekli';
+
+  @override
+  String get passwordsDoNotMatch => 'Şifreler eşleşmiyor';
+
+  @override
+  String get passwordUpdated => 'Şifre güncellendi';
+
+  @override
+  String get failedToResetPassword =>
+      'Şifre sıfırlanamadı. Lütfen tekrar deneyin.';
+
+  @override
+  String get anyAvailability => 'Tümü';
+
+  @override
+  String get lowStock => 'Az stok';
+
+  @override
+  String get register => 'Kayıt ol';
+
+  @override
+  String get alreadyHaveAccount => 'Hesabınız var mı? Giriş yapın';
+
+  @override
+  String get needAnAccount => 'Hesabınız yok mu? Kayıt olun';
+
+  @override
+  String get cashback => 'Cashback';
+
+  @override
+  String get promoCredit => 'Kampanya';
+
+  @override
+  String get walletPayHint => 'Cüzdan bakiyenizden ödeyin';
+
+  @override
+  String get cashPayHint => 'Siparişiniz geldiğinde kuryeye ödeyin';
+
+  @override
+  String get giftCardRedeemHint => 'Hediye kartı bakiyesini kullanın';
+
+  @override
+  String get previousPaymentFailed =>
+      'Önceki ödeme başarısız oldu. Tekrar deneyebilirsiniz.';
+
+  @override
+  String get reviewYourOrder => 'Siparişinizi gözden geçirin';
+
+  @override
+  String get contactlessHint =>
+      'Kapıya bırakılsın — teslim alışverişi gerekmez.';
+
+  @override
+  String get giftOrderHint => 'Alıcının fişinde fiyatları gizle.';
+
+  @override
+  String get companyInvoice => 'Kurumsal fatura';
+
+  @override
+  String get companyInvoiceHint => 'Bu sipariş için kurumsal fatura isteyin.';
 }
