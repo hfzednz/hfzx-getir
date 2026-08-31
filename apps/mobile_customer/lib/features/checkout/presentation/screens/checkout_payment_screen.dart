@@ -105,7 +105,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
               padding: const EdgeInsets.all(NxSpacing.s4),
               children: [
                 Text(
-                  'How would you like to pay?',
+                  l10n.paymentMethod,
                   style: NxTypography.headlineSm
                       .copyWith(color: colors.textPrimary),
                 ),
@@ -137,7 +137,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: NxSpacing.s3),
                         child: Text(
-                          'No saved cards yet. You can still pay with wallet or cash.',
+                          l10n.noSavedCards,
                           style: NxTypography.bodySm
                               .copyWith(color: colors.textSecondary),
                         ),
@@ -157,7 +157,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                             subtitle: card.expiryMonth != null &&
                                     card.expiryYear != null
                                 ? 'Expires ${card.expiryMonth}/${card.expiryYear}'
-                                : (card.isDefault ? 'Default card' : null),
+                                : (card.isDefault ? l10n.defaultCard : null),
                             icon: Icons.credit_card,
                             onTap: () => ref
                                 .read(checkoutControllerProvider.notifier)
@@ -182,7 +182,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                 ),
                 if (checkout.paymentType == 'card') ...[
                   Text(
-                    'Installments',
+                    l10n.installments,
                     style: NxTypography.titleSm
                         .copyWith(color: colors.textPrimary),
                   ),
@@ -192,7 +192,7 @@ class _CheckoutPaymentScreenState extends ConsumerState<CheckoutPaymentScreen> {
                     runSpacing: NxSpacing.s2,
                     children: [
                       FilterChip(
-                        label: const Text('Pay in full'),
+                        label: Text(l10n.payInFull),
                         selected: checkout.installmentCount == null,
                         onSelected: (_) => ref
                             .read(checkoutControllerProvider.notifier)

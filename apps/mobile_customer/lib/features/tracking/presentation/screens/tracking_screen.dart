@@ -17,7 +17,30 @@ class TrackingScreen extends ConsumerWidget {
 
   final String orderId;
 
-  String _etaRange(TrackingSnapshot snapshot) {
+  String _stageLabel(AppLocalizations l10n, String raw) {
+    switch (normalizeTrackingStatus(raw)) {
+      case 'created':
+        return l10n.trackingCreated;
+      case 'warehouse_assigned':
+        return l10n.trackingWarehouse;
+      case 'picking':
+        return l10n.trackingPicking;
+      case 'packing':
+        return l10n.trackingPacking;
+      case 'ready_for_dispatch':
+        return l10n.trackingReady;
+      case 'courier_assigned':
+        return l10n.trackingCourier;
+      case 'out_for_delivery':
+        return l10n.trackingOut;
+      case 'completed':
+        return l10n.trackingCompleted;
+      default:
+        return raw;
+    }
+  }
+
+  String _etaRange(TrackingSnapshot snapshot, AppLocalizations l10n) {
     final min = snapshot.etaMin ?? snapshot.etaMinutes;
     final max = snapshot.etaMax ?? snapshot.etaMinutes;
     if (min != null && max != null && min != max) {
@@ -25,7 +48,7 @@ class TrackingScreen extends ConsumerWidget {
     }
     if (min != null) return '$min min';
     if (max != null) return '$max min';
-    return 'Calculating ETA';
+    return l10n.calculatingEta;
   }
 
   NxTrackingStepState _stepState(String state) {
@@ -45,14 +68,15 @@ class TrackingScreen extends ConsumerWidget {
     );
   }
 
-  Set<Marker> _markers(TrackingSnapshot snapshot) {
+  Set<Marker> _markers(BuildContext context, TrackingSnapshot snapshot) {
+    final l10n = AppLocalizations.of(context);
     final markers = <Marker>{};
     if (snapshot.storeLat != null && snapshot.storeLng != null) {
       markers.add(
         Marker(
           markerId: const MarkerId('store'),
           position: LatLng(snapshot.storeLat!, snapshot.storeLng!),
-          infoWindow: const InfoWindow(title: 'Store'),
+          infoWindow: InfoWindow(title: l10n.storesTitle),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
         ),
       );
@@ -62,7 +86,7 @@ class TrackingScreen extends ConsumerWidget {
         Marker(
           markerId: const MarkerId('destination'),
           position: LatLng(snapshot.destLat!, snapshot.destLng!),
-          infoWindow: const InfoWindow(title: 'Delivery'),
+          infoWindow: InfoWindow(title: l10n.trackingTitle),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         ),
       );
@@ -73,7 +97,7 @@ class TrackingScreen extends ConsumerWidget {
           markerId: const MarkerId('courier'),
           position: LatLng(snapshot.courierLat!, snapshot.courierLng!),
           infoWindow: InfoWindow(
-            title: snapshot.courierName ?? 'Courier',
+            title: snapshot.courierName ?? l10n.courierLabel,
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
         ),
@@ -153,13 +177,16 @@ class TrackingScreen extends ConsumerWidget {
           Expanded(
             child: trackingAsync.when(
               data: (snapshot) {
-                final markers = _markers(snapshot);
+                final markers = _markers(context, snapshot);
                 final polylines = _polylines(snapshot, colors.textBrand);
                 final hasMap = markers.isNotEmpty || polylines.isNotEmpty;
-                final steps = snapshot.steps
+                final rawSteps = snapshot.steps.isNotEmpty
+                    ? snapshot.steps
+                    : trackingLifecycleSteps(snapshot.status);
+                final steps = rawSteps
                     .map(
                       (s) => NxTrackingStep(
-                        label: s.title,
+                        label: _stageLabel(l10n, s.title),
                         subtitle: s.subtitle,
                         state: _stepState(s.state),
                       ),
@@ -187,9 +214,9 @@ class TrackingScreen extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.all(NxSpacing.s4),
                       child: NxEtaCard(
-                        etaRange: _etaRange(snapshot),
+                        etaRange: _etaRange(snapshot, l10n),
                         confidenceCopy: snapshot.courierName != null
-                            ? 'Courier: ${snapshot.courierName}'
+                            ? '${l10n.courierLabel}: ${snapshot.courierName}'
                             : snapshot.status,
                         live: true,
                       ),
@@ -201,7 +228,7 @@ class TrackingScreen extends ConsumerWidget {
                         ),
                         child: steps.isEmpty
                             ? Text(
-                                'Tracking updates will appear here as your order moves.',
+                                l10n.trackingUpdatesSoon,
                                 style: NxTypography.bodyMd
                                     .copyWith(color: colors.textSecondary),
                               )

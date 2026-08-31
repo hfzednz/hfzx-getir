@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nexora_design/nexora_design.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/business_rules/order_rules.dart';
 import '../../../../shared/utils/idempotency.dart';
 import '../../domain/entities/orders_entity.dart';
@@ -35,10 +36,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final orderAsync = ref.watch(orderDetailProvider(widget.orderId));
 
     return Scaffold(
-      appBar: NxTopBar(title: 'Order ${widget.orderId}'),
+      appBar: NxTopBar(title: l10n.ordersTitle),
       body: orderAsync.when(
         data: (order) => Stack(
           children: [
@@ -52,7 +54,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     statusLabel: order.statusLabel,
                     total: order.totalLabel,
                     subtitle: order.etaMinutes != null
-                        ? 'ETA ~ ${order.etaMinutes} min'
+                        ? '${l10n.deliveryEta} ~ ${order.etaMinutes} min'
                         : null,
                     imageUrls: order.items
                         .map((i) => i.imageUrl ?? '')
@@ -65,7 +67,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     NxCard(
                       child: ListTile(
                         leading: const Icon(Icons.delivery_dining),
-                        title: Text(order.courier!.name ?? 'Courier'),
+                        title: Text(order.courier!.name ?? l10n.courierLabel),
                         subtitle: Text(order.courier!.vehicle ?? ''),
                       ),
                     ),
@@ -102,7 +104,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Proof of delivery', style: NxTypography.titleSm),
+                            Text(l10n.proofOfDelivery, style: NxTypography.titleSm),
                             const SizedBox(height: NxSpacing.s2),
                             Wrap(
                               spacing: NxSpacing.s2,
@@ -165,14 +167,14 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   ],
                   const SizedBox(height: NxSpacing.s4),
                   NxButton(
-                    label: 'Track order',
+                    label: l10n.trackOrder,
                     expand: true,
                     onPressed: () => context.push('/orders/${widget.orderId}/track'),
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   if (order.canCancel)
                     NxButton(
-                      label: 'Cancel order',
+                      label: l10n.cancelOrder,
                       variant: NxButtonVariant.secondary,
                       expand: true,
                       onPressed: _busy
@@ -184,14 +186,14 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       padding: const EdgeInsets.only(bottom: NxSpacing.s3),
                       child: Text(
                         order.cancellationPolicy.policyText ??
-                            'This order can no longer be cancelled.',
+                            l10n.cannotCancelOrder,
                         style: NxTypography.captionMd,
                       ),
                     ),
                   if (order.canPartialCancel) ...[
                     const SizedBox(height: NxSpacing.s3),
                     NxButton(
-                      label: 'Partial cancel',
+                      label: l10n.partialCancel,
                       variant: NxButtonVariant.secondary,
                       expand: true,
                       onPressed: _busy
@@ -202,7 +204,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   if (order.cancellationPolicy.refundEligible) ...[
                     const SizedBox(height: NxSpacing.s3),
                     NxButton(
-                      label: 'Request refund',
+                      label: l10n.requestRefund,
                       variant: NxButtonVariant.secondary,
                       expand: true,
                       onPressed: _busy
@@ -213,7 +215,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   if (order.canReorder) ...[
                     const SizedBox(height: NxSpacing.s3),
                     NxButton(
-                      label: 'Reorder',
+                      label: l10n.reorder,
                       expand: true,
                       onPressed: _busy ? null : () => _runAction(() => _reorder(order)),
                     ),
@@ -223,7 +225,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     children: [
                       Expanded(
                         child: NxButton(
-                          label: order.isFavorite ? 'Unfavorite' : 'Favorite',
+                          label: order.isFavorite ? l10n.unfavorite : l10n.favorite,
                           variant: NxButtonVariant.tertiary,
                           onPressed: _busy
                               ? null
@@ -235,7 +237,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       const SizedBox(width: NxSpacing.s3),
                       Expanded(
                         child: NxButton(
-                          label: 'Invoice',
+                          label: l10n.invoice,
                           variant: NxButtonVariant.tertiary,
                           onPressed: order.invoiceUrl != null
                               ? () => launchUrl(Uri.parse(order.invoiceUrl!))
@@ -247,7 +249,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   if (order.receiptUrl != null || order.status.name == 'delivered') ...[
                     const SizedBox(height: NxSpacing.s3),
                     NxButton(
-                      label: 'Receipt',
+                      label: l10n.receipt,
                       variant: NxButtonVariant.tertiary,
                       expand: true,
                       onPressed: order.receiptUrl != null

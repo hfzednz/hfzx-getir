@@ -13,6 +13,6 @@ class TrackingRepositoryImpl implements TrackingRepository {
       _remote.fetchSnapshot(orderId);
 
   @override
-  Future<Result<String>> issueRealtimeTicket(String orderId) =>
+  Future<Result<RealtimeTicket>> issueRealtimeTicket(String orderId) =>
       _remote.issueRealtimeTicket(orderId);
 }

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum FavoriteType { product, brand, category, search }
+enum FavoriteType { product, brand, category, search, store }
 
 class FavoriteEntry extends Equatable {
   const FavoriteEntry({

@@ -6,9 +6,13 @@ import 'package:nexora_design/nexora_design.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/route_names.dart';
 import '../../../../shared/errors/customer_facing_error.dart';
+import '../../../../shared/utils/formatters.dart';
+import '../../../../shared/utils/money.dart';
 import '../../../../shared/widgets/async_value_widget.dart';
 import '../../../../shared/widgets/error_view.dart';
-import '../../../search/presentation/providers/search_providers.dart';
+import '../../../favorites/domain/entities/favorites_entity.dart';
+import '../../../favorites/presentation/providers/favorites_providers.dart';
+import '../../../product/domain/entities/product_entity.dart';
 import '../providers/stores_providers.dart';
 
 class StoreDetailScreen extends ConsumerWidget {
@@ -21,7 +25,13 @@ class StoreDetailScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     final storeAsync = ref.watch(storeDetailProvider(storeId));
-    final productsAsync = ref.watch(catalogBrowseProvider);
+    final productsAsync = ref.watch(storeProductsProvider(storeId));
+
+    ref.listen(storeDetailProvider(storeId), (prev, next) {
+      next.whenData((store) {
+        ref.read(selectedStoreIdProvider.notifier).state = store.id;
+      });
+    });
 
     return Scaffold(
       appBar: NxTopBar(title: l10n.storesTitle),
@@ -31,7 +41,7 @@ class StoreDetailScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(storeDetailProvider(storeId));
-              ref.invalidate(catalogBrowseProvider);
+              ref.invalidate(storeProductsProvider(storeId));
             },
             child: ListView(
               padding: const EdgeInsets.all(NxSpacing.s4),
@@ -39,16 +49,44 @@ class StoreDetailScreen extends ConsumerWidget {
                 Text(store.name, style: NxTypography.headlineSm),
                 const SizedBox(height: NxSpacing.s2),
                 Text(store.open ? l10n.storeOpen : l10n.storeClosed),
+                if (!store.open) ...[
+                  const SizedBox(height: NxSpacing.s2),
+                  Text(l10n.storeClosedBody, style: NxTypography.bodyMd),
+                ],
                 if (store.etaMinutes != null)
                   Text('${l10n.deliveryEta}: ${store.etaMinutes} dk'),
+                Text(
+                  '${l10n.minOrder}: ${Formatters.money(Money(minorUnits: store.minOrderMinor, currency: 'TRY'))}',
+                ),
+                Text(
+                  '${l10n.deliveryFee}: ${Formatters.money(Money(minorUnits: store.deliveryFeeMinor, currency: 'TRY'))}',
+                ),
+                const SizedBox(height: NxSpacing.s3),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: NxButton(
+                    label: l10n.favorite,
+                    variant: NxButtonVariant.secondary,
+                    onPressed: () {
+                      ref.read(favoritesRepositoryProvider).add(
+                            FavoriteEntry(
+                              id: 'store:$storeId',
+                              type: FavoriteType.store,
+                              targetId: storeId,
+                              title: store.name,
+                            ),
+                          );
+                    },
+                  ),
+                ),
                 const SizedBox(height: NxSpacing.s4),
-                Text(l10n.categoriesTitle, style: NxTypography.titleSm),
+                Text(l10n.productTitle, style: NxTypography.titleSm),
                 const SizedBox(height: NxSpacing.s2),
                 productsAsync.when(
                   loading: () => const Center(child: NxSpinner()),
                   error: (e, _) => ErrorView(
                     message: customerFacingError(e, languageCode: lang),
-                    onRetry: () => ref.invalidate(catalogBrowseProvider),
+                    onRetry: () => ref.invalidate(storeProductsProvider(storeId)),
                   ),
                   data: (items) {
                     if (items.isEmpty) {
@@ -61,10 +99,31 @@ class StoreDetailScreen extends ConsumerWidget {
                       children: [
                         for (final item in items)
                           ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            minVerticalPadding: 12,
                             title: Text(item.title),
-                            onTap: () => context.push(
-                              RouteNames.product.replaceFirst(':productId', item.id),
+                            subtitle: Text(
+                              item.stockStatus == ProductStockStatus.outOfStock
+                                  ? l10n.outOfStock
+                                  : Formatters.money(
+                                      Money(
+                                        minorUnits: item.priceMinor,
+                                        currency: item.currency,
+                                      ),
+                                    ),
                             ),
+                            enabled:
+                                store.open &&
+                                item.stockStatus != ProductStockStatus.outOfStock,
+                            onTap: store.open &&
+                                    item.stockStatus != ProductStockStatus.outOfStock
+                                ? () => context.push(
+                                      RouteNames.product.replaceFirst(
+                                        ':productId',
+                                        item.id,
+                                      ),
+                                    )
+                                : null,
                           ),
                       ],
                     );

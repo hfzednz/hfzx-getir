@@ -14,6 +14,7 @@ import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../../orders/domain/entities/orders_entity.dart';
 import '../../../orders/presentation/providers/orders_providers.dart';
 import '../../domain/entities/home_entity.dart';
+import '../home_history.dart';
 import '../providers/home_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -107,22 +108,16 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-              if (feed.widgets.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: NxEmptyState(
-                    title: l10n.emptyTitle,
-                    body: l10n.emptyMessage,
-                    primaryActionLabel: l10n.retry,
-                    onPrimaryAction: () => ref.invalidate(homeFeedProvider),
-                  ),
-                )
-              else
-                ...feed.widgets.map(
-                  (widget) => SliverToBoxAdapter(
-                    child: _HomeWidgetSection(config: widget),
-                  ),
+              ..._homeWidgetSlivers(
+                context,
+                l10n,
+                ordersAsync.maybeWhen(
+                  data: (orders) => mergeHomeHistory(feed.widgets, orders),
+                  orElse: () => feed.widgets,
                 ),
+                ordersAsync.isLoading,
+                ordersAsync.hasError,
+              ),
               const SliverToBoxAdapter(child: SizedBox(height: 80)),
             ],
           ),
@@ -176,23 +171,96 @@ List<Widget> _activeOrderSlivers(
   );
 }
 
+List<Widget> _homeWidgetSlivers(
+  BuildContext context,
+  AppLocalizations l10n,
+  List<HomeWidgetConfig> widgets,
+  bool ordersLoading,
+  bool ordersError,
+) {
+  if (widgets.isEmpty) {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: NxEmptyState(
+          title: l10n.emptyTitle,
+          body: l10n.emptyMessage,
+        ),
+      ),
+    ];
+  }
+  return [
+    for (final widget in widgets)
+      SliverToBoxAdapter(
+        child: _HomeWidgetSection(
+          config: widget,
+          ordersLoading: ordersLoading &&
+              (widget.id == 'recently-ordered' ||
+                  widget.id == 'frequently-purchased'),
+          ordersError: ordersError &&
+              (widget.id == 'recently-ordered' ||
+                  widget.id == 'frequently-purchased'),
+        ),
+      ),
+  ];
+}
+
+String _homeSectionTitle(AppLocalizations l10n, HomeWidgetConfig config) {
+  return switch (config.id) {
+    'nearby-stores' => l10n.nearbyStores,
+    'categories' => l10n.categoriesTitle,
+    'popular' => l10n.popularProducts,
+    'recommended' => l10n.recommendedProducts,
+    'recently-ordered' => l10n.recentlyOrdered,
+    'frequently-purchased' => l10n.frequentlyPurchased,
+    'campaign-welcome' => l10n.campaignsTitle,
+    _ => config.title,
+  };
+}
+
 class _HomeWidgetSection extends StatelessWidget {
-  const _HomeWidgetSection({required this.config});
+  const _HomeWidgetSection({
+    required this.config,
+    this.ordersLoading = false,
+    this.ordersError = false,
+  });
 
   final HomeWidgetConfig config;
+  final bool ordersLoading;
+  final bool ordersError;
 
   @override
   Widget build(BuildContext context) {
-    return switch (config.type) {
+    final l10n = AppLocalizations.of(context);
+    final titled = HomeWidgetConfig(
+      id: config.id,
+      type: config.type,
+      title: _homeSectionTitle(l10n, config),
+      payload: config.payload,
+      items: config.items,
+    );
+    if (ordersLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(NxSpacing.s4),
+        child: Center(child: NxSpinner()),
+      );
+    }
+    if (ordersError) {
+      return Padding(
+        padding: const EdgeInsets.all(NxSpacing.s4),
+        child: Text(l10n.sectionEmpty, style: NxTypography.bodyMd),
+      );
+    }
+    return switch (titled.type) {
       HomeWidgetType.banner ||
       HomeWidgetType.campaign =>
-        _BannerWidget(config: config),
-      HomeWidgetType.countdown => _CountdownWidget(config: config),
-      HomeWidgetType.flashSale => _ProductRailWidget(config: config, accent: true),
+        _BannerWidget(config: titled),
+      HomeWidgetType.countdown => _CountdownWidget(config: titled),
+      HomeWidgetType.flashSale => _ProductRailWidget(config: titled, accent: true),
       HomeWidgetType.brands ||
       HomeWidgetType.favoriteCategories =>
-        _ChipRailWidget(config: config),
-      _ => _ProductRailWidget(config: config),
+        _ChipRailWidget(config: titled),
+      _ => _ProductRailWidget(config: titled),
     };
   }
 }
@@ -291,7 +359,27 @@ class _ProductRailWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (config.items.isEmpty) return const SizedBox.shrink();
+    if (config.items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          NxSpacing.s4,
+          NxSpacing.s4,
+          NxSpacing.s4,
+          NxSpacing.s2,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(config.title, style: NxTypography.headlineSm),
+            const SizedBox(height: NxSpacing.s2),
+            Text(
+              AppLocalizations.of(context).sectionEmpty,
+              style: NxTypography.bodyMd,
+            ),
+          ],
+        ),
+      );
+    }
     final l10n = AppLocalizations.of(context);
 
     return Column(

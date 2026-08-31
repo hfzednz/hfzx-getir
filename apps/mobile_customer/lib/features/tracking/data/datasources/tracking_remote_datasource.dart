@@ -15,12 +15,12 @@ class TrackingRemoteDataSource {
     );
   }
 
-  Future<Result<String>> issueRealtimeTicket(String orderId) async {
-    return _client.post<String>(
+  Future<Result<RealtimeTicket>> issueRealtimeTicket(String orderId) async {
+    return _client.post<RealtimeTicket>(
       '/orders/$orderId/realtime-ticket',
       parser: (json) {
         final map = json as Map<String, dynamic>;
-        return map['ticket']?.toString() ?? map['token']?.toString() ?? '';
+        return RealtimeTicket.fromJson(map, fallbackTopic: 'order:$orderId');
       },
     );
   }

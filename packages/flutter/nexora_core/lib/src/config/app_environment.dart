@@ -94,6 +94,21 @@ class AppEnvironment {
 
   bool get isProduction => name == 'prod';
 
+  /// HTTP SSE endpoint derived from [wsUrl] (`wss://host/v1` → `https://host/v1/realtime/sse`).
+  String get sseUrl {
+    var u = wsUrl.trim();
+    if (u.startsWith('wss://')) {
+      u = 'https://${u.substring(6)}';
+    } else if (u.startsWith('ws://')) {
+      u = 'http://${u.substring(5)}';
+    }
+    u = u.replaceAll(RegExp(r'/+$'), '');
+    if (u.endsWith('/v1')) {
+      u = u.substring(0, u.length - 3);
+    }
+    return '$u/v1/realtime/sse';
+  }
+
   @override
   String toString() => 'AppEnvironment($name, $baseUrl)';
 }

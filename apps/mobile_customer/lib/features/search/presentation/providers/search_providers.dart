@@ -7,6 +7,7 @@ import '../../domain/repositories/search_repository.dart';
 import '../../domain/usecases/search_usecases.dart';
 import '../../../cart/data/local/app_database.dart';
 import '../../../product/domain/entities/product_entity.dart';
+import '../../../stores/presentation/providers/stores_providers.dart';
 import '../../../../di/providers.dart';
 
 final searchRemoteDataSourceProvider = Provider<SearchRemoteDataSource>((ref) {
@@ -43,9 +44,11 @@ final catalogBrowseProvider =
 final searchResultsProvider =
     FutureProvider.family.autoDispose<List<ProductSummary>, SearchQuery>((ref, query) async {
   if (query.text.trim().length < 2) return [];
+  final storeId = ref.watch(selectedStoreIdProvider);
+  final filters = query.filters.copyWith(storeId: storeId);
   final result = await ref.watch(semanticSearchUseCaseProvider).call(
         query.text,
-        filters: query.filters,
+        filters: filters,
       );
   return result.fold(
     onSuccess: (v) => v.items,

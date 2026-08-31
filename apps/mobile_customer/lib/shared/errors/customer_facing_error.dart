@@ -96,6 +96,22 @@ String customerFacingError(
         ? 'Kupon geçersiz. Lütfen kodu kontrol edin.'
         : 'This coupon is not valid. Check the code and try again.';
   }
+  if (lower.contains('unavailable') ||
+      lower.contains('out of stock') ||
+      lower.contains('out_of_stock')) {
+    return tr
+        ? 'Bu ürün şu anda stokta yok.'
+        : 'This product is currently unavailable.';
+  }
+  if (lower.contains('price') &&
+      (lower.contains('chang') || lower.contains('mismatch'))) {
+    return tr
+        ? 'Fiyat değişti. Lütfen sepetinizi yenileyip tekrar deneyin.'
+        : 'The price changed. Refresh your cart and try again.';
+  }
+  if (lower.contains('empty') && lower.contains('cart')) {
+    return tr ? 'Sepetiniz boş.' : 'Your cart is empty.';
+  }
   if (lower.contains('min') &&
       (lower.contains('order') || lower.contains('basket'))) {
     return tr

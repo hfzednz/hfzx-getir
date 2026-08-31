@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexora_core/nexora_core.dart';
 
 import '../../../../di/providers.dart';
+import '../../../../shared/realtime/order_sse_client.dart';
+import '../../../../shared/realtime/sse_parser.dart';
 import '../../data/datasources/tracking_remote_datasource.dart';
 import '../../data/repositories/tracking_repository_impl.dart';
 import '../../domain/entities/tracking_entity.dart';
@@ -31,50 +35,142 @@ final trackingSnapshotProvider =
   );
 });
 
-/// Live tracking: authenticated SSE/WS ticket for this order, plus track polling.
-/// Warehouse and courier events arrive on the ticketed realtime socket; poll is
-/// the fallback when the socket is reconnecting.
+/// Live tracking: authenticated HTTP SSE is primary; polling is fallback only.
 final trackingRealtimeProvider =
-    StreamProvider.autoDispose.family<TrackingSnapshot, String>((ref, orderId) async* {
-  yield await ref.watch(trackingSnapshotProvider(orderId).future);
-
+    StreamProvider.autoDispose.family<TrackingSnapshot, String>((ref, orderId) {
+  final controller = StreamController<TrackingSnapshot>();
   var closed = false;
-  ref.onDispose(() => closed = true);
+  var sseConnected = false;
+  var lastRank = -1;
+  final seenEventIds = <String>{};
+  TrackingSnapshot? latest;
 
-  final repo = ref.watch(trackingRepositoryProvider);
-  final env = ref.watch(environmentProvider);
-  final ticketResult = await repo.issueRealtimeTicket(orderId);
-  final ticket = ticketResult.fold(
-    onSuccess: (value) => value,
-    onFailure: (_) => '',
-  );
+  final repo = ref.read(trackingRepositoryProvider);
+  final env = ref.read(environmentProvider);
+  final sse = OrderSseClient();
+  StreamSubscription<SseFrame>? sseSub;
+  Timer? pollTimer;
+  AppLifecycleListener? lifecycle;
 
-  RealtimeClient? live;
-  StreamSubscription<RealtimeEvent>? sub;
-  if (ticket.isNotEmpty) {
-    live = RealtimeClient(
-      wsBaseUrl: env.wsUrl,
-      ticketProvider: () async => ticket,
-    );
-    sub = live.events.listen((event) {
-      if (event is RealtimeMessageEvent && !closed) {
-        ref.invalidate(trackingSnapshotProvider(orderId));
-      }
-    });
-    ref.onDispose(() {
-      unawaited(sub?.cancel());
-      unawaited(live?.dispose());
-    });
-    unawaited(live.connect());
+  void emit(TrackingSnapshot next) {
+    final rank = trackingStatusRank(next.status);
+    if (rank >= 0 && lastRank >= 0 && rank < lastRank) return;
+    if (rank >= 0) lastRank = rank;
+    latest = next;
+    if (!controller.isClosed) controller.add(next);
   }
 
-  await for (final _ in Stream<void>.periodic(const Duration(seconds: 3))) {
-    if (closed) return;
+  Future<void> refreshTrack() async {
     ref.invalidate(trackingSnapshotProvider(orderId));
     try {
-      yield await ref.read(trackingSnapshotProvider(orderId).future);
-    } catch (_) {
-      // Keep the last snapshot on transient track failures.
-    }
+      emit(await ref.read(trackingSnapshotProvider(orderId).future));
+    } catch (_) {}
   }
+
+  void handleFrame(SseFrame frame) {
+    sseConnected = true;
+    if (frame.id != null && frame.id!.isNotEmpty) {
+      if (!seenEventIds.add(frame.id!)) return;
+      if (seenEventIds.length > 200) {
+        seenEventIds.remove(seenEventIds.first);
+      }
+    }
+    if (frame.data.isEmpty) return;
+    try {
+      final decoded = jsonDecode(frame.data);
+      if (decoded is Map && latest != null) {
+        final status = decoded['status']?.toString() ??
+            decoded['type']?.toString() ??
+            decoded['event']?.toString();
+        if (status != null && status.isNotEmpty) {
+          final current = latest!;
+          emit(
+            TrackingSnapshot(
+              orderId: current.orderId,
+              status: normalizeTrackingStatus(status),
+              etaMinutes: current.etaMinutes,
+              etaMin: current.etaMin,
+              etaMax: current.etaMax,
+              courierName: current.courierName,
+              courierPhone: current.courierPhone,
+              courierLat: current.courierLat,
+              courierLng: current.courierLng,
+              storeLat: current.storeLat,
+              storeLng: current.storeLng,
+              destLat: current.destLat,
+              destLng: current.destLng,
+              steps: trackingLifecycleSteps(status),
+              routePoints: current.routePoints,
+              canCall: current.canCall,
+              canChat: current.canChat,
+              courierChatUrl: current.courierChatUrl,
+            ),
+          );
+        }
+      }
+    } catch (_) {}
+    unawaited(refreshTrack());
+  }
+
+  Future<void> connectSse() async {
+    if (closed) return;
+    await sseSub?.cancel();
+    final ticketResult = await repo.issueRealtimeTicket(orderId);
+    final ticket = ticketResult.fold(
+      onSuccess: (value) => value,
+      onFailure: (_) => const RealtimeTicket(ticket: ''),
+    );
+    if (ticket.isEmpty || closed) return;
+    final topic = ticket.topic.isEmpty ? 'order:$orderId' : ticket.topic;
+    sseSub = sse
+        .connect(sseUrl: env.sseUrl, ticket: ticket.ticket, topic: topic)
+        .listen(
+      handleFrame,
+      onError: (_) {
+        sseConnected = false;
+      },
+    );
+  }
+
+  void startPollFallback() {
+    pollTimer?.cancel();
+    pollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (closed) return;
+      if (sseConnected) return;
+      unawaited(connectSse());
+      unawaited(refreshTrack());
+    });
+  }
+
+  unawaited(() async {
+    try {
+      emit(await ref.read(trackingSnapshotProvider(orderId).future));
+    } catch (err, stack) {
+      if (!controller.isClosed) controller.addError(err, stack);
+    }
+    await connectSse();
+    startPollFallback();
+  }());
+
+  lifecycle = AppLifecycleListener(
+    onResume: () {
+      sseConnected = false;
+      unawaited(connectSse());
+      unawaited(refreshTrack());
+    },
+    onPause: () {
+      unawaited(sseSub?.cancel());
+      sseConnected = false;
+    },
+  );
+
+  ref.onDispose(() {
+    closed = true;
+    lifecycle?.dispose();
+    pollTimer?.cancel();
+    unawaited(sseSub?.cancel());
+    unawaited(controller.close());
+  });
+
+  return controller.stream;
 });

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../di/providers.dart';
+import '../../../product/domain/entities/product_entity.dart';
 import '../../data/datasources/stores_remote_datasource.dart';
 import '../../domain/entities/store_entity.dart';
 
@@ -16,5 +17,13 @@ final storesListProvider = FutureProvider.autoDispose<List<StoreSummary>>((ref) 
 final storeDetailProvider =
     FutureProvider.autoDispose.family<StoreSummary, String>((ref, id) async {
   final result = await ref.watch(storesRemoteDataSourceProvider).fetch(id);
+  return result.fold(onSuccess: (v) => v, onFailure: (e) => throw e);
+});
+
+final selectedStoreIdProvider = StateProvider<String?>((ref) => null);
+
+final storeProductsProvider =
+    FutureProvider.autoDispose.family<List<ProductSummary>, String>((ref, id) async {
+  final result = await ref.watch(storesRemoteDataSourceProvider).fetchProducts(id);
   return result.fold(onSuccess: (v) => v, onFailure: (e) => throw e);
 });

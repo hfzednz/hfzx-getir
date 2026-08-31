@@ -1,6 +1,7 @@
 import 'package:nexora_core/nexora_core.dart';
 
 import '../../../../shared/utils/json_list.dart';
+import '../../../product/domain/entities/product_entity.dart';
 import '../../domain/entities/store_entity.dart';
 
 class StoresRemoteDataSource {
@@ -20,6 +21,14 @@ class StoresRemoteDataSource {
       '/stores/$id',
       parser: (json) =>
           StoreSummary.fromJson(Map<String, dynamic>.from(json as Map)),
+    );
+  }
+
+  Future<Result<List<ProductSummary>>> fetchProducts(String id) {
+    return _client.get<List<ProductSummary>>(
+      '/stores/$id/products',
+      parser: (json) =>
+          jsonObjectList(json).map(ProductSummary.fromJson).toList(),
     );
   }
 }

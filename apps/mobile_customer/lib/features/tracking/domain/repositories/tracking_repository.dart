@@ -4,5 +4,5 @@ import '../entities/tracking_entity.dart';
 
 abstract class TrackingRepository {
   Future<Result<TrackingSnapshot>> fetchSnapshot(String orderId);
-  Future<Result<String>> issueRealtimeTicket(String orderId);
+  Future<Result<RealtimeTicket>> issueRealtimeTicket(String orderId);
 }

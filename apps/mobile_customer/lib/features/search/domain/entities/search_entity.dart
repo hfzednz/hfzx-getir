@@ -36,6 +36,7 @@ class SearchFilters extends Equatable {
     this.dietary = const [],
     this.sort = SearchSort.relevance,
     this.categoryId,
+    this.storeId,
   });
 
   final List<String> brands;
@@ -45,6 +46,7 @@ class SearchFilters extends Equatable {
   final List<String> dietary;
   final SearchSort sort;
   final String? categoryId;
+  final String? storeId;
 
   Map<String, dynamic> toQueryParams() => {
         if (brands.isNotEmpty) 'brands': brands.join(','),
@@ -54,6 +56,7 @@ class SearchFilters extends Equatable {
         if (dietary.isNotEmpty) 'dietary': dietary.join(','),
         'sort': searchSortToJson(sort),
         if (categoryId != null) 'category_id': categoryId,
+        if (storeId != null && storeId!.isNotEmpty) 'storeId': storeId,
       };
 
   factory SearchFilters.fromJson(Map<String, dynamic> json) => SearchFilters(
@@ -70,6 +73,7 @@ class SearchFilters extends Equatable {
             .toList(),
         sort: searchSortFromJson(json['sort']?.toString()),
         categoryId: json['category_id']?.toString(),
+        storeId: json['storeId']?.toString() ?? json['store_id']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -80,6 +84,7 @@ class SearchFilters extends Equatable {
         'dietary': dietary,
         'sort': searchSortToJson(sort),
         if (categoryId != null) 'category_id': categoryId,
+        if (storeId != null) 'storeId': storeId,
       };
 
   SearchFilters copyWith({
@@ -90,7 +95,9 @@ class SearchFilters extends Equatable {
     List<String>? dietary,
     SearchSort? sort,
     String? categoryId,
+    String? storeId,
     bool clearAvailability = false,
+    bool clearStoreId = false,
   }) =>
       SearchFilters(
         brands: brands ?? this.brands,
@@ -100,11 +107,12 @@ class SearchFilters extends Equatable {
         dietary: dietary ?? this.dietary,
         sort: sort ?? this.sort,
         categoryId: categoryId ?? this.categoryId,
+        storeId: clearStoreId ? null : (storeId ?? this.storeId),
       );
 
   @override
   List<Object?> get props =>
-      [brands, priceMinMinor, priceMaxMinor, availability, dietary, sort, categoryId];
+      [brands, priceMinMinor, priceMaxMinor, availability, dietary, sort, categoryId, storeId];
 }
 
 class SearchSuggestion extends Equatable {

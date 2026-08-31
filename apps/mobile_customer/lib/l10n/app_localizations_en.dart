@@ -271,7 +271,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resendOtp => 'Resend code';
 
   @override
-  String resendOtpIn(int seconds) => 'Resend in ${seconds}s';
+  String resendOtpIn(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
 
   @override
   String get enterPhone => 'Enter your phone number';
@@ -300,4 +302,267 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashOnDelivery => 'Cash on delivery';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get submit => 'Submit';
+
+  @override
+  String get firstName => 'First name';
+
+  @override
+  String get lastName => 'Last name';
+
+  @override
+  String get displayName => 'Display name';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get phone => 'Phone';
+
+  @override
+  String get communicationPreferences => 'Communication preferences';
+
+  @override
+  String get emailMarketing => 'Email marketing';
+
+  @override
+  String get orderUpdatesPush => 'Order updates (push)';
+
+  @override
+  String get promotionsPush => 'Promotions (push)';
+
+  @override
+  String get smsAlerts => 'SMS alerts';
+
+  @override
+  String get privacyControls => 'Privacy controls';
+
+  @override
+  String get recipientName => 'Recipient name';
+
+  @override
+  String get recipientPhone => 'Recipient phone';
+
+  @override
+  String get favorite => 'Favorite';
+
+  @override
+  String get unfavorite => 'Remove favorite';
+
+  @override
+  String get defaultAddress => 'Default address';
+
+  @override
+  String get pickOnMap => 'Pick on map';
+
+  @override
+  String get changeLocation => 'Change location';
+
+  @override
+  String get saveChanges => 'Save changes';
+
+  @override
+  String get saveAddress => 'Save address';
+
+  @override
+  String get deliveryNotAvailableHere =>
+      'Delivery may not be available at this location.';
+
+  @override
+  String get newTicket => 'New ticket';
+
+  @override
+  String get faqTitle => 'FAQ';
+
+  @override
+  String get yourTickets => 'Your tickets';
+
+  @override
+  String get createSupportTicket => 'Create a support ticket';
+
+  @override
+  String get subject => 'Subject';
+
+  @override
+  String get message => 'Message';
+
+  @override
+  String get partialCancel => 'Cancel selected items';
+
+  @override
+  String get requestRefund => 'Request a refund';
+
+  @override
+  String get cancelOrder => 'Cancel order';
+
+  @override
+  String get cannotCancelOrder => 'This order can no longer be cancelled.';
+
+  @override
+  String get trackOrder => 'Track order';
+
+  @override
+  String get payInFull => 'Pay in full';
+
+  @override
+  String get installments => 'Installments';
+
+  @override
+  String get defaultCard => 'Default card';
+
+  @override
+  String get noSavedCards =>
+      'No saved cards yet. Pay with cash or the staging test card.';
+
+  @override
+  String get recentlyOrdered => 'Recently ordered';
+
+  @override
+  String get frequentlyPurchased => 'Frequently purchased';
+
+  @override
+  String get popularProducts => 'Popular';
+
+  @override
+  String get recommendedProducts => 'Recommended for you';
+
+  @override
+  String get nearbyStores => 'Nearby stores';
+
+  @override
+  String get campaignsTitle => 'Offers';
+
+  @override
+  String get minOrder => 'Minimum order';
+
+  @override
+  String get outOfStock => 'Out of stock';
+
+  @override
+  String get inStock => 'In stock';
+
+  @override
+  String get storeClosedBody =>
+      'This store is closed right now. You can browse, but ordering will be available when it reopens.';
+
+  @override
+  String get trackingUpdatesSoon =>
+      'Tracking updates will appear here as your order moves.';
+
+  @override
+  String get calculatingEta => 'Calculating arrival time';
+
+  @override
+  String get courierLabel => 'Courier';
+
+  @override
+  String get markAllRead => 'Mark all as read';
+
+  @override
+  String get noNotifications => 'No notifications yet.';
+
+  @override
+  String get emptyCart => 'Your cart is empty.';
+
+  @override
+  String get retryPayment => 'Retry payment';
+
+  @override
+  String get paymentFailed =>
+      'Payment did not go through. Try again or choose another method.';
+
+  @override
+  String get sectionEmpty => 'Nothing to show here yet.';
+
+  @override
+  String get accessibility => 'Accessibility';
+
+  @override
+  String get highContrast => 'High contrast';
+
+  @override
+  String get reduceMotion => 'Reduce motion';
+
+  @override
+  String get textSize => 'Text size';
+
+  @override
+  String get addressLabel => 'Label';
+
+  @override
+  String get addressHome => 'Home';
+
+  @override
+  String get addressWork => 'Work';
+
+  @override
+  String get addressCustom => 'Custom';
+
+  @override
+  String get customLabel => 'Custom label';
+
+  @override
+  String get streetAddress => 'Street address';
+
+  @override
+  String get editAddress => 'Edit address';
+
+  @override
+  String get addressSaved => 'Address saved';
+
+  @override
+  String get addressUpdated => 'Address updated';
+
+  @override
+  String get building => 'Building';
+
+  @override
+  String get floor => 'Floor';
+
+  @override
+  String get doorApt => 'Apartment / door';
+
+  @override
+  String get deliveryInstructions => 'Delivery instructions';
+
+  @override
+  String get invoice => 'Invoice';
+
+  @override
+  String get receipt => 'Receipt';
+
+  @override
+  String get proofOfDelivery => 'Proof of delivery';
+
+  @override
+  String get trackingCreated => 'Order created';
+
+  @override
+  String get trackingWarehouse => 'Warehouse assigned';
+
+  @override
+  String get trackingPicking => 'Picking';
+
+  @override
+  String get trackingPacking => 'Packing';
+
+  @override
+  String get trackingReady => 'Ready for dispatch';
+
+  @override
+  String get trackingCourier => 'Courier assigned';
+
+  @override
+  String get trackingOut => 'Out for delivery';
+
+  @override
+  String get trackingCompleted => 'Delivered';
 }

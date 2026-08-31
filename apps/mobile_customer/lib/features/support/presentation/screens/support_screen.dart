@@ -34,7 +34,7 @@ class SupportScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateTicket(context, ref),
-        label: const Text('New ticket'),
+        label: Text(l10n.newTicket),
         icon: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
@@ -58,7 +58,7 @@ class SupportScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(NxSpacing.s4, 0, NxSpacing.s4, NxSpacing.s2),
-                child: Text('FAQ', style: NxTypography.headlineSm),
+                child: Text(l10n.faqTitle, style: NxTypography.headlineSm),
               ),
             ),
             AsyncValueWidget(
@@ -83,7 +83,7 @@ class SupportScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(NxSpacing.s4, NxSpacing.s4, NxSpacing.s4, NxSpacing.s2),
-                child: Text('Your tickets', style: NxTypography.headlineSm),
+                child: Text(l10n.yourTickets, style: NxTypography.headlineSm),
               ),
             ),
             ticketsAsync.when(
@@ -124,22 +124,23 @@ class SupportScreen extends ConsumerWidget {
   }
 
   Future<void> _showCreateTicket(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final subjectController = TextEditingController();
     final bodyController = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Create support ticket'),
+        title: Text(l10n.createSupportTicket),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: subjectController, decoration: const InputDecoration(labelText: 'Subject')),
-            TextField(controller: bodyController, decoration: const InputDecoration(labelText: 'Message'), maxLines: 3),
+            TextField(controller: subjectController, decoration: InputDecoration(labelText: l10n.subject)),
+            TextField(controller: bodyController, decoration: InputDecoration(labelText: l10n.message), maxLines: 3),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Submit')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.submit)),
         ],
       ),
     );

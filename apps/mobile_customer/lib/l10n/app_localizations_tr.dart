@@ -271,7 +271,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get resendOtp => 'Kodu yeniden gönder';
 
   @override
-  String resendOtpIn(int seconds) => '$seconds sn sonra yeniden gönder';
+  String resendOtpIn(int seconds) {
+    return '$seconds sn sonra yeniden gönder';
+  }
 
   @override
   String get enterPhone => 'Telefon numaranızı girin';
@@ -300,4 +302,267 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cashOnDelivery => 'Kapıda nakit';
+
+  @override
+  String get save => 'Kaydet';
+
+  @override
+  String get cancel => 'Vazgeç';
+
+  @override
+  String get submit => 'Gönder';
+
+  @override
+  String get firstName => 'Ad';
+
+  @override
+  String get lastName => 'Soyad';
+
+  @override
+  String get displayName => 'Görünen ad';
+
+  @override
+  String get email => 'E-posta';
+
+  @override
+  String get phone => 'Telefon';
+
+  @override
+  String get communicationPreferences => 'İletişim tercihleri';
+
+  @override
+  String get emailMarketing => 'E-posta kampanyaları';
+
+  @override
+  String get orderUpdatesPush => 'Sipariş bildirimleri (anlık)';
+
+  @override
+  String get promotionsPush => 'Kampanya bildirimleri (anlık)';
+
+  @override
+  String get smsAlerts => 'SMS bildirimleri';
+
+  @override
+  String get privacyControls => 'Gizlilik ayarları';
+
+  @override
+  String get recipientName => 'Alıcı adı';
+
+  @override
+  String get recipientPhone => 'Alıcı telefonu';
+
+  @override
+  String get favorite => 'Favorilere ekle';
+
+  @override
+  String get unfavorite => 'Favorilerden çıkar';
+
+  @override
+  String get defaultAddress => 'Varsayılan adres';
+
+  @override
+  String get pickOnMap => 'Haritadan seç';
+
+  @override
+  String get changeLocation => 'Konumu değiştir';
+
+  @override
+  String get saveChanges => 'Değişiklikleri kaydet';
+
+  @override
+  String get saveAddress => 'Adresi kaydet';
+
+  @override
+  String get deliveryNotAvailableHere =>
+      'Bu konumda teslimat şu anda mümkün olmayabilir.';
+
+  @override
+  String get newTicket => 'Yeni talep';
+
+  @override
+  String get faqTitle => 'Sıkça sorulan sorular';
+
+  @override
+  String get yourTickets => 'Talepleriniz';
+
+  @override
+  String get createSupportTicket => 'Destek talebi oluştur';
+
+  @override
+  String get subject => 'Konu';
+
+  @override
+  String get message => 'Mesaj';
+
+  @override
+  String get partialCancel => 'Seçilen ürünleri iptal et';
+
+  @override
+  String get requestRefund => 'İade talep et';
+
+  @override
+  String get cancelOrder => 'Siparişi iptal et';
+
+  @override
+  String get cannotCancelOrder => 'Bu sipariş artık iptal edilemez.';
+
+  @override
+  String get trackOrder => 'Siparişi takip et';
+
+  @override
+  String get payInFull => 'Peşin öde';
+
+  @override
+  String get installments => 'Taksit';
+
+  @override
+  String get defaultCard => 'Varsayılan kart';
+
+  @override
+  String get noSavedCards =>
+      'Kayıtlı kart yok. Kapıda nakit veya test kartı ile ödeyebilirsiniz.';
+
+  @override
+  String get recentlyOrdered => 'Son siparişleriniz';
+
+  @override
+  String get frequentlyPurchased => 'Sık alınanlar';
+
+  @override
+  String get popularProducts => 'Popüler ürünler';
+
+  @override
+  String get recommendedProducts => 'Size önerilenler';
+
+  @override
+  String get nearbyStores => 'Yakındaki mağazalar';
+
+  @override
+  String get campaignsTitle => 'Kampanyalar';
+
+  @override
+  String get minOrder => 'Minimum sepet tutarı';
+
+  @override
+  String get outOfStock => 'Tükendi';
+
+  @override
+  String get inStock => 'Stokta';
+
+  @override
+  String get storeClosedBody =>
+      'Bu mağaza şu anda kapalı. Ürünlere bakabilirsiniz; sipariş mağaza açıldığında mümkün olacak.';
+
+  @override
+  String get trackingUpdatesSoon =>
+      'Siparişiniz ilerledikçe takip bilgileri burada görünecek.';
+
+  @override
+  String get calculatingEta => 'Varış süresi hesaplanıyor';
+
+  @override
+  String get courierLabel => 'Kurye';
+
+  @override
+  String get markAllRead => 'Tümünü okundu işaretle';
+
+  @override
+  String get noNotifications => 'Henüz bildiriminiz yok.';
+
+  @override
+  String get emptyCart => 'Sepetiniz boş.';
+
+  @override
+  String get retryPayment => 'Ödemeyi tekrar dene';
+
+  @override
+  String get paymentFailed =>
+      'Ödeme alınamadı. Tekrar deneyin veya başka bir yöntem seçin.';
+
+  @override
+  String get sectionEmpty => 'Burada henüz bir şey yok.';
+
+  @override
+  String get accessibility => 'Erişilebilirlik';
+
+  @override
+  String get highContrast => 'Yüksek kontrast';
+
+  @override
+  String get reduceMotion => 'Hareketi azalt';
+
+  @override
+  String get textSize => 'Yazı boyutu';
+
+  @override
+  String get addressLabel => 'Etiket';
+
+  @override
+  String get addressHome => 'Ev';
+
+  @override
+  String get addressWork => 'İş';
+
+  @override
+  String get addressCustom => 'Özel';
+
+  @override
+  String get customLabel => 'Özel etiket';
+
+  @override
+  String get streetAddress => 'Sokak adresi';
+
+  @override
+  String get editAddress => 'Adresi düzenle';
+
+  @override
+  String get addressSaved => 'Adres kaydedildi';
+
+  @override
+  String get addressUpdated => 'Adres güncellendi';
+
+  @override
+  String get building => 'Bina';
+
+  @override
+  String get floor => 'Kat';
+
+  @override
+  String get doorApt => 'Daire / kapı';
+
+  @override
+  String get deliveryInstructions => 'Teslimat notu';
+
+  @override
+  String get invoice => 'Fatura';
+
+  @override
+  String get receipt => 'Makbuz';
+
+  @override
+  String get proofOfDelivery => 'Teslim kanıtı';
+
+  @override
+  String get trackingCreated => 'Sipariş oluşturuldu';
+
+  @override
+  String get trackingWarehouse => 'Depo atandı';
+
+  @override
+  String get trackingPicking => 'Toplanıyor';
+
+  @override
+  String get trackingPacking => 'Paketleniyor';
+
+  @override
+  String get trackingReady => 'Çıkışa hazır';
+
+  @override
+  String get trackingCourier => 'Kurye atandı';
+
+  @override
+  String get trackingOut => 'Dağıtımda';
+
+  @override
+  String get trackingCompleted => 'Teslim edildi';
 }

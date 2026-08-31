@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:nexora_design/nexora_design.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/idempotency.dart';
 import '../../../../shared/validators/address_validator.dart';
 import '../../../../shared/widgets/nx_map_view.dart';
@@ -190,6 +191,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
           );
 
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     setState(() => _saving = false);
 
     result.fold(
@@ -201,7 +203,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
         context.pop();
         NxToast.show(
           context,
-          message: widget.isEditing ? 'Address updated' : 'Address saved',
+          message: widget.isEditing ? l10n.addressUpdated : l10n.addressSaved,
           variant: NxToastVariant.success,
         );
       },
@@ -215,6 +217,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final editing = widget.isEditing;
     final detailAsync = editing
         ? ref.watch(addressDetailProvider(widget.addressId!))
@@ -223,7 +226,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
     detailAsync?.whenData(_populateFromAddress);
 
     return Scaffold(
-      appBar: NxTopBar(title: editing ? 'Edit address' : 'Add address'),
+      appBar: NxTopBar(title: editing ? l10n.editAddress : l10n.addAddress),
       body: detailAsync?.isLoading == true && !_loaded
           ? const Center(child: NxSpinner())
           : SingleChildScrollView(
@@ -235,24 +238,24 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text('Label', style: NxTypography.titleSm),
+                        Text(l10n.addressLabel, style: NxTypography.titleSm),
                         const SizedBox(height: NxSpacing.s2),
                         SegmentedButton<AddressLabel>(
-                          segments: const [
+                          segments: [
                             ButtonSegment(
                               value: AddressLabel.home,
-                              label: Text('Home'),
-                              icon: Icon(Icons.home_outlined),
+                              label: Text(l10n.addressHome),
+                              icon: const Icon(Icons.home_outlined),
                             ),
                             ButtonSegment(
                               value: AddressLabel.work,
-                              label: Text('Work'),
-                              icon: Icon(Icons.work_outline),
+                              label: Text(l10n.addressWork),
+                              icon: const Icon(Icons.work_outline),
                             ),
                             ButtonSegment(
                               value: AddressLabel.custom,
-                              label: Text('Custom'),
-                              icon: Icon(Icons.edit_outlined),
+                              label: Text(l10n.addressCustom),
+                              icon: const Icon(Icons.edit_outlined),
                             ),
                           ],
                           selected: {_label},
@@ -262,7 +265,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                         if (_label == AddressLabel.custom) ...[
                           const SizedBox(height: NxSpacing.s3),
                           NxField(
-                            label: 'Custom label',
+                            label: l10n.customLabel,
                             controller: _customLabelController,
                             error: _customLabelError,
                           ),
@@ -272,7 +275,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Street address',
+                    label: l10n.streetAddress,
                     controller: _formattedController,
                     error: _formattedError,
                   ),
@@ -281,14 +284,14 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                     children: [
                       Expanded(
                         child: NxField(
-                          label: 'Building',
+                          label: l10n.building,
                           controller: _buildingController,
                         ),
                       ),
                       const SizedBox(width: NxSpacing.s3),
                       Expanded(
                         child: NxField(
-                          label: 'Floor',
+                          label: l10n.floor,
                           controller: _floorController,
                         ),
                       ),
@@ -296,40 +299,40 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Door / apt',
+                    label: l10n.doorApt,
                     controller: _doorController,
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Delivery instructions',
+                    label: l10n.deliveryInstructions,
                     controller: _instructionsController,
                     maxLines: 3,
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Recipient name',
+                    label: l10n.recipientName,
                     controller: _recipientNameController,
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxField(
-                    label: 'Recipient phone',
+                    label: l10n.recipientPhone,
                     controller: _recipientPhoneController,
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   SwitchListTile(
-                    title: const Text('Favorite'),
+                    title: Text(l10n.favorite),
                     value: _isFavorite,
                     onChanged: (v) => setState(() => _isFavorite = v),
                   ),
                   SwitchListTile(
-                    title: const Text('Default address'),
+                    title: Text(l10n.defaultAddress),
                     value: _isDefault,
                     onChanged: (v) => setState(() => _isDefault = v),
                   ),
                   const SizedBox(height: NxSpacing.s3),
                   NxButton(
-                    label: _pin == null ? 'Pick on map' : 'Change location',
+                    label: _pin == null ? l10n.pickOnMap : l10n.changeLocation,
                     variant: NxButtonVariant.secondary,
                     expand: true,
                     onPressed: _openMapPicker,
@@ -350,7 +353,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                     const SizedBox(height: NxSpacing.s2),
                     if (!_serviceable)
                       Text(
-                        'Delivery may not be available at this location',
+                        l10n.deliveryNotAvailableHere,
                         style: NxTypography.captionMd.copyWith(
                           color: context.nxColors.danger,
                         ),
@@ -358,7 +361,7 @@ class _AddressEditScreenState extends ConsumerState<AddressEditScreen> {
                   ],
                   const SizedBox(height: NxSpacing.s4),
                   NxButton(
-                    label: editing ? 'Save changes' : 'Save address',
+                    label: editing ? l10n.saveChanges : l10n.saveAddress,
                     expand: true,
                     loading: _saving,
                     disabled: _saving,

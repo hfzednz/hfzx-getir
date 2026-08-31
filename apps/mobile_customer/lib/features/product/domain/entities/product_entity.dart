@@ -320,7 +320,11 @@ class ProductSummary extends Equatable {
         currency: json['currency']?.toString() ?? 'TRY',
         imageUrl: json['image_url']?.toString() ??
             (json['images'] as List<dynamic>?)?.firstOrNull?.toString(),
-        stockStatus: productStockStatusFromJson(json['stock_status']?.toString()),
+        stockStatus: json['outOfStock'] == true || json['out_of_stock'] == true
+            ? ProductStockStatus.outOfStock
+            : productStockStatusFromJson(
+                json['stock_status']?.toString() ?? json['stockStatus']?.toString(),
+              ),
       );
 
   Map<String, dynamic> toJson() => {

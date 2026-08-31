@@ -51,6 +51,107 @@ class TrackingStep extends Equatable {
   List<Object?> get props => [title, subtitle, state];
 }
 
+class RealtimeTicket extends Equatable {
+  const RealtimeTicket({
+    required this.ticket,
+    this.topic = '',
+    this.expiresIn = 120,
+  });
+
+  final String ticket;
+  final String topic;
+  final int expiresIn;
+
+  bool get isEmpty => ticket.isEmpty;
+
+  factory RealtimeTicket.fromJson(Map<String, dynamic> json, {String fallbackTopic = ''}) {
+    return RealtimeTicket(
+      ticket: json['ticket']?.toString() ?? json['token']?.toString() ?? '',
+      topic: json['topic']?.toString() ?? fallbackTopic,
+      expiresIn: (json['expiresIn'] as num?)?.toInt() ??
+          (json['expires_in'] as num?)?.toInt() ??
+          120,
+    );
+  }
+
+  @override
+  List<Object?> get props => [ticket, topic, expiresIn];
+}
+
+const customerTrackingStages = [
+  'created',
+  'warehouse_assigned',
+  'picking',
+  'packing',
+  'ready_for_dispatch',
+  'courier_assigned',
+  'out_for_delivery',
+  'completed',
+];
+
+String normalizeTrackingStatus(String raw) {
+  switch (raw.toLowerCase().trim()) {
+    case 'confirmed':
+    case 'created':
+    case 'pending_payment':
+    case 'draft':
+      return 'created';
+    case 'warehouse_assigned':
+    case 'warehouseassigned':
+      return 'warehouse_assigned';
+    case 'picking':
+    case 'in_picking':
+    case 'pick':
+      return 'picking';
+    case 'packing':
+    case 'packed':
+    case 'pack':
+      return 'packing';
+    case 'ready_for_dispatch':
+    case 'ready':
+      return 'ready_for_dispatch';
+    case 'courier_assigned':
+    case 'assigned':
+      return 'courier_assigned';
+    case 'out_for_delivery':
+    case 'dispatched':
+    case 'picked_up':
+      return 'out_for_delivery';
+    case 'completed':
+    case 'delivered':
+      return 'completed';
+    case 'cancelled':
+    case 'canceled':
+    case 'failed':
+      return raw.toLowerCase();
+    default:
+      return raw.toLowerCase();
+  }
+}
+
+int trackingStatusRank(String raw) {
+  final status = normalizeTrackingStatus(raw);
+  final idx = customerTrackingStages.indexOf(status);
+  return idx < 0 ? -1 : idx;
+}
+
+List<TrackingStep> trackingLifecycleSteps(String rawStatus) {
+  final current = trackingStatusRank(rawStatus);
+  return [
+    for (var i = 0; i < customerTrackingStages.length; i++)
+      TrackingStep(
+        title: customerTrackingStages[i],
+        state: current < 0
+            ? 'upcoming'
+            : i < current
+                ? 'completed'
+                : i == current
+                    ? 'current'
+                    : 'upcoming',
+      ),
+  ];
+}
+
 class TrackingSnapshot extends Equatable {
   const TrackingSnapshot({
     required this.orderId,

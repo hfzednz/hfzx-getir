@@ -88,6 +88,7 @@ class FavoritesScreen extends ConsumerWidget {
         FavoriteType.brand => Icons.storefront_outlined,
         FavoriteType.category => Icons.category_outlined,
         FavoriteType.search => Icons.search,
+        FavoriteType.store => Icons.store_outlined,
       };
 }
 
