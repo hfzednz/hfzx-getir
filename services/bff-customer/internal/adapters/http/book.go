@@ -194,6 +194,23 @@ func (b *CustomerBook) ListOrders(tenantID, principalID string) []map[string]any
 	return cloneSlice(b.orders[bookKey(tenantID, principalID)])
 }
 
+func (b *CustomerBook) UpdateOrder(tenantID, principalID, id string, patch map[string]any) (map[string]any, bool) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	key := bookKey(tenantID, principalID)
+	list := b.orders[key]
+	for i, o := range list {
+		if asString(o["id"]) == id || asString(o["orderId"]) == id {
+			for k, v := range patch {
+				o[k] = v
+			}
+			list[i] = o
+			return cloneMap(o), true
+		}
+	}
+	return nil, false
+}
+
 func (b *CustomerBook) Profile(tenantID, principalID string) map[string]any {
 	b.mu.Lock()
 	defer b.mu.Unlock()

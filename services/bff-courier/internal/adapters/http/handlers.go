@@ -23,9 +23,33 @@ func writeErr(w http.ResponseWriter, err error) {
 		})
 		return
 	}
+	if errors.Is(err, app.ErrNotSupported) {
+		writeJSON(w, http.StatusNotImplemented, map[string]any{
+			"error": map[string]any{"code": "not_supported", "message": err.Error()},
+		})
+		return
+	}
 	writeJSON(w, http.StatusBadGateway, map[string]any{
 		"error": map[string]any{"code": "upstream_error", "message": err.Error()},
 	})
+}
+
+func tenant(r *http.Request) string {
+	t := r.Header.Get("X-Tenant-Id")
+	if t == "" {
+		t = r.Header.Get("X-Nexora-Tenant")
+	}
+	return t
+}
+
+func courierID(r *http.Request, bodyID string) string {
+	if bodyID != "" {
+		return bodyID
+	}
+	if q := r.URL.Query().Get("courierId"); q != "" {
+		return q
+	}
+	return r.Header.Get("X-Nexora-User")
 }
 
 func NewServer(addr string, d *app.Deps) *http.Server {
@@ -46,7 +70,33 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 			On        bool   `json:"on"`
 		}
 		_ = json.NewDecoder(r.Body).Decode(&b)
-		res, err := d.Duty(r.Context(), r.Header.Get("X-Tenant-Id"), b.CourierID, b.On)
+		res, err := d.Duty(r.Context(), tenant(r), courierID(r, b.CourierID), b.On)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
+	})
+	mux.HandleFunc("GET /v1/courier/duty", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.GetDuty(r.Context(), tenant(r), courierID(r, ""))
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
+	})
+	list := func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.ListOffers(r.Context(), tenant(r), courierID(r, ""))
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"items": res, "deliveries": res, "total": len(res)})
+	}
+	mux.HandleFunc("GET /v1/courier/offers", list)
+	mux.HandleFunc("GET /v1/courier/deliveries", list)
+	mux.HandleFunc("GET /v1/courier/deliveries/{id}", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.GetJob(r.Context(), tenant(r), r.PathValue("id"))
 		if err != nil {
 			writeErr(w, err)
 			return
@@ -59,7 +109,7 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 			Accept    bool   `json:"accept"`
 		}
 		_ = json.NewDecoder(r.Body).Decode(&b)
-		res, err := d.Offer(r.Context(), r.Header.Get("X-Tenant-Id"), b.CourierID, r.PathValue("id"), b.Accept)
+		res, err := d.Offer(r.Context(), tenant(r), courierID(r, b.CourierID), r.PathValue("id"), b.Accept)
 		if err != nil {
 			writeErr(w, err)
 			return
@@ -67,7 +117,7 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 		writeJSON(w, http.StatusOK, res)
 	})
 	mux.HandleFunc("POST /v1/courier/offers/{id}/enroute", func(w http.ResponseWriter, r *http.Request) {
-		res, err := d.Enroute(r.Context(), r.Header.Get("X-Tenant-Id"), r.PathValue("id"))
+		res, err := d.Enroute(r.Context(), tenant(r), r.PathValue("id"))
 		if err != nil {
 			writeErr(w, err)
 			return
@@ -75,7 +125,54 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 		writeJSON(w, http.StatusOK, res)
 	})
 	mux.HandleFunc("POST /v1/courier/offers/{id}/complete", func(w http.ResponseWriter, r *http.Request) {
-		res, err := d.Complete(r.Context(), r.Header.Get("X-Tenant-Id"), r.PathValue("id"))
+		res, err := d.Complete(r.Context(), tenant(r), r.PathValue("id"))
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
+	})
+	mux.HandleFunc("POST /v1/courier/deliveries/{id}/status", func(w http.ResponseWriter, r *http.Request) {
+		var b struct {
+			Status    string `json:"status"`
+			CourierID string `json:"courierId"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&b)
+		res, err := d.Transition(r.Context(), tenant(r), courierID(r, b.CourierID), r.PathValue("id"), b.Status)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
+	})
+	mux.HandleFunc("POST /v1/courier/deliveries/{id}/pickup", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.Enroute(r.Context(), tenant(r), r.PathValue("id"))
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
+	})
+	mux.HandleFunc("POST /v1/courier/deliveries/{id}/pod", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.Complete(r.Context(), tenant(r), r.PathValue("id"))
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		res["podStored"] = false
+		writeJSON(w, http.StatusOK, res)
+	})
+	mux.HandleFunc("POST /v1/courier/deliveries/{id}/fail", func(w http.ResponseWriter, r *http.Request) {
+		var b struct {
+			ReasonCode string `json:"reason_code"`
+			Note       string `json:"note"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&b)
+		reason := b.ReasonCode
+		if b.Note != "" {
+			reason = reason + ": " + b.Note
+		}
+		res, err := d.Fail(r.Context(), tenant(r), r.PathValue("id"), reason)
 		if err != nil {
 			writeErr(w, err)
 			return

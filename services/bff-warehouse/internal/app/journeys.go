@@ -7,19 +7,24 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 )
 
-var ErrInvalid = errors.New("invalid argument")
+var (
+	ErrInvalid      = errors.New("invalid argument")
+	ErrNotSupported = errors.New("not supported")
+)
 
 type Deps struct {
-	HTTP       *http.Client
-	OrderURL   string
-	TrackingURL string
-	RealtimeURL string
+	HTTP         *http.Client
+	OrderURL     string
+	TrackingURL  string
+	RealtimeURL  string
 	PublishToken string
 }
 
@@ -32,6 +37,36 @@ func DepsFromEnv() *Deps {
 		PublishToken: os.Getenv("REALTIME_PUBLISH_TOKEN"),
 	}
 	return d
+}
+
+func (d *Deps) ListTasks(ctx context.Context, tenant string) ([]map[string]any, error) {
+	orders, err := d.listOrders(ctx, tenant, "")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]map[string]any, 0, len(orders))
+	for _, o := range orders {
+		st := firstString(o, "status")
+		switch st {
+		case "warehouse_assigned", "picking", "packing", "confirmed", "inventory_reservation":
+			out = append(out, orderToPickTask(o))
+		}
+	}
+	return out, nil
+}
+
+func (d *Deps) GetTask(ctx context.Context, tenant, taskID string) (map[string]any, error) {
+	if taskID == "" {
+		return nil, ErrInvalid
+	}
+	if d.OrderURL == "" {
+		return orderToPickTask(map[string]any{"id": taskID, "status": "queued"}), nil
+	}
+	o, err := d.getOrder(ctx, tenant, taskID)
+	if err != nil {
+		return nil, err
+	}
+	return orderToPickTask(o), nil
 }
 
 func (d *Deps) Pick(ctx context.Context, tenant, taskID string) (map[string]any, error) {
@@ -61,14 +96,14 @@ func (d *Deps) DispatchReady(ctx context.Context, tenant, taskID string) (map[st
 	}
 	st, _ := o["status"].(string)
 	if st == "ready_for_dispatch" || st == "courier_assigned" || st == "out_for_delivery" {
-		return o, nil
+		return orderToPickTask(o), nil
 	}
 	return d.lifecycle(ctx, tenant, taskID, "warehouse", "PackingCompleted", "ready_for_dispatch")
 }
 
 func (d *Deps) lifecycle(ctx context.Context, tenant, orderID, kind, eventType, statusHint string) (map[string]any, error) {
 	if d.OrderURL == "" {
-		return map[string]any{"taskId": orderID, "status": statusHint}, nil
+		return orderToPickTask(map[string]any{"id": orderID, "status": statusHint}), nil
 	}
 	path := "/v1/orders/" + orderID + "/events/" + kind
 	var out map[string]any
@@ -80,6 +115,29 @@ func (d *Deps) lifecycle(ctx context.Context, tenant, orderID, kind, eventType, 
 		st = statusHint
 	}
 	d.fanout(ctx, tenant, orderID, st, eventType)
+	return orderToPickTask(out), nil
+}
+
+func (d *Deps) listOrders(ctx context.Context, tenant, status string) ([]map[string]any, error) {
+	if d.OrderURL == "" {
+		return []map[string]any{}, nil
+	}
+	q := url.Values{}
+	q.Set("limit", "100")
+	if status != "" {
+		q.Set("status", status)
+	}
+	var raw map[string]any
+	if err := d.getJSON(ctx, d.OrderURL+"/v1/orders?"+q.Encode(), tenant, &raw); err != nil {
+		return nil, err
+	}
+	arr, _ := raw["items"].([]any)
+	out := make([]map[string]any, 0, len(arr))
+	for _, item := range arr {
+		if m, ok := item.(map[string]any); ok {
+			out = append(out, m)
+		}
+	}
 	return out, nil
 }
 
@@ -90,17 +148,22 @@ func (d *Deps) getOrder(ctx context.Context, tenant, orderID string) (map[string
 }
 
 func (d *Deps) fanout(ctx context.Context, tenant, orderID, status, eventType string) {
+	log := slog.Default()
 	if d.TrackingURL != "" {
-		_ = d.postJSON(ctx, d.TrackingURL+"/v1/tracking/orders/"+orderID+"/timeline", tenant, map[string]any{
+		if err := d.postJSON(ctx, d.TrackingURL+"/v1/tracking/orders/"+orderID+"/timeline", tenant, map[string]any{
 			"type": "Custom", "message": status,
 			"meta": map[string]any{"status": status, "eventType": eventType},
-		}, nil)
+		}, nil); err != nil {
+			log.Warn("warehouse.fanout.tracking", "err", err, "orderId", orderID)
+		}
 	}
 	if d.RealtimeURL != "" {
-		_ = d.postJSON(ctx, d.RealtimeURL+"/v1/realtime/publish", tenant, map[string]any{
-			"topic": "order:" + orderID,
+		if err := d.postJSON(ctx, d.RealtimeURL+"/v1/realtime/publish", tenant, map[string]any{
+			"topic":   "order:" + orderID,
 			"payload": map[string]any{"orderId": orderID, "status": status, "eventType": eventType},
-		}, nil)
+		}, nil); err != nil {
+			log.Warn("warehouse.fanout.realtime", "err", err, "orderId", orderID)
+		}
 	}
 }
 
@@ -156,4 +219,82 @@ func (d *Deps) getJSON(ctx context.Context, url, tenant string, out any) error {
 		return nil
 	}
 	return json.Unmarshal(b, out)
+}
+
+func orderToPickTask(o map[string]any) map[string]any {
+	id := firstString(o, "id", "taskId", "orderId")
+	st := firstString(o, "status", "orderStatus")
+	pick := "queued"
+	switch st {
+	case "picking":
+		pick = "in_progress"
+	case "packing":
+		pick = "picked"
+	case "ready_for_dispatch", "courier_assigned", "out_for_delivery":
+		pick = "staged"
+	}
+	return map[string]any{
+		"id":          id,
+		"taskId":      id,
+		"order_id":    id,
+		"orderId":     id,
+		"status":      pick,
+		"orderStatus": st,
+		"lines":       orderLines(o),
+	}
+}
+
+func orderLines(o map[string]any) []map[string]any {
+	raw, _ := o["lines"].([]any)
+	if raw == nil {
+		raw, _ = o["items"].([]any)
+	}
+	out := make([]map[string]any, 0, len(raw))
+	for _, item := range raw {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		sku := firstString(m, "sku", "skuCode", "variantId", "productId", "product_id")
+		qty := asInt(m["qty"])
+		if qty == 0 {
+			qty = asInt(m["quantity"])
+		}
+		if qty == 0 {
+			qty = 1
+		}
+		name := firstString(m, "titleSnapshot", "name", "title")
+		out = append(out, map[string]any{
+			"id":           firstString(m, "id"),
+			"sku":          sku,
+			"barcode":      sku,
+			"bin":          firstString(m, "bin"),
+			"qty":          qty,
+			"name":         name,
+			"product_name": name,
+		})
+	}
+	return out
+}
+
+func firstString(m map[string]any, keys ...string) string {
+	for _, k := range keys {
+		if s, ok := m[k].(string); ok && s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+func asInt(v any) int {
+	switch n := v.(type) {
+	case int:
+		return n
+	case int64:
+		return int(n)
+	case float64:
+		return int(n)
+	default:
+		return 0
+	}
 }

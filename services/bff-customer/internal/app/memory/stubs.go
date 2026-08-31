@@ -94,6 +94,9 @@ func (s *Stubs) Get(_ context.Context, _, cartID string) (map[string]any, error)
 }
 
 func (s *Stubs) AddItem(_ context.Context, _, cartID, sku string, qty, unitMinor int64) (map[string]any, error) {
+	if cartID == "" {
+		cartID = uuid.NewString()
+	}
 	if s.Carts == nil {
 		s.Carts = map[string][]map[string]any{}
 	}
@@ -165,4 +168,11 @@ func (o OrderStub) List(ctx context.Context, tenantID, principalID string) ([]ma
 
 func (o OrderStub) Cancel(ctx context.Context, tenantID, orderID, reason string) (map[string]any, error) {
 	return o.S.CancelOrder(ctx, tenantID, orderID, reason)
+}
+
+func (o OrderStub) Refund(_ context.Context, _, orderID, reason string, amountMinor int64) (map[string]any, error) {
+	return map[string]any{
+		"orderId": orderID, "id": orderID, "status": "refunded",
+		"reason": reason, "amountMinor": amountMinor,
+	}, nil
 }

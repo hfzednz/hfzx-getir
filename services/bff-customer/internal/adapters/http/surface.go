@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/nexora/bff-customer/internal/domain"
+	"github.com/nexora/bff-customer/internal/reqctx"
 )
 
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +169,7 @@ func (h *Handler) listStoreProducts(w http.ResponseWriter, r *http.Request) {
 	products := joinStockWithCatalog(stock, catalog)
 	writeJSON(w, 200, map[string]any{
 		"id": id, "store": store, "items": products, "products": products,
-		"open": store["open"] == true || asString(store["status"]) == "open" || asString(store["status"]) == "active",
+		"open":       store["open"] == true || asString(store["status"]) == "open" || asString(store["status"]) == "active",
 		"etaMinutes": store["etaMinutes"], "minOrderMinor": store["minOrderMinor"],
 		"deliveryFeeMinor": store["deliveryFeeMinor"],
 	})
@@ -271,7 +272,7 @@ func (h *Handler) listOrders(w http.ResponseWriter, r *http.Request) {
 			seen[id] = true
 		}
 	}
-	writeJSON(w, 200, owned)
+	writeJSON(w, 200, map[string]any{"items": owned})
 }
 
 func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
@@ -300,28 +301,148 @@ func (h *Handler) reorder(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
+	if h.Deps == nil || h.Deps.Cart == nil {
+		writeErr(w, domain.ErrUpstream)
+		return
+	}
 	id := r.PathValue("id")
-	items := []map[string]any{}
-	if order, err := h.lookupOrder(r, id); err == nil {
-		items = extractOrderLines(order)
+	order, err := h.lookupOrder(r, id)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	items := extractOrderLines(order)
+	if len(items) == 0 {
+		writeJSON(w, 409, map[string]any{
+			"error": map[string]any{
+				"code": "conflict", "message": "No items available to reorder",
+			},
+		})
+		return
+	}
+	if pid := callerID(r); pid != "" {
+		r = r.WithContext(reqctx.WithUserID(r.Context(), pid))
+	}
+	cartID := ""
+	added := 0
+	for _, line := range items {
+		sku := firstNonEmpty(asString(line["sku"]), asString(line["productId"]), asString(line["product_id"]))
+		if sku == "" {
+			continue
+		}
+		qty := asInt64(line["quantity"])
+		if qty == 0 {
+			qty = asInt64(line["qty"])
+		}
+		if qty < 1 {
+			qty = 1
+		}
+		unit := asInt64(line["unit_price_minor"])
+		if unit == 0 {
+			unit = asInt64(line["unitPriceMinor"])
+		}
+		out, err := h.Deps.Cart.AddItem(r.Context(), tenant(r), cartID, sku, qty, unit)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		cartID = firstNonEmpty(asString(out["cartId"]), asString(out["id"]), asString(out["ID"]), cartID)
+		added++
+	}
+	if cartID == "" || added == 0 {
+		writeJSON(w, 409, map[string]any{
+			"error": map[string]any{
+				"code": "conflict", "message": "Could not add items to a new cart",
+			},
+		})
+		return
 	}
 	writeJSON(w, 200, map[string]any{
-		"status": "cart_seeded", "id": id, "orderId": id, "items": items,
+		"status":  "cart_created",
+		"cartId":  cartID,
+		"id":      cartID,
+		"orderId": id,
+		"items":   items,
 	})
 }
 
-func (h *Handler) lookupOrder(r *http.Request, id string) (map[string]any, error) {
-	if h.Deps.Orders != nil {
-		if out, err := h.Deps.Orders.Get(r.Context(), tenant(r), id); err == nil {
-			return out, nil
+func (h *Handler) refundOrder(w http.ResponseWriter, r *http.Request) {
+	if err := h.requireOwnedOrder(r); err != nil {
+		writeErr(w, err)
+		return
+	}
+	if h.Deps == nil || h.Deps.Orders == nil {
+		writeErr(w, domain.ErrUpstream)
+		return
+	}
+	var body struct {
+		Reason      string `json:"reason"`
+		AmountMinor int64  `json:"amountMinor"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	out, err := h.Deps.Orders.Refund(r.Context(), tenant(r), r.PathValue("id"), body.Reason, body.AmountMinor)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	writeJSON(w, 200, out)
+}
+
+func (h *Handler) favoriteOrder(w http.ResponseWriter, r *http.Request) {
+	if err := h.requireOwnedOrder(r); err != nil {
+		writeErr(w, err)
+		return
+	}
+	var body struct {
+		Favorite bool `json:"favorite"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	id := r.PathValue("id")
+	if h.Book != nil {
+		if out, ok := h.Book.UpdateOrder(tenant(r), callerID(r), id, map[string]any{
+			"isFavorite": body.Favorite, "is_favorite": body.Favorite,
+		}); ok {
+			writeJSON(w, 200, out)
+			return
 		}
 	}
+	order, err := h.lookupOrder(r, id)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	order["isFavorite"] = body.Favorite
+	order["is_favorite"] = body.Favorite
+	writeJSON(w, 200, order)
+}
+
+func (h *Handler) orderDocument(kind string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := h.requireOwnedOrder(r); err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, 404, map[string]any{
+			"error": map[string]any{
+				"code":    "not_found",
+				"message": kind + " is not available for this order yet",
+			},
+		})
+	}
+}
+
+func (h *Handler) lookupOrder(r *http.Request, id string) (map[string]any, error) {
 	if h.Book != nil {
 		pid := callerID(r)
 		for _, o := range h.Book.ListOrders(tenant(r), pid) {
 			if asString(o["id"]) == id || asString(o["orderId"]) == id {
 				return o, nil
 			}
+		}
+	}
+	if h.Deps.Orders != nil {
+		if out, err := h.Deps.Orders.Get(r.Context(), tenant(r), id); err == nil && ownedByCaller(r, out) {
+			return out, nil
 		}
 	}
 	return nil, domain.ErrNotFound
@@ -341,15 +462,18 @@ func extractOrderLines(order map[string]any) []map[string]any {
 		if !ok {
 			continue
 		}
+		sku := firstNonEmpty(asString(m["sku"]), asString(m["skuCode"]), asString(m["variantId"]), asString(m["productId"]), asString(m["product_id"]))
+		qty := firstNonEmptyNum(m, "quantity", "qty")
 		out = append(out, map[string]any{
-			"id":               firstNonEmpty(asString(m["id"]), asString(m["sku"])),
-			"product_id":       firstNonEmpty(asString(m["product_id"]), asString(m["productId"]), asString(m["sku"])),
-			"productId":        firstNonEmpty(asString(m["productId"]), asString(m["product_id"]), asString(m["sku"])),
-			"name":             firstNonEmpty(asString(m["name"]), asString(m["title"])),
-			"title":            firstNonEmpty(asString(m["title"]), asString(m["name"])),
-			"quantity":         m["quantity"],
-			"unit_price_minor": firstNonEmptyNum(m, "unit_price_minor", "unitPriceMinor", "priceMinor"),
-			"sku":              asString(m["sku"]),
+			"id":               firstNonEmpty(asString(m["id"]), sku),
+			"product_id":       firstNonEmpty(asString(m["product_id"]), asString(m["productId"]), sku),
+			"productId":        firstNonEmpty(asString(m["productId"]), asString(m["product_id"]), sku),
+			"name":             firstNonEmpty(asString(m["name"]), asString(m["title"]), asString(m["titleSnapshot"])),
+			"title":            firstNonEmpty(asString(m["title"]), asString(m["name"]), asString(m["titleSnapshot"])),
+			"quantity":         qty,
+			"qty":              qty,
+			"unit_price_minor": firstNonEmptyNum(m, "unit_price_minor", "unitPriceMinor", "priceMinor", "unit_price_minor"),
+			"sku":              sku,
 		})
 	}
 	return out
@@ -362,6 +486,27 @@ func firstNonEmptyNum(m map[string]any, keys ...string) any {
 		}
 	}
 	return 0
+}
+
+func asInt64(v any) int64 {
+	switch n := v.(type) {
+	case int:
+		return int64(n)
+	case int32:
+		return int64(n)
+	case int64:
+		return n
+	case float64:
+		return int64(n)
+	case json.Number:
+		i, _ := n.Int64()
+		return i
+	case string:
+		i, _ := strconv.ParseInt(n, 10, 64)
+		return i
+	default:
+		return 0
+	}
 }
 
 func (h *Handler) listAddresses(w http.ResponseWriter, r *http.Request) {
@@ -404,26 +549,26 @@ func addressFromBody(body map[string]any) map[string]any {
 		isFav = v
 	}
 	return map[string]any{
-		"id":                     asString(body["id"]),
-		"title":                  firstNonEmpty(asString(body["title"]), asString(body["label"]), asString(body["custom_label"])),
-		"label":                  asString(body["label"]),
-		"custom_label":           firstNonEmpty(asString(body["custom_label"]), asString(body["customLabel"])),
-		"formatted":              line1,
-		"line1":                  line1,
-		"building":               asString(body["building"]),
-		"floor":                  asString(body["floor"]),
-		"door":                   firstNonEmpty(asString(body["door"]), asString(body["apartment"])),
-		"delivery_instructions":  firstNonEmpty(asString(body["delivery_instructions"]), asString(body["notes"])),
-		"recipient_name":         firstNonEmpty(asString(body["recipient_name"]), asString(body["recipientName"])),
-		"phone":                  firstNonEmpty(asString(body["phone"]), asString(body["recipient_phone"])),
-		"lat":                    lat,
-		"lng":                    lng,
-		"city":                   asString(body["city"]),
-		"country":                asString(body["country"]),
-		"is_default":             isDefault,
-		"isDefault":              isDefault,
-		"is_favorite":            isFav,
-		"serviceable":            body["serviceable"] != false,
+		"id":                    asString(body["id"]),
+		"title":                 firstNonEmpty(asString(body["title"]), asString(body["label"]), asString(body["custom_label"])),
+		"label":                 asString(body["label"]),
+		"custom_label":          firstNonEmpty(asString(body["custom_label"]), asString(body["customLabel"])),
+		"formatted":             line1,
+		"line1":                 line1,
+		"building":              asString(body["building"]),
+		"floor":                 asString(body["floor"]),
+		"door":                  firstNonEmpty(asString(body["door"]), asString(body["apartment"])),
+		"delivery_instructions": firstNonEmpty(asString(body["delivery_instructions"]), asString(body["notes"])),
+		"recipient_name":        firstNonEmpty(asString(body["recipient_name"]), asString(body["recipientName"])),
+		"phone":                 firstNonEmpty(asString(body["phone"]), asString(body["recipient_phone"])),
+		"lat":                   lat,
+		"lng":                   lng,
+		"city":                  asString(body["city"]),
+		"country":               asString(body["country"]),
+		"is_default":            isDefault,
+		"isDefault":             isDefault,
+		"is_favorite":           isFav,
+		"serviceable":           body["serviceable"] != false,
 	}
 }
 

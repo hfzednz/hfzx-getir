@@ -40,6 +40,7 @@ type OrderClient interface {
 	Get(ctx context.Context, tenantID, orderID string) (map[string]any, error)
 	List(ctx context.Context, tenantID, principalID string) ([]map[string]any, error)
 	Cancel(ctx context.Context, tenantID, orderID, reason string) (map[string]any, error)
+	Refund(ctx context.Context, tenantID, orderID, reason string, amountMinor int64) (map[string]any, error)
 }
 
 type TrackingClient interface {

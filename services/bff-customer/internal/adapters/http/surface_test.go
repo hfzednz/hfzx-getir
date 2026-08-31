@@ -101,6 +101,10 @@ func TestCustomerSurfaceSearchAndAddresses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	code, added := hit(http.MethodPost, "/v1/customer/cart/items", `{"cartId":"cart1","sku":"SKU1","qty":2,"unitMinor":1999}`)
+	if code != 201 && code != 200 {
+		t.Fatalf("cart add before place %d %+v", code, added)
+	}
 	code, placed := hit(http.MethodPost, "/v1/customer/checkout/place", `{"cartId":"cart1","paymentMethod":"card","sessionId":"`+prev.SessionID+`","principalId":"c1","address":{"line1":"Moda Cd 12","lat":40.98,"lng":29.02}}`)
 	if code != 201 {
 		t.Fatalf("place %d %+v", code, placed)
@@ -156,6 +160,15 @@ func TestCustomerSurfaceSearchAndAddresses(t *testing.T) {
 		code, re := hit(http.MethodPost, "/v1/customer/orders/"+oid+"/reorder", "")
 		if code != 200 {
 			t.Fatalf("reorder %d %+v", code, re)
+		}
+		if re["status"] == "cart_seeded" {
+			t.Fatalf("reorder must create a real cart, got %+v", re)
+		}
+		if asString(re["cartId"]) == "" {
+			t.Fatalf("reorder must return cartId, got %+v", re)
+		}
+		if asString(re["cartId"]) == oid {
+			t.Fatalf("reorder must not clone the completed order id: %+v", re)
 		}
 	}
 

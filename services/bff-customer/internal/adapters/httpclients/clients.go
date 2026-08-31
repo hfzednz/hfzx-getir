@@ -117,7 +117,7 @@ func (c *Catalog) Categories(ctx context.Context, tenantID string) ([]map[string
 		name := firstNonEmpty(asString(m["Name"]), asString(m["name"]), asString(m["title"]))
 		out = append(out, map[string]any{
 			"id": id, "title": name, "name": name,
-			"slug": firstNonEmpty(asString(m["Slug"]), asString(m["slug"])),
+			"slug":      firstNonEmpty(asString(m["Slug"]), asString(m["slug"])),
 			"parent_id": firstNonEmpty(asString(m["ParentID"]), asString(m["parentId"])),
 		})
 	}
@@ -137,9 +137,9 @@ func (c *Catalog) Product(ctx context.Context, tenantID, productID string) (map[
 	title := firstNonEmpty(asString(p["Title"]), asString(p["title"]), asString(p["name"]), asString(p["SKUCode"]), asString(p["skuCode"]))
 	out := map[string]any{
 		"id": id, "title": title, "name": title,
-		"sku": firstNonEmpty(asString(p["SKUCode"]), asString(p["skuCode"]), asString(p["sku"])),
-		"brand": firstNonEmpty(asString(p["Brand"]), asString(p["brand"])),
-		"currency": "TRY",
+		"sku":          firstNonEmpty(asString(p["SKUCode"]), asString(p["skuCode"]), asString(p["sku"])),
+		"brand":        firstNonEmpty(asString(p["Brand"]), asString(p["brand"])),
+		"currency":     "TRY",
 		"stock_status": "in_stock",
 	}
 	if v, ok := p["priceMinor"]; ok {
@@ -429,6 +429,18 @@ func (c *Orders) Cancel(ctx context.Context, tenantID, orderID, reason string) (
 	return out, nil
 }
 
+func (c *Orders) Refund(ctx context.Context, tenantID, orderID, reason string, amountMinor int64) (map[string]any, error) {
+	var out map[string]any
+	body := map[string]any{"reason": reason}
+	if amountMinor > 0 {
+		body["amountMinor"] = amountMinor
+	}
+	if err := c.post(ctx, "/v1/orders/"+url.PathEscape(orderID)+"/refunds", tenantID, body, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 var _ ports.OrderClient = (*Orders)(nil)
 
 type Stores struct{ Base }
@@ -503,7 +515,7 @@ func (c *Stores) StoreStock(ctx context.Context, tenantID, storeID string) ([]ma
 			"sku": sku, "skuCode": sku,
 			"available": avail, "onHand": onHand,
 			"outOfStock": avail <= 0,
-			"variantId": firstNonEmpty(asString(m["VariantID"]), asString(m["variantId"])),
+			"variantId":  firstNonEmpty(asString(m["VariantID"]), asString(m["variantId"])),
 		})
 	}
 	return out, nil

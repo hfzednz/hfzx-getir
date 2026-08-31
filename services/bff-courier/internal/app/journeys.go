@@ -7,13 +7,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
-var ErrInvalid = errors.New("invalid argument")
+var (
+	ErrInvalid      = errors.New("invalid argument")
+	ErrNotSupported = errors.New("not supported")
+)
 
 type Deps struct {
 	HTTP         *http.Client
@@ -21,6 +27,9 @@ type Deps struct {
 	TrackingURL  string
 	RealtimeURL  string
 	PublishToken string
+
+	mu   sync.Mutex
+	duty map[string]bool
 }
 
 func DepsFromEnv() *Deps {
@@ -30,14 +39,74 @@ func DepsFromEnv() *Deps {
 		TrackingURL:  strings.TrimRight(os.Getenv("TRACKING_URL"), "/"),
 		RealtimeURL:  strings.TrimRight(os.Getenv("REALTIME_URL"), "/"),
 		PublishToken: os.Getenv("REALTIME_PUBLISH_TOKEN"),
+		duty:         map[string]bool{},
 	}
+}
+
+func dutyKey(tenant, courierID string) string {
+	return tenant + ":" + courierID
 }
 
 func (d *Deps) Duty(_ context.Context, tenant, courierID string, on bool) (map[string]any, error) {
 	if tenant == "" || courierID == "" {
 		return nil, ErrInvalid
 	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.duty == nil {
+		d.duty = map[string]bool{}
+	}
+	d.duty[dutyKey(tenant, courierID)] = on
+	return map[string]any{"courierId": courierID, "onDuty": on, "persisted": true}, nil
+}
+
+func (d *Deps) GetDuty(_ context.Context, tenant, courierID string) (map[string]any, error) {
+	if courierID == "" {
+		return nil, ErrInvalid
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	on := false
+	if d.duty != nil {
+		on = d.duty[dutyKey(tenant, courierID)]
+	}
 	return map[string]any{"courierId": courierID, "onDuty": on}, nil
+}
+
+func (d *Deps) ListOffers(ctx context.Context, tenant, courierID string) ([]map[string]any, error) {
+	orders, err := d.listOrders(ctx, tenant)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]map[string]any, 0, len(orders))
+	for _, o := range orders {
+		st := firstString(o, "status")
+		switch st {
+		case "ready_for_dispatch", "courier_assigned", "out_for_delivery":
+			if courierID != "" {
+				ref := firstString(o, "courierRef")
+				if ref != "" && ref != courierID && st != "ready_for_dispatch" {
+					continue
+				}
+			}
+			out = append(out, orderToJob(o))
+		}
+	}
+	return out, nil
+}
+
+func (d *Deps) GetJob(ctx context.Context, tenant, jobID string) (map[string]any, error) {
+	if jobID == "" {
+		return nil, ErrInvalid
+	}
+	if d.OrderURL == "" {
+		return orderToJob(map[string]any{"id": jobID, "status": "assigned"}), nil
+	}
+	o, err := d.getOrder(ctx, tenant, jobID)
+	if err != nil {
+		return nil, err
+	}
+	return orderToJob(o), nil
 }
 
 func (d *Deps) Offer(ctx context.Context, tenant, courierID, jobID string, accept bool) (map[string]any, error) {
@@ -57,6 +126,10 @@ func (d *Deps) Offer(ctx context.Context, tenant, courierID, jobID string, accep
 		return nil, err
 	}
 	out["order"] = order
+	out["status"] = firstString(order, "status")
+	if out["status"] == "" {
+		out["status"] = "assigned"
+	}
 	return out, nil
 }
 
@@ -65,7 +138,7 @@ func (d *Deps) Enroute(ctx context.Context, tenant, jobID string) (map[string]an
 		return nil, ErrInvalid
 	}
 	if d.OrderURL == "" {
-		return map[string]any{"jobId": jobID, "status": "out_for_delivery"}, nil
+		return orderToJob(map[string]any{"id": jobID, "status": "out_for_delivery"}), nil
 	}
 	return d.dispatch(ctx, tenant, jobID, "OutForDelivery", "", "out_for_delivery")
 }
@@ -75,19 +148,61 @@ func (d *Deps) Complete(ctx context.Context, tenant, jobID string) (map[string]a
 		return nil, ErrInvalid
 	}
 	if d.OrderURL == "" {
-		return map[string]any{"jobId": jobID, "status": "delivered"}, nil
+		return orderToJob(map[string]any{"id": jobID, "status": "delivered"}), nil
 	}
 	o, err := d.getOrder(ctx, tenant, jobID)
 	if err != nil {
 		return nil, err
 	}
 	st, _ := o["status"].(string)
-	if st == "courier_assigned" {
+	if st == "courier_assigned" || st == "ready_for_dispatch" {
 		if _, err := d.dispatch(ctx, tenant, jobID, "OutForDelivery", "", "out_for_delivery"); err != nil {
 			return nil, err
 		}
 	}
 	return d.dispatch(ctx, tenant, jobID, "Delivered", "", "delivered")
+}
+
+func (d *Deps) Fail(ctx context.Context, tenant, jobID, reason string) (map[string]any, error) {
+	if jobID == "" {
+		return nil, ErrInvalid
+	}
+	if reason == "" {
+		reason = "delivery_failed"
+	}
+	if d.OrderURL == "" {
+		return map[string]any{"jobId": jobID, "status": "failed", "reason": reason}, nil
+	}
+	var out map[string]any
+	if err := d.postJSON(ctx, d.OrderURL+"/v1/orders/"+jobID+"/cancel", tenant, map[string]any{
+		"reason": reason,
+	}, &out); err != nil {
+		return nil, err
+	}
+	st := firstString(out, "status")
+	if st == "" {
+		st = "cancelled"
+	}
+	d.fanout(ctx, tenant, jobID, st, "Cancelled")
+	job := orderToJob(out)
+	job["status"] = "failed"
+	job["reason"] = reason
+	return job, nil
+}
+
+func (d *Deps) Transition(ctx context.Context, tenant, courierID, jobID, status string) (map[string]any, error) {
+	switch strings.ToLower(strings.ReplaceAll(status, "-", "_")) {
+	case "assigned", "accepted":
+		return d.Offer(ctx, tenant, courierID, jobID, true)
+	case "en_route_store", "en_route_customer", "picked_up", "at_store", "arrived", "out_for_delivery":
+		return d.Enroute(ctx, tenant, jobID)
+	case "delivered":
+		return d.Complete(ctx, tenant, jobID)
+	case "failed", "cancelled", "canceled":
+		return d.Fail(ctx, tenant, jobID, status)
+	default:
+		return nil, ErrInvalid
+	}
 }
 
 func (d *Deps) dispatch(ctx context.Context, tenant, orderID, eventType, courierRef, statusHint string) (map[string]any, error) {
@@ -104,6 +219,26 @@ func (d *Deps) dispatch(ctx context.Context, tenant, orderID, eventType, courier
 		st = statusHint
 	}
 	d.fanout(ctx, tenant, orderID, st, eventType)
+	return orderToJob(out), nil
+}
+
+func (d *Deps) listOrders(ctx context.Context, tenant string) ([]map[string]any, error) {
+	if d.OrderURL == "" {
+		return []map[string]any{}, nil
+	}
+	q := url.Values{}
+	q.Set("limit", "100")
+	var raw map[string]any
+	if err := d.getJSON(ctx, d.OrderURL+"/v1/orders?"+q.Encode(), tenant, &raw); err != nil {
+		return nil, err
+	}
+	arr, _ := raw["items"].([]any)
+	out := make([]map[string]any, 0, len(arr))
+	for _, item := range arr {
+		if m, ok := item.(map[string]any); ok {
+			out = append(out, m)
+		}
+	}
 	return out, nil
 }
 
@@ -114,17 +249,22 @@ func (d *Deps) getOrder(ctx context.Context, tenant, orderID string) (map[string
 }
 
 func (d *Deps) fanout(ctx context.Context, tenant, orderID, status, eventType string) {
+	log := slog.Default()
 	if d.TrackingURL != "" {
-		_ = d.postJSON(ctx, d.TrackingURL+"/v1/tracking/orders/"+orderID+"/timeline", tenant, map[string]any{
+		if err := d.postJSON(ctx, d.TrackingURL+"/v1/tracking/orders/"+orderID+"/timeline", tenant, map[string]any{
 			"type": "Custom", "message": status,
 			"meta": map[string]any{"status": status, "eventType": eventType},
-		}, nil)
+		}, nil); err != nil {
+			log.Warn("courier.fanout.tracking", "err", err, "orderId", orderID)
+		}
 	}
 	if d.RealtimeURL != "" {
-		_ = d.postJSON(ctx, d.RealtimeURL+"/v1/realtime/publish", tenant, map[string]any{
-			"topic": "order:" + orderID,
+		if err := d.postJSON(ctx, d.RealtimeURL+"/v1/realtime/publish", tenant, map[string]any{
+			"topic":   "order:" + orderID,
 			"payload": map[string]any{"orderId": orderID, "status": status, "eventType": eventType},
-		}, nil)
+		}, nil); err != nil {
+			log.Warn("courier.fanout.realtime", "err", err, "orderId", orderID)
+		}
 	}
 }
 
@@ -177,4 +317,40 @@ func (d *Deps) getJSON(ctx context.Context, url, tenant string, out any) error {
 		return nil
 	}
 	return json.Unmarshal(b, out)
+}
+
+func orderToJob(o map[string]any) map[string]any {
+	id := firstString(o, "id", "jobId", "orderId")
+	st := firstString(o, "status", "orderStatus")
+	jobSt := "assigned"
+	switch st {
+	case "out_for_delivery":
+		jobSt = "en_route_customer"
+	case "delivered", "completed":
+		jobSt = "delivered"
+	case "cancelled", "failed":
+		jobSt = "failed"
+	case "courier_assigned", "ready_for_dispatch", "accepted":
+		jobSt = "assigned"
+	}
+	return map[string]any{
+		"id":            id,
+		"jobId":         id,
+		"order_id":      id,
+		"orderId":       id,
+		"status":        jobSt,
+		"orderStatus":   st,
+		"store_name":    firstString(o, "storeName"),
+		"customer_area": firstString(o, "customerArea"),
+		"courierRef":    firstString(o, "courierRef"),
+	}
+}
+
+func firstString(m map[string]any, keys ...string) string {
+	for _, k := range keys {
+		if s, ok := m[k].(string); ok && s != "" {
+			return s
+		}
+	}
+	return ""
 }

@@ -44,12 +44,16 @@ func main() {
 	rdb := redis.NewClient(cfg.RedisURL, log)
 	publisher := kafka.NewPublisher(cfg.KafkaBrokers, log)
 
-	// Demo cart for in-memory HTTP smoke tests (empty DATABASE_URL).
-	demoTenant := mustParse("11111111-1111-1111-1111-111111111111")
-	demoPrincipal := mustParse("22222222-2222-2222-2222-222222222222")
-	demoCart := mustParse("33333333-3333-3333-3333-333333333333")
-	demoVariant := mustParse("44444444-4444-4444-4444-444444444444")
-	store.SeedCart(memoryCart(demoTenant, demoPrincipal, demoCart, demoVariant))
+	// Demo cart is opt-in for local HTTP smoke tests. Production/staging must not
+	// seed a hardcoded tenant/principal/cart on every boot.
+	if os.Getenv("NEXORA_SEED_DEMO_CART") == "true" {
+		demoTenant := mustParse("11111111-1111-1111-1111-111111111111")
+		demoPrincipal := mustParse("22222222-2222-2222-2222-222222222222")
+		demoCart := mustParse("33333333-3333-3333-3333-333333333333")
+		demoVariant := mustParse("44444444-4444-4444-4444-444444444444")
+		store.SeedCart(memoryCart(demoTenant, demoPrincipal, demoCart, demoVariant))
+		log.Info("checkout.seed_demo_cart", "enabled", true)
+	}
 
 	memCart := &memory.CartClient{S: store}
 	memPricing := &memory.PricingClient{}
