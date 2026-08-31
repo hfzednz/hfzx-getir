@@ -90,3 +90,11 @@ type failingCatalog struct{}
 func (failingCatalog) Search(context.Context, string, string) ([]map[string]any, error) {
 	return nil, domain.ErrUpstream
 }
+
+func (failingCatalog) Categories(context.Context, string) ([]map[string]any, error) {
+	return nil, domain.ErrUpstream
+}
+
+func (failingCatalog) Product(context.Context, string, string) (map[string]any, error) {
+	return nil, domain.ErrUpstream
+}

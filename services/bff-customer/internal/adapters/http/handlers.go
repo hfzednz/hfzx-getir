@@ -15,14 +15,17 @@ import (
 	"github.com/nexora/bff-customer/internal/reqctx"
 )
 
-type Handler struct{ Deps *app.Deps }
+type Handler struct {
+	Deps *app.Deps
+	Book *CustomerBook
+}
 
 func NewServer(addr string, deps *app.Deps) *http.Server {
 	return NewServerWithAuth(addr, deps, authz.FromEnv())
 }
 
 func NewServerWithAuth(addr string, deps *app.Deps, v authz.Validator) *http.Server {
-	h := &Handler{Deps: deps}
+	h := &Handler{Deps: deps, Book: NewCustomerBook()}
 	mux := http.NewServeMux()
 	const base = "/v1/customer"
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]string{"status": "ok"}) })
@@ -30,13 +33,56 @@ func NewServerWithAuth(addr string, deps *app.Deps, v authz.Validator) *http.Ser
 	mux.HandleFunc("POST "+base+"/auth/otp/start", h.otpStart)
 	mux.HandleFunc("POST "+base+"/auth/otp/verify", h.login)
 	mux.HandleFunc("GET "+base+"/home", h.home)
+	mux.HandleFunc("GET "+base+"/search", h.search)
+	mux.HandleFunc("GET "+base+"/search/semantic", h.search)
+	mux.HandleFunc("GET "+base+"/search/suggestions", h.searchSuggestions)
+	mux.HandleFunc("GET "+base+"/products/{id}", h.getProduct)
+	mux.HandleFunc("GET "+base+"/categories", h.listCategories)
+	mux.HandleFunc("GET "+base+"/categories/{id}", h.getCategory)
+	mux.HandleFunc("GET "+base+"/stores", h.listStores)
+	mux.HandleFunc("GET "+base+"/stores/{id}", h.getStore)
 	mux.HandleFunc("POST "+base+"/cart/items", h.addCart)
 	mux.HandleFunc("POST "+base+"/checkout/preview", h.preview)
 	mux.HandleFunc("POST "+base+"/checkout/place", h.place)
+	mux.HandleFunc("GET "+base+"/orders", h.listOrders)
 	mux.HandleFunc("GET "+base+"/orders/{id}", h.getOrder)
 	mux.HandleFunc("GET "+base+"/orders/{id}/track", h.track)
+	mux.HandleFunc("GET "+base+"/orders/{id}/tracking", h.track)
 	mux.HandleFunc("POST "+base+"/orders/{id}/realtime-ticket", h.realtimeTicket)
+	mux.HandleFunc("GET "+base+"/orders/{id}/realtime-ticket", h.realtimeTicket)
+	mux.HandleFunc("POST "+base+"/orders/{id}/cancel", h.cancelOrder)
+	mux.HandleFunc("POST "+base+"/orders/{id}/reorder", h.reorder)
+	mux.HandleFunc("GET "+base+"/addresses", h.listAddresses)
+	mux.HandleFunc("POST "+base+"/addresses", h.createAddress)
+	mux.HandleFunc("GET "+base+"/addresses/validate-zone", h.validateZone)
+	mux.HandleFunc("GET "+base+"/addresses/{id}", h.getAddress)
+	mux.HandleFunc("PATCH "+base+"/addresses/{id}", h.patchAddress)
+	mux.HandleFunc("DELETE "+base+"/addresses/{id}", h.deleteAddress)
+	mux.HandleFunc("POST "+base+"/addresses/{id}/default", h.defaultAddress)
+	mux.HandleFunc("POST "+base+"/addresses/{id}/favorite", h.favoriteAddress)
+	mux.HandleFunc("GET "+base+"/favorites", h.listFavorites)
+	mux.HandleFunc("POST "+base+"/favorites", h.addFavorite)
+	mux.HandleFunc("DELETE "+base+"/favorites/{id}", h.deleteFavorite)
 	mux.HandleFunc("POST "+base+"/support/tickets", h.ticket)
+	mux.HandleFunc("GET "+base+"/support/tickets", h.listTickets)
+	mux.HandleFunc("GET "+base+"/support/tickets/{id}", h.getTicket)
+	mux.HandleFunc("GET "+base+"/support/faq", h.listFaq)
+	mux.HandleFunc("POST "+base+"/support/assistant/message", h.assistantMessage)
+	mux.HandleFunc("GET "+base+"/profile", h.getProfile)
+	mux.HandleFunc("PATCH "+base+"/profile", h.patchProfile)
+	mux.HandleFunc("GET "+base+"/notifications", h.listNotifications)
+	mux.HandleFunc("POST "+base+"/notifications/{id}/read", h.markNotificationRead)
+	mux.HandleFunc("POST "+base+"/notifications/read-all", h.markAllNotificationsRead)
+	mux.HandleFunc("GET "+base+"/notifications/preferences", h.getNotificationPrefs)
+	mux.HandleFunc("PUT "+base+"/notifications/preferences", h.putNotificationPrefs)
+	mux.HandleFunc("POST "+base+"/notifications/fcm-token", h.registerFcm)
+	mux.HandleFunc("GET "+base+"/coupons", h.listCoupons)
+	mux.HandleFunc("GET "+base+"/coupons/{code}", h.getCoupon)
+	mux.HandleFunc("POST "+base+"/coupons/validate", h.validateCoupon)
+	mux.HandleFunc("POST "+base+"/coupons/apply", h.validateCoupon)
+	mux.HandleFunc("GET "+base+"/payment-methods/cards", h.listPaymentCards)
+	mux.HandleFunc("POST "+base+"/payment-methods/wallet/pay", h.walletPay)
+	mux.HandleFunc("POST "+base+"/payment-methods/retry", h.retryPayment)
 	mux.HandleFunc("POST "+base+"/reviews", h.review)
 	gated := authz.Gate(v, authz.Options{
 		Public: []string{"/health", "/ready", "/v1/customer/auth/otp/"},
@@ -133,10 +179,15 @@ func (h *Handler) home(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) addCart(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		CartID, SKU string
-		Qty, UnitMinor int64
+		CartID    string `json:"cartId"`
+		SKU       string `json:"sku"`
+		Qty       int64  `json:"qty"`
+		UnitMinor int64  `json:"unitMinor"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
+	if pid := callerID(r); pid != "" {
+		r = r.WithContext(reqctx.WithUserID(r.Context(), pid))
+	}
 	res, err := h.Deps.AddToCart(r.Context(), tenant(r), body.CartID, body.SKU, body.Qty, body.UnitMinor)
 	if err != nil {
 		writeErr(w, err)
@@ -151,8 +202,8 @@ func (h *Handler) preview(w http.ResponseWriter, r *http.Request) {
 		PrincipalID string `json:"principalId"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
-	if body.PrincipalID != "" {
-		r = r.WithContext(reqctx.WithUserID(r.Context(), body.PrincipalID))
+	if pid := firstNonEmpty(callerID(r), body.PrincipalID); pid != "" {
+		r = r.WithContext(reqctx.WithUserID(r.Context(), pid))
 	}
 	p, err := h.Deps.PreviewCheckout(r.Context(), tenant(r), body.CartID)
 	if err != nil {
@@ -164,39 +215,60 @@ func (h *Handler) preview(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) place(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		CartID        string                `json:"cartId"`
-		PaymentMethod string                `json:"paymentMethod"`
-		SessionID     string                `json:"sessionId"`
-		PrincipalID   string                `json:"principalId"`
+		CartID        string                 `json:"cartId"`
+		PaymentMethod string                 `json:"paymentMethod"`
+		SessionID     string                 `json:"sessionId"`
+		PrincipalID   string                 `json:"principalId"`
 		Address       domain.CheckoutAddress `json:"address"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
-	if body.PrincipalID != "" {
-		r = r.WithContext(reqctx.WithUserID(r.Context(), body.PrincipalID))
+	pid := firstNonEmpty(callerID(r), body.PrincipalID)
+	if pid != "" {
+		r = r.WithContext(reqctx.WithUserID(r.Context(), pid))
 	}
 	id, err := h.Deps.PlaceOrder(r.Context(), tenant(r), body.CartID, body.PaymentMethod, body.SessionID, body.Address)
 	if err != nil {
 		writeErr(w, err)
 		return
 	}
+	if h.Book != nil && pid != "" {
+		h.Book.RememberOrder(tenant(r), pid, map[string]any{
+			"id": id, "orderId": id, "status": "confirmed", "cartId": body.CartID,
+			"customerPrincipalId": pid,
+			"address":             body.Address.Map(),
+		})
+		h.Book.AddNotification(tenant(r), pid, map[string]any{
+			"type": "transactional", "title": "Order confirmed",
+			"body": "Your order is confirmed.", "deep_link": "/orders/" + id,
+			"orderId": id,
+		})
+	}
 	writeJSON(w, 201, map[string]string{"orderId": id})
 }
 
 func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if h.Deps.Orders != nil {
+		out, err := h.Deps.Orders.Get(r.Context(), tenant(r), id)
+		if err == nil && ownedByCaller(r, out) {
+			writeJSON(w, 200, out)
+			return
+		}
+	}
+	if h.Book != nil {
+		pid := callerID(r)
+		for _, o := range h.Book.ListOrders(tenant(r), pid) {
+			if asString(o["id"]) == id || asString(o["orderId"]) == id {
+				writeJSON(w, 200, o)
+				return
+			}
+		}
+	}
 	if h.Deps.Orders == nil {
 		writeErr(w, domain.ErrUpstream)
 		return
 	}
-	out, err := h.Deps.Orders.Get(r.Context(), tenant(r), r.PathValue("id"))
-	if err != nil {
-		writeErr(w, err)
-		return
-	}
-	if !ownedByCaller(r, out) {
-		writeErr(w, domain.ErrNotFound)
-		return
-	}
-	writeJSON(w, 200, out)
+	writeErr(w, domain.ErrNotFound)
 }
 
 func (h *Handler) track(w http.ResponseWriter, r *http.Request) {
@@ -233,17 +305,29 @@ func (h *Handler) realtimeTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) requireOwnedOrder(r *http.Request) error {
-	if h.Deps.Orders == nil {
-		return domain.ErrUpstream
+	id := r.PathValue("id")
+	if h.Deps.Orders != nil {
+		out, err := h.Deps.Orders.Get(r.Context(), tenant(r), id)
+		if err == nil && ownedByCaller(r, out) {
+			return nil
+		}
+		if err != nil && h.Book == nil {
+			return err
+		}
 	}
-	out, err := h.Deps.Orders.Get(r.Context(), tenant(r), r.PathValue("id"))
-	if err != nil {
-		return err
-	}
-	if !ownedByCaller(r, out) {
+	if h.Book != nil {
+		pid := callerID(r)
+		if pid == "" {
+			return domain.ErrUnauthorized
+		}
+		for _, o := range h.Book.ListOrders(tenant(r), pid) {
+			if asString(o["id"]) == id || asString(o["orderId"]) == id {
+				return nil
+			}
+		}
 		return domain.ErrNotFound
 	}
-	return nil
+	return domain.ErrUpstream
 }
 
 func ownedByCaller(r *http.Request, order map[string]any) bool {
@@ -257,6 +341,22 @@ func ownedByCaller(r *http.Request, order map[string]any) bool {
 		asString(order["principalId"]),
 	)
 	return owner == p.ID
+}
+
+func callerID(r *http.Request) string {
+	if p, ok := authz.PrincipalFrom(r.Context()); ok && p.ID != "" {
+		return p.ID
+	}
+	return reqctx.UserID(r.Context())
+}
+
+func requirePrincipal(w http.ResponseWriter, r *http.Request) (string, bool) {
+	id := callerID(r)
+	if id == "" {
+		writeErr(w, domain.ErrUnauthorized)
+		return "", false
+	}
+	return id, true
 }
 
 func asString(v any) string {
@@ -274,14 +374,35 @@ func firstNonEmpty(vals ...string) string {
 }
 
 func (h *Handler) ticket(w http.ResponseWriter, r *http.Request) {
-	var body struct{ CustomerID, Subject string }
-	_ = json.NewDecoder(r.Body).Decode(&body)
-	id, err := h.Deps.OpenSupport(r.Context(), tenant(r), body.CustomerID, body.Subject)
-	if err != nil {
-		writeErr(w, err)
+	pid, ok := requirePrincipal(w, r)
+	if !ok {
 		return
 	}
-	writeJSON(w, 201, map[string]string{"ticketId": id})
+	var body struct {
+		Subject, Category, OrderID, Message, Body string
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	subject := firstNonEmpty(body.Subject, "Help request")
+	ticketID := ""
+	if h.Deps.CRM != nil {
+		if id, err := h.Deps.OpenSupport(r.Context(), tenant(r), pid, subject); err == nil {
+			ticketID = id
+		}
+	}
+	if h.Book != nil {
+		created := h.Book.AddTicket(tenant(r), pid, map[string]any{
+			"id": ticketID, "subject": subject, "category": body.Category,
+			"order_id": firstNonEmpty(body.OrderID), "status": "open",
+			"body": firstNonEmpty(body.Body, body.Message),
+		})
+		writeJSON(w, 201, created)
+		return
+	}
+	if ticketID == "" {
+		writeErr(w, domain.ErrUpstream)
+		return
+	}
+	writeJSON(w, 201, map[string]any{"id": ticketID, "ticketId": ticketID, "subject": subject, "status": "open"})
 }
 
 func (h *Handler) review(w http.ResponseWriter, r *http.Request) {

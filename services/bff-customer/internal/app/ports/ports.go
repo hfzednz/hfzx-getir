@@ -13,6 +13,12 @@ type IdentityClient interface {
 
 type CatalogClient interface {
 	Search(ctx context.Context, tenantID, query string) ([]map[string]any, error)
+	Categories(ctx context.Context, tenantID string) ([]map[string]any, error)
+	Product(ctx context.Context, tenantID, productID string) (map[string]any, error)
+}
+
+type StoreClient interface {
+	ListStores(ctx context.Context, tenantID string) ([]map[string]any, error)
 }
 
 type RecClient interface {
@@ -31,6 +37,8 @@ type CheckoutClient interface {
 
 type OrderClient interface {
 	Get(ctx context.Context, tenantID, orderID string) (map[string]any, error)
+	List(ctx context.Context, tenantID, principalID string) ([]map[string]any, error)
+	Cancel(ctx context.Context, tenantID, orderID, reason string) (map[string]any, error)
 }
 
 type TrackingClient interface {

@@ -81,19 +81,70 @@ func (c *Catalog) Search(ctx context.Context, tenantID, query string) ([]map[str
 		if m, ok := h.(map[string]any); ok {
 			pid := firstNonEmpty(asString(m["ProductID"]), asString(m["productId"]))
 			sku := firstNonEmpty(pid, asString(m["SKU"]), asString(m["sku"]))
+			title := firstNonEmpty(asString(m["Title"]), asString(m["title"]), asString(m["name"]), sku, "Product")
 			item := map[string]any{
-				"id":   sku,
-				"sku":  sku,
-				"name": firstNonEmpty(asString(m["Title"]), asString(m["title"]), asString(m["name"]), "Product"),
+				"id": firstNonEmpty(pid, sku), "sku": sku, "name": title, "title": title,
 			}
 			if pid != "" {
 				item["productId"] = pid
 			}
 			if pm, ok := m["priceMinor"]; ok {
 				item["priceMinor"] = asInt64(pm)
+				item["price_minor"] = asInt64(pm)
 			}
 			out = append(out, item)
 		}
+	}
+	return out, nil
+}
+
+func (c *Catalog) Categories(ctx context.Context, tenantID string) ([]map[string]any, error) {
+	var raw map[string]any
+	if err := c.get(ctx, "/v1/catalog/categories", tenantID, &raw); err != nil {
+		return nil, err
+	}
+	arr, _ := raw["items"].([]any)
+	if arr == nil {
+		arr, _ = raw["Items"].([]any)
+	}
+	out := make([]map[string]any, 0, len(arr))
+	for _, h := range arr {
+		m, ok := h.(map[string]any)
+		if !ok {
+			continue
+		}
+		id := firstNonEmpty(asString(m["ID"]), asString(m["id"]))
+		name := firstNonEmpty(asString(m["Name"]), asString(m["name"]), asString(m["title"]))
+		out = append(out, map[string]any{
+			"id": id, "title": name, "name": name,
+			"slug": firstNonEmpty(asString(m["Slug"]), asString(m["slug"])),
+			"parent_id": firstNonEmpty(asString(m["ParentID"]), asString(m["parentId"])),
+		})
+	}
+	return out, nil
+}
+
+func (c *Catalog) Product(ctx context.Context, tenantID, productID string) (map[string]any, error) {
+	var raw map[string]any
+	if err := c.get(ctx, "/v1/catalog/products/"+url.PathEscape(productID), tenantID, &raw); err != nil {
+		return nil, err
+	}
+	p, _ := raw["product"].(map[string]any)
+	if p == nil {
+		p = raw
+	}
+	id := firstNonEmpty(asString(p["ID"]), asString(p["id"]), productID)
+	title := firstNonEmpty(asString(p["Title"]), asString(p["title"]), asString(p["name"]), asString(p["SKUCode"]), asString(p["skuCode"]))
+	out := map[string]any{
+		"id": id, "title": title, "name": title,
+		"sku": firstNonEmpty(asString(p["SKUCode"]), asString(p["skuCode"]), asString(p["sku"])),
+		"brand": firstNonEmpty(asString(p["Brand"]), asString(p["brand"])),
+		"currency": "TRY",
+		"stock_status": "in_stock",
+	}
+	if v, ok := p["priceMinor"]; ok {
+		out["priceMinor"] = asInt64(v)
+		out["price_minor"] = asInt64(v)
 	}
 	return out, nil
 }
@@ -134,10 +185,18 @@ func (c *Cart) Get(ctx context.Context, tenantID, cartID string) (map[string]any
 
 func (c *Cart) AddItem(ctx context.Context, tenantID, cartID, sku string, qty, unitMinor int64) (map[string]any, error) {
 	create := func() error {
+		body := map[string]any{"currency": "TRY"}
+		if uid := reqctx.UserID(ctx); uid != "" {
+			body["principalId"] = uid
+		} else {
+			token := cartID
+			if token == "" {
+				token = fmt.Sprintf("guest-%d", time.Now().UnixNano())
+			}
+			body["guestToken"] = "mobile-" + token
+		}
 		var created map[string]any
-		if err := c.post(ctx, "/v1/cart", tenantID, map[string]any{
-			"guestToken": fmt.Sprintf("web-%d", time.Now().UnixNano()), "currency": "TRY",
-		}, &created); err != nil {
+		if err := c.post(ctx, "/v1/cart", tenantID, body, &created); err != nil {
 			return err
 		}
 		cartID = firstNonEmpty(asString(created["ID"]), asString(created["id"]), asString(created["cartId"]))
@@ -337,7 +396,71 @@ func (c *Orders) Get(ctx context.Context, tenantID, orderID string) (map[string]
 	return out, nil
 }
 
+func (c *Orders) List(ctx context.Context, tenantID, principalID string) ([]map[string]any, error) {
+	var raw map[string]any
+	if err := c.get(ctx, "/v1/orders?limit=50", tenantID, &raw); err != nil {
+		return nil, err
+	}
+	arr, _ := raw["items"].([]any)
+	out := make([]map[string]any, 0, len(arr))
+	for _, h := range arr {
+		m, ok := h.(map[string]any)
+		if !ok {
+			continue
+		}
+		owner := firstNonEmpty(asString(m["customerPrincipalId"]), asString(m["principalId"]))
+		if principalID != "" && owner != "" && owner != principalID {
+			continue
+		}
+		out = append(out, m)
+	}
+	return out, nil
+}
+
+func (c *Orders) Cancel(ctx context.Context, tenantID, orderID, reason string) (map[string]any, error) {
+	var out map[string]any
+	body := map[string]any{}
+	if reason != "" {
+		body["reason"] = reason
+	}
+	if err := c.post(ctx, "/v1/orders/"+url.PathEscape(orderID)+"/cancel", tenantID, body, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 var _ ports.OrderClient = (*Orders)(nil)
+
+type Stores struct{ Base }
+
+func NewStores(baseURL string) *Stores { return &Stores{Base: newBase(baseURL)} }
+
+func (c *Stores) ListStores(ctx context.Context, tenantID string) ([]map[string]any, error) {
+	var raw map[string]any
+	if err := c.get(ctx, "/v1/inventory/warehouses?limit=50", tenantID, &raw); err != nil {
+		return nil, err
+	}
+	arr, _ := raw["items"].([]any)
+	out := make([]map[string]any, 0, len(arr))
+	for _, h := range arr {
+		m, ok := h.(map[string]any)
+		if !ok {
+			continue
+		}
+		id := firstNonEmpty(asString(m["ID"]), asString(m["id"]))
+		name := firstNonEmpty(asString(m["Name"]), asString(m["name"]))
+		status := firstNonEmpty(asString(m["Status"]), asString(m["status"]), "open")
+		out = append(out, map[string]any{
+			"id": id, "name": name, "title": name,
+			"status": status, "open": status == "active" || status == "open",
+			"etaMinutes": 15, "deliveryFeeMinor": 0, "minOrderMinor": 0,
+			"category": "market",
+		})
+	}
+	return out, nil
+}
+
+var _ ports.StoreClient = (*Stores)(nil)
 
 // Tracking implements ports.TrackingClient against tracking-service.
 type Tracking struct{ Base }

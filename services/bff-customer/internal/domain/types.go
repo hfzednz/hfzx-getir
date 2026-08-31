@@ -18,11 +18,14 @@ type SessionView struct {
 	ExpiresIn    int    `json:"expiresIn"`
 }
 
-// HomeFeed aggregates search + recommendations.
+// HomeFeed aggregates search + recommendations + discovery widgets.
 type HomeFeed struct {
 	Query       string           `json:"query"`
 	Products    []map[string]any `json:"products"`
 	Rails       []map[string]any `json:"rails"`
+	Stores      []map[string]any `json:"stores,omitempty"`
+	Categories  []map[string]any `json:"categories,omitempty"`
+	Widgets     []map[string]any `json:"widgets,omitempty"`
 	Serviceable bool             `json:"serviceable"`
 }
 

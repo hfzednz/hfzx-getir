@@ -20,6 +20,7 @@ type Config struct {
 	NotificationURL   string
 	CRMURL            string
 	ReviewURL         string
+	InventoryURL      string
 }
 
 // ConfigFromEnv loads URLs from environment with localhost registry defaults.
@@ -37,6 +38,7 @@ func ConfigFromEnv() Config {
 		NotificationURL:   envOr("NOTIFICATION_URL", "http://127.0.0.1:8101"),
 		CRMURL:            envOr("CRM_URL", "http://127.0.0.1:8102"),
 		ReviewURL:         envOr("REVIEW_URL", "http://127.0.0.1:8103"),
+		InventoryURL:      envOr("INVENTORY_URL", "http://127.0.0.1:8084"),
 	}
 }
 
@@ -61,5 +63,6 @@ func NewDeps(cfg Config) *app.Deps {
 		Notify:   NewNotify(cfg.NotificationURL),
 		CRM:      NewCRM(cfg.CRMURL),
 		Reviews:  NewReviews(cfg.ReviewURL),
+		Stores:   NewStores(cfg.InventoryURL),
 	}
 }

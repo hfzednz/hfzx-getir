@@ -32,7 +32,22 @@ func (s *Stubs) VerifyOTP(_ context.Context, _, challengeID, code string) (domai
 }
 
 func (s *Stubs) Search(_ context.Context, _, query string) ([]map[string]any, error) {
-	return []map[string]any{{"sku": "SKU1", "name": query, "priceMinor": int64(1999)}}, nil
+	return []map[string]any{{"id": "SKU1", "sku": "SKU1", "name": query, "title": query, "priceMinor": int64(1999)}}, nil
+}
+
+func (s *Stubs) Categories(_ context.Context, _ string) ([]map[string]any, error) {
+	return []map[string]any{{"id": "cat-dairy", "title": "Süt & Kahvaltı", "slug": "sut-kahvalti"}}, nil
+}
+
+func (s *Stubs) Product(_ context.Context, _, id string) (map[string]any, error) {
+	return map[string]any{"id": id, "title": "Fresh Milk", "name": "Fresh Milk", "priceMinor": int64(1999), "currency": "TRY"}, nil
+}
+
+func (s *Stubs) ListStores(_ context.Context, _ string) ([]map[string]any, error) {
+	return []map[string]any{
+		{"id": "store-kadikoy", "name": "Nexora Market Kadıköy", "status": "open", "etaMinutes": 12, "deliveryFeeMinor": 0, "minOrderMinor": 5000},
+		{"id": "store-besiktas", "name": "Nexora Market Beşiktaş", "status": "open", "etaMinutes": 18, "deliveryFeeMinor": 1499, "minOrderMinor": 7500},
+	}, nil
 }
 
 func (s *Stubs) ForYou(_ context.Context, _, _ string) ([]map[string]any, error) {
@@ -66,7 +81,15 @@ func (s *Stubs) Place(_ context.Context, _, cartID, _, sessionID string, _ domai
 }
 
 func (s *Stubs) GetOrder(_ context.Context, _, orderID string) (map[string]any, error) {
-	return map[string]any{"orderId": orderID, "status": "confirmed"}, nil
+	return map[string]any{"orderId": orderID, "id": orderID, "status": "confirmed", "customerPrincipalId": "cust_1"}, nil
+}
+
+func (s *Stubs) ListOrders(_ context.Context, _, principalID string) ([]map[string]any, error) {
+	return []map[string]any{{"orderId": "ord_1", "id": "ord_1", "status": "confirmed", "customerPrincipalId": principalID}}, nil
+}
+
+func (s *Stubs) CancelOrder(_ context.Context, _, orderID, _ string) (map[string]any, error) {
+	return map[string]any{"orderId": orderID, "id": orderID, "status": "cancelled"}, nil
 }
 
 func (s *Stubs) Track(_ context.Context, _, orderID string) (domain.OrderTrack, error) {
@@ -90,4 +113,12 @@ type OrderStub struct{ S *Stubs }
 
 func (o OrderStub) Get(ctx context.Context, tenantID, orderID string) (map[string]any, error) {
 	return o.S.GetOrder(ctx, tenantID, orderID)
+}
+
+func (o OrderStub) List(ctx context.Context, tenantID, principalID string) ([]map[string]any, error) {
+	return o.S.ListOrders(ctx, tenantID, principalID)
+}
+
+func (o OrderStub) Cancel(ctx context.Context, tenantID, orderID, reason string) (map[string]any, error) {
+	return o.S.CancelOrder(ctx, tenantID, orderID, reason)
 }
