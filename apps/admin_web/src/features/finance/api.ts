@@ -1,5 +1,6 @@
 import type { FinanceSnapshot } from "./types";
-import { ApiError } from "@/shared/api/client";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { ApiError, apiClient } from "@/shared/api/client";
 
 const delay = (ms = 180) => new Promise((r) => setTimeout(r, ms));
 
@@ -252,10 +253,15 @@ let mockSnapshot: FinanceSnapshot = {
   ],
 };
 
-/** Mock finance — replaced by GET /admin/finance/* when BFF is live. */
+/** Live finance snapshot from bff-admin → ledger journals. */
 export async function fetchFinanceSnapshot(): Promise<FinanceSnapshot> {
-  await delay();
-  return structuredClone(mockSnapshot);
+  try {
+    return await apiClient<FinanceSnapshot>("/admin/finance/journals");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay();
+    return structuredClone(mockSnapshot);
+  }
 }
 
 export async function approvePayout(id: string): Promise<FinanceSnapshot> {

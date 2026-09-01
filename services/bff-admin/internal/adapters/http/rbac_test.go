@@ -42,6 +42,12 @@ func TestAdminRBAC(t *testing.T) {
 	if req("adm", "/v1/admin/dashboard") != 200 {
 		t.Fatal("admin must pass")
 	}
+	if st := req("fin", "/v1/admin/finance/journals"); st == 403 || st == 401 {
+		t.Fatalf("finance_analyst must reach finance journals, got %d", st)
+	}
+	if req("cust", "/v1/admin/finance/journals") != 403 {
+		t.Fatal("customer must be denied finance")
+	}
 	if req("", "/health") != 200 {
 		t.Fatal("health public")
 	}

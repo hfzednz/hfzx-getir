@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/nexora/crm-service/internal/domain"
 )
@@ -33,6 +34,36 @@ func writeOK(w http.ResponseWriter, v any) {
 
 func writeCreated(w http.ResponseWriter, v any) {
 	writeJSON(w, http.StatusCreated, v)
+}
+
+func ticketDTO(t domain.Ticket) map[string]any {
+	out := map[string]any{
+		"id":          t.ID.String(),
+		"tenantId":    t.TenantID.String(),
+		"customerId":  t.CustomerID.String(),
+		"status":      t.Status,
+		"priority":    t.Priority,
+		"category":    t.Category,
+		"subject":     t.Subject,
+		"description": t.Description,
+		"slaBreached": t.SLABreached,
+		"tags":        t.Tags,
+		"createdAt":   t.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt":   t.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+	if t.AssigneeID != nil {
+		out["assigneeId"] = t.AssigneeID.String()
+	}
+	if t.TeamID != nil {
+		out["teamId"] = t.TeamID.String()
+	}
+	if t.ResolvedAt != nil {
+		out["resolvedAt"] = t.ResolvedAt.UTC().Format(time.RFC3339)
+	}
+	if t.ClosedAt != nil {
+		out["closedAt"] = t.ClosedAt.UTC().Format(time.RFC3339)
+	}
+	return out
 }
 
 func writeErr(w http.ResponseWriter, r *http.Request, err error) {

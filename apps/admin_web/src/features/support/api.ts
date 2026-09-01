@@ -1,4 +1,5 @@
-import { ApiError } from "@/shared/api/client";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { ApiError, apiClient } from "@/shared/api/client";
 import type {
   SupportTicket,
   SupportWorkspace,
@@ -133,72 +134,122 @@ let mockTickets: SupportTicket[] = [
   },
 ];
 
-/** Mock support — replaced by GET /admin/support/tickets when BFF is live. */
+/** Live support workspace from bff-admin → CRM tickets. */
 export async function fetchSupportWorkspace(
   params: TicketListParams = {},
 ): Promise<SupportWorkspace> {
-  await delay();
-  let tickets = [...mockTickets];
-  if (params.status && params.status !== "all") {
-    tickets = tickets.filter((t) => t.status === params.status);
-  }
-  if (params.category && params.category !== "all") {
-    tickets = tickets.filter((t) => t.category === params.category);
-  }
-  if (params.q?.trim()) {
-    const q = params.q.trim().toLowerCase();
-    tickets = tickets.filter(
-      (t) =>
-        t.subject.toLowerCase().includes(q) ||
-        t.id.toLowerCase().includes(q) ||
-        t.customerName.toLowerCase().includes(q) ||
-        (t.orderId?.toLowerCase().includes(q) ?? false),
+  try {
+    const qs = new URLSearchParams();
+    if (params.status && params.status !== "all") qs.set("status", params.status);
+    if (params.category && params.category !== "all")
+      qs.set("category", params.category);
+    if (params.q?.trim()) qs.set("q", params.q.trim());
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const live = await apiClient<SupportWorkspace>(
+      `/admin/support/tickets${suffix}`,
     );
+    let tickets = live.tickets ?? [];
+    if (params.status && params.status !== "all") {
+      tickets = tickets.filter((t) => t.status === params.status);
+    }
+    if (params.category && params.category !== "all") {
+      tickets = tickets.filter((t) => t.category === params.category);
+    }
+    if (params.q?.trim()) {
+      const q = params.q.trim().toLowerCase();
+      tickets = tickets.filter(
+        (t) =>
+          t.subject.toLowerCase().includes(q) ||
+          t.id.toLowerCase().includes(q) ||
+          t.customerName.toLowerCase().includes(q) ||
+          (t.orderId?.toLowerCase().includes(q) ?? false),
+      );
+    }
+    return { ...live, tickets };
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay();
+    let tickets = [...mockTickets];
+    if (params.status && params.status !== "all") {
+      tickets = tickets.filter((t) => t.status === params.status);
+    }
+    if (params.category && params.category !== "all") {
+      tickets = tickets.filter((t) => t.category === params.category);
+    }
+    if (params.q?.trim()) {
+      const q = params.q.trim().toLowerCase();
+      tickets = tickets.filter(
+        (t) =>
+          t.subject.toLowerCase().includes(q) ||
+          t.id.toLowerCase().includes(q) ||
+          t.customerName.toLowerCase().includes(q) ||
+          (t.orderId?.toLowerCase().includes(q) ?? false),
+      );
+    }
+    return {
+      tickets,
+      liveChat: {
+        activeSessions: 0,
+        queued: 0,
+        avgWaitSec: 0,
+        agentsOnline: 0,
+      },
+      aiChatbot: {
+        enabled: false,
+        containmentRatePct: 0,
+        handoffRatePct: 0,
+        topIntents: [],
+      },
+      complaintCount: tickets.filter((t) => t.category === "complaint").length,
+      openRefunds: tickets.filter((t) => t.refund?.status === "pending").length,
+    };
   }
-  return {
-    tickets,
-    liveChat: {
-      activeSessions: 14,
-      queued: 3,
-      avgWaitSec: 48,
-      agentsOnline: 11,
-    },
-    aiChatbot: {
-      enabled: true,
-      containmentRatePct: 64.2,
-      handoffRatePct: 21.5,
-      topIntents: [
-        { intent: "where_is_order", count: 420 },
-        { intent: "refund_request", count: 188 },
-        { intent: "coupon_help", count: 96 },
-      ],
-    },
-    complaintCount: tickets.filter((t) => t.category === "complaint").length,
-    openRefunds: tickets.filter((t) => t.refund?.status === "pending").length,
-  };
 }
 
 export async function fetchTicket(id: string): Promise<SupportTicket> {
-  await delay();
-  const found = mockTickets.find((t) => t.id === id);
-  if (!found) {
-    throw new ApiError(404, {
-      code: "not_found",
-      message: "Ticket not found",
-      traceId: "mock",
-    });
+  try {
+    return await apiClient<SupportTicket>(`/admin/support/tickets/${id}`);
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay();
+    const found = mockTickets.find((t) => t.id === id);
+    if (!found) {
+      throw new ApiError(404, {
+        code: "not_found",
+        message: "Ticket not found",
+        traceId: "mock",
+      });
+    }
+    return structuredClone(found);
   }
-  return structuredClone(found);
 }
 
 export async function escalateTicket(id: string): Promise<SupportTicket> {
-  await delay(200);
-  return patchTicket(id, { status: "escalated", escalated: true });
+  try {
+    return await apiClient<SupportTicket>(`/admin/support/tickets/${id}/escalate`, {
+      method: "POST",
+      body: {},
+      idempotent: true,
+    });
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay(200);
+    return patchTicket(id, { status: "escalated", escalated: true });
+  }
 }
 
 export async function resolveTicket(id: string): Promise<SupportTicket> {
-  await delay(200);
-  return patchTicket(id, { status: "resolved" });
+  try {
+    return await apiClient<SupportTicket>(`/admin/support/tickets/${id}/resolve`, {
+      method: "POST",
+      body: {},
+      idempotent: true,
+    });
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay(200);
+    return patchTicket(id, { status: "resolved" });
+  }
 }
 
 export async function approveTicketRefund(

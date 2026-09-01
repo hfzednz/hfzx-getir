@@ -42,6 +42,7 @@ func NewHandler(cfg ServerConfig) http.Handler {
 	mux.HandleFunc("GET "+base+"/ready", h.ready)
 
 	mux.HandleFunc("POST "+base+"/tickets", tenant(h.createTicket))
+	mux.HandleFunc("GET "+base+"/tickets", tenant(h.listTickets))
 	mux.HandleFunc("GET "+base+"/tickets/{id}", tenant(h.getTicket))
 	mux.HandleFunc("POST "+base+"/tickets/{id}/assign", tenant(h.assignTicket))
 	mux.HandleFunc("POST "+base+"/tickets/{id}/notes", tenant(h.addNote))
@@ -171,7 +172,28 @@ func (h *Handler) createTicket(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, err)
 		return
 	}
-	writeCreated(w, t)
+	writeCreated(w, ticketDTO(t))
+}
+
+func (h *Handler) listTickets(w http.ResponseWriter, r *http.Request) {
+	tid, ok := requireTenant(w, r)
+	if !ok {
+		return
+	}
+	if h.Deps == nil || h.Deps.Tickets == nil {
+		writeOK(w, map[string]any{"items": []any{}, "total": 0})
+		return
+	}
+	list, err := h.Deps.Tickets.ListOpen(r.Context(), tid)
+	if err != nil {
+		writeErr(w, r, err)
+		return
+	}
+	items := make([]any, 0, len(list))
+	for _, t := range list {
+		items = append(items, ticketDTO(t))
+	}
+	writeOK(w, map[string]any{"items": items, "total": len(items)})
 }
 
 func (h *Handler) getTicket(w http.ResponseWriter, r *http.Request) {
@@ -189,7 +211,7 @@ func (h *Handler) getTicket(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, r, err)
 		return
 	}
-	writeOK(w, t)
+	writeOK(w, ticketDTO(t))
 }
 
 func (h *Handler) assignTicket(w http.ResponseWriter, r *http.Request) {
