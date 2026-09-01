@@ -182,7 +182,7 @@ abstract final class CartRules {
           code: CartViolationCode.outOfStock,
           message: '${line.title} is out of stock',
           productId: line.productId,
-        ));
+        ),);
       }
 
       final maxQty = line.maxQty ?? meta.maxQty;
@@ -191,7 +191,7 @@ abstract final class CartRules {
           code: CartViolationCode.maxQty,
           message: '${line.title} max quantity is $maxQty',
           productId: line.productId,
-        ));
+        ),);
       }
 
       final availableQty = line.availableQty ?? meta.availableQty;
@@ -200,7 +200,7 @@ abstract final class CartRules {
           code: CartViolationCode.outOfStock,
           message: 'Only $availableQty of ${line.title} available',
           productId: line.productId,
-        ));
+        ),);
       }
     }
     return violations;

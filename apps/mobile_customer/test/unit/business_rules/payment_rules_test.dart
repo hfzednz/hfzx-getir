@@ -73,7 +73,7 @@ void main() {
 
     test('rejects non-retriable validation error', () {
       final now = DateTime.utc(2026, 1, 1, 12, 0, 0);
-      final lastError = NexoraValidationException(
+      const lastError = NexoraValidationException(
         code: NexoraErrorCode.validationFailed,
         message: 'Card declined',
       );

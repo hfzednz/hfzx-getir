@@ -256,8 +256,10 @@ class Order extends Equatable {
       title: json['title']?.toString() ?? json['name']?.toString() ?? '',
       items: [
         for (final e in itemsRaw)
-          if (e is Map)
-            OrderLineItem.fromJson(Map<String, dynamic>.from(e)),
+          if (e is Map<dynamic, dynamic>)
+            OrderLineItem.fromJson(
+              e.map((k, v) => MapEntry(k.toString(), v)),
+            ),
       ],
       totals: OrderTotals.fromJson(
         json['totals'] as Map<String, dynamic>? ?? json,
@@ -268,9 +270,13 @@ class Order extends Equatable {
         json['courier'] as Map<String, dynamic>? ??
             json['courier_summary'] as Map<String, dynamic>?,
       ),
-      timeline: timelineRaw
-          .map((e) => OrderTimelineEvent.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      timeline: [
+        for (final e in timelineRaw)
+          if (e is Map<dynamic, dynamic>)
+            OrderTimelineEvent.fromJson(
+              e.map((k, v) => MapEntry(k.toString(), v)),
+            ),
+      ],
       invoiceUrl: json['invoice_url']?.toString() ?? json['invoiceUrl']?.toString(),
       receiptUrl: json['receipt_url']?.toString() ?? json['receiptUrl']?.toString(),
       proofOfDeliveryUrl: json['proof_of_delivery_url']?.toString() ??
@@ -307,7 +313,7 @@ class Order extends Equatable {
               'name': i.name,
               'quantity': i.quantity,
               'unit_price_minor': i.unitPriceMinor,
-            }).toList(),
+            },).toList(),
         'totals': {
           'subtotal_minor': totals.subtotalMinor,
           'discount_minor': totals.discountMinor,

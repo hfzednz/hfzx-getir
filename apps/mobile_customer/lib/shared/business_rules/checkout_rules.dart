@@ -68,7 +68,7 @@ abstract final class CheckoutRules {
 
   static Result<Address> validateAddressRequired(Address? address) {
     if (address == null || address.id.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Delivery address is required',
@@ -119,7 +119,7 @@ abstract final class CheckoutRules {
     if (draft.scheduleMode == CheckoutScheduleMode.scheduled) {
       final at = draft.scheduledAt;
       if (at == null || !at.isAfter(DateTime.now())) {
-        return Failure(
+        return const Failure(
           NexoraValidationException(
             code: NexoraErrorCode.validationFailed,
             message: 'Select a future delivery time',
@@ -132,7 +132,7 @@ abstract final class CheckoutRules {
     if (draft.wantInvoice) {
       final fields = draft.invoiceFields;
       if (fields == null || !fields.isComplete) {
-        return Failure(
+        return const Failure(
           NexoraValidationException(
             code: NexoraErrorCode.validationFailed,
             message: 'Company invoice details are incomplete',
@@ -143,7 +143,7 @@ abstract final class CheckoutRules {
     }
 
     if (draft.gift && draft.giftMessage.trim().isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Gift message is required when sending as a gift',
@@ -209,7 +209,7 @@ abstract final class CheckoutRules {
   static Result<String> validateVerifiedQuoteId(String? quoteId) {
     final id = quoteId?.trim() ?? '';
     if (id.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Price must be verified before payment',

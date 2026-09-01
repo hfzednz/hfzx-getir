@@ -13,7 +13,7 @@ abstract final class OtpValidator {
   static Result<String> parse(String? raw, {int length = defaultLength}) {
     final code = raw?.trim().replaceAll(RegExp(r'\s'), '') ?? '';
     if (code.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Verification code is required',

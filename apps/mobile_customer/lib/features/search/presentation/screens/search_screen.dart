@@ -453,7 +453,7 @@ class _SearchFiltersSheetState extends State<_SearchFiltersSheet> {
           NxField(label: l10n.brandsComma, controller: _brandsController),
           const SizedBox(height: NxSpacing.s3),
           DropdownButtonFormField<SearchSort>(
-            value: _sort,
+            initialValue: _sort,
             decoration: InputDecoration(labelText: l10n.sort),
             items: SearchSort.values
                 .map((s) => DropdownMenuItem(value: s, child: Text(searchSortToJson(s))))
@@ -462,7 +462,7 @@ class _SearchFiltersSheetState extends State<_SearchFiltersSheet> {
           ),
           const SizedBox(height: NxSpacing.s3),
           DropdownButtonFormField<ProductStockStatus?>(
-            value: _availability,
+            initialValue: _availability,
             decoration: InputDecoration(labelText: l10n.availabilityFilter),
             items: [
               DropdownMenuItem(value: null, child: Text(l10n.anyAvailability)),

@@ -25,7 +25,7 @@ void main() {
   });
 
   test('Cart.fromJson reads BFF cartId', () {
-    final cart = Cart.fromJson({'cartId': 'cart-9', 'items': []});
+    final cart = Cart.fromJson({'cartId': 'cart-9', 'items': <Map<String, dynamic>>[]});
     expect(cart.id, 'cart-9');
   });
 

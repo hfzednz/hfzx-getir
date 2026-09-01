@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nexora_core/nexora_core.dart';
 
 import '../../../../di/providers.dart';
 import '../../../../shared/realtime/order_sse_client.dart';

@@ -15,7 +15,7 @@ abstract final class EmailValidator {
   static Result<String> parse(String? raw) {
     final email = raw?.trim() ?? '';
     if (email.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Email is required',
@@ -25,7 +25,7 @@ abstract final class EmailValidator {
     }
 
     if (email.length > maxLength) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Email is too long',
@@ -36,7 +36,7 @@ abstract final class EmailValidator {
 
     final normalized = email.toLowerCase();
     if (!_emailRegex.hasMatch(normalized)) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Enter a valid email address',

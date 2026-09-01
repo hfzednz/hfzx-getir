@@ -16,10 +16,10 @@ final onboardingRepositoryProvider = Provider<OnboardingRepository>((ref) {
 });
 
 final getOnboardingUseCaseProvider = Provider((ref) =>
-    GetOnboardingUseCase(ref.watch(onboardingRepositoryProvider)));
+    GetOnboardingUseCase(ref.watch(onboardingRepositoryProvider)),);
 
 final listOnboardingUseCaseProvider = Provider((ref) =>
-    ListOnboardingUseCase(ref.watch(onboardingRepositoryProvider)));
+    ListOnboardingUseCase(ref.watch(onboardingRepositoryProvider)),);
 
 final onboardingListProvider = FutureProvider.autoDispose<List<OnboardingPage>>((ref) async {
   final result = await ref.watch(listOnboardingUseCaseProvider).call();

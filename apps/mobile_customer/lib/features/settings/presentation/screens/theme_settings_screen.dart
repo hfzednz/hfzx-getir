@@ -21,20 +21,22 @@ class ThemeSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: NxTopBar(title: l10n.theme),
-      body: ListView(
-        children: [
-          for (final option in options)
-            RadioListTile<ThemeMode>(
-              title: Text(option.$2),
-              value: option.$1,
-              groupValue: themeMode,
-              onChanged: (value) {
-                if (value == null) return;
-                ref.read(themeModeProvider.notifier).state = value;
-                ref.read(preferencesStoreProvider).set('theme_mode', value.name);
-              },
-            ),
-        ],
+      body: RadioGroup<ThemeMode>(
+        groupValue: themeMode,
+        onChanged: (value) {
+          if (value == null) return;
+          ref.read(themeModeProvider.notifier).state = value;
+          ref.read(preferencesStoreProvider).set('theme_mode', value.name);
+        },
+        child: ListView(
+          children: [
+            for (final option in options)
+              RadioListTile<ThemeMode>(
+                title: Text(option.$2),
+                value: option.$1,
+              ),
+          ],
+        ),
       ),
     );
   }

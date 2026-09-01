@@ -15,8 +15,8 @@ void main() {
     });
 
     test('props include gift and substitution fields', () {
-      final draft = CheckoutDraft(
-        address: const Address(id: 'a1', title: 'Home'),
+      const draft = CheckoutDraft(
+        address: Address(id: 'a1', title: 'Home'),
         gift: true,
         giftMessage: 'Congrats',
         substitutionPreference: SubstitutionPreference.reject,

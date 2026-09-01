@@ -181,7 +181,7 @@ class _TransactionTile extends StatelessWidget {
         subtitle: Text([
           transaction.type.label,
           if (transaction.createdAt != null) Formatters.dateTime(transaction.createdAt!),
-        ].join(' · ')),
+        ].join(' · '),),
         trailing: Text(
           '$sign${transaction.amount.format()}',
           style: NxTypography.bodyMd.copyWith(

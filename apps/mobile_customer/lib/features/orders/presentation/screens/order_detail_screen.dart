@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -376,7 +378,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             );
         if (!mounted) return;
         NxToast.show(context, message: AppLocalizations.of(context).itemsAddedToCart);
-        context.push('/cart');
+        unawaited(context.push('/cart'));
       },
       onFailure: (e) async =>
           NxToast.show(context, message: localizedCustomerError(context, e)),

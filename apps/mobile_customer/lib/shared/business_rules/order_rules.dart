@@ -138,7 +138,7 @@ abstract final class OrderRules {
     required int totalLineCount,
   }) {
     if (lineIdsToCancel.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Select at least one item to cancel',
@@ -148,7 +148,7 @@ abstract final class OrderRules {
     }
 
     if (lineIdsToCancel.length >= totalLineCount) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Use full order cancellation instead',

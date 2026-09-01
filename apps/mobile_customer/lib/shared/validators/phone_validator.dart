@@ -21,7 +21,7 @@ abstract final class PhoneValidator {
   }) {
     final input = raw?.trim() ?? '';
     if (input.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Phone number is required',

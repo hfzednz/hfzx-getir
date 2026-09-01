@@ -16,10 +16,10 @@ final legalRepositoryProvider = Provider<LegalRepository>((ref) {
 });
 
 final getLegalUseCaseProvider = Provider((ref) =>
-    GetLegalUseCase(ref.watch(legalRepositoryProvider)));
+    GetLegalUseCase(ref.watch(legalRepositoryProvider)),);
 
 final listLegalUseCaseProvider = Provider((ref) =>
-    ListLegalUseCase(ref.watch(legalRepositoryProvider)));
+    ListLegalUseCase(ref.watch(legalRepositoryProvider)),);
 
 final legalListProvider = FutureProvider.autoDispose<List<LegalDocument>>((ref) async {
   final result = await ref.watch(listLegalUseCaseProvider).call();

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,10 +35,10 @@ class _AuthPhoneScreenState extends ConsumerState<AuthPhoneScreen> {
     final ok = await ref.read(authControllerProvider.notifier).requestOtp(phone);
     if (!mounted) return;
     if (ok) {
-      context.push('${RouteNames.authOtp}?phone=${Uri.encodeComponent(phone)}');
+      unawaited(context.push('${RouteNames.authOtp}?phone=${Uri.encodeComponent(phone)}'));
     } else {
       setState(() => _error = ref.read(authControllerProvider).error ??
-          AppLocalizations.of(context).otpSendFailed);
+          AppLocalizations.of(context).otpSendFailed,);
     }
   }
 

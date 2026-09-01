@@ -12,7 +12,7 @@ abstract final class AgeRestrictionValidator {
 
   static Result<int> parseBirthDate(DateTime? birthDate, {DateTime? referenceDate}) {
     if (birthDate == null) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Date of birth is required for age-restricted items',
@@ -23,7 +23,7 @@ abstract final class AgeRestrictionValidator {
 
     final now = referenceDate ?? DateTime.now();
     if (birthDate.isAfter(now)) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Date of birth cannot be in the future',
@@ -68,7 +68,7 @@ abstract final class AgeRestrictionValidator {
       return Failure(ageResult.errorOrNull!);
     }
 
-    return Failure(
+    return const Failure(
       NexoraValidationException(
         code: NexoraErrorCode.validationFailed,
         message: 'Age verification is required for restricted items',

@@ -88,28 +88,28 @@ abstract final class CouponRules {
       violations.add(const CouponViolation(
         code: CouponViolationCode.inactive,
         message: 'This coupon is no longer active',
-      ));
+      ),);
     }
 
     if (coupon.startsAt != null && coupon.startsAt!.isAfter(now)) {
       violations.add(const CouponViolation(
         code: CouponViolationCode.notYetActive,
         message: 'This coupon is not valid yet',
-      ));
+      ),);
     }
 
     if (coupon.expiresAt != null && !coupon.expiresAt!.isAfter(now)) {
       violations.add(const CouponViolation(
         code: CouponViolationCode.expired,
         message: 'This coupon has expired',
-      ));
+      ),);
     }
 
     if (coupon.usageLimit != null && coupon.usageCount >= coupon.usageLimit!) {
       violations.add(const CouponViolation(
         code: CouponViolationCode.usageLimitReached,
         message: 'This coupon has reached its usage limit',
-      ));
+      ),);
     }
 
     if (coupon.minOrderMinor > 0 && cartSubtotalMinor < coupon.minOrderMinor) {
@@ -117,28 +117,28 @@ abstract final class CouponRules {
       violations.add(CouponViolation(
         code: CouponViolationCode.minOrderNotMet,
         message: 'Minimum order ${min.format()} required for this coupon',
-      ));
+      ),);
     }
 
     if (coupon.currency != cartCurrency) {
-      violations.add(CouponViolation(
+      violations.add(const CouponViolation(
         code: CouponViolationCode.inactive,
         message: 'Coupon currency does not match cart',
-      ));
+      ),);
     }
 
     if (hasActivePromotion && !coupon.stackable) {
       violations.add(const CouponViolation(
         code: CouponViolationCode.notStackable,
         message: 'Coupon cannot be combined with other promotions',
-      ));
+      ),);
     }
 
     if (coupon.firstOrderOnly && !isFirstOrder) {
       violations.add(const CouponViolation(
         code: CouponViolationCode.firstOrderOnly,
         message: 'Coupon is valid for first orders only',
-      ));
+      ),);
     }
 
     if (coupon.applicableCategoryIds.isNotEmpty &&
@@ -146,7 +146,7 @@ abstract final class CouponRules {
       violations.add(const CouponViolation(
         code: CouponViolationCode.categoryNotEligible,
         message: 'Coupon does not apply to items in your cart',
-      ));
+      ),);
     }
 
     return violations;

@@ -20,21 +20,23 @@ class LanguageSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: NxTopBar(title: l10n.language),
-      body: ListView(
-        children: [
-          for (final option in _options)
-            RadioListTile<String>(
-              title: Text(option.label),
-              subtitle: Text(option.code.toUpperCase()),
-              value: option.code,
-              groupValue: locale,
-              onChanged: (value) {
-                if (value == null) return;
-                ref.read(localeCodeProvider.notifier).state = value;
-                ref.read(preferencesStoreProvider).set('locale_code', value);
-              },
-            ),
-        ],
+      body: RadioGroup<String>(
+        groupValue: locale,
+        onChanged: (value) {
+          if (value == null) return;
+          ref.read(localeCodeProvider.notifier).state = value;
+          ref.read(preferencesStoreProvider).set('locale_code', value);
+        },
+        child: ListView(
+          children: [
+            for (final option in _options)
+              RadioListTile<String>(
+                title: Text(option.label),
+                subtitle: Text(option.code.toUpperCase()),
+                value: option.code,
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -16,10 +16,10 @@ final helpRepositoryProvider = Provider<HelpRepository>((ref) {
 });
 
 final getHelpUseCaseProvider = Provider((ref) =>
-    GetHelpUseCase(ref.watch(helpRepositoryProvider)));
+    GetHelpUseCase(ref.watch(helpRepositoryProvider)),);
 
 final listHelpUseCaseProvider = Provider((ref) =>
-    ListHelpUseCase(ref.watch(helpRepositoryProvider)));
+    ListHelpUseCase(ref.watch(helpRepositoryProvider)),);
 
 final helpListProvider = FutureProvider.autoDispose<List<HelpArticle>>((ref) async {
   final result = await ref.watch(listHelpUseCaseProvider).call();

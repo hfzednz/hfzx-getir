@@ -55,7 +55,7 @@ class DevicesScreen extends ConsumerWidget {
                   ].join(' · '),
                 ),
                 trailing: device.isCurrent
-                    ? Chip(label: Text('This device'))
+                    ? const Chip(label: Text('This device'))
                     : lifecycle.isLoading
                         ? const SizedBox(
                             width: 24,
@@ -70,7 +70,7 @@ class DevicesScreen extends ConsumerWidget {
                             onPressed: () async {
                               final ok = await ref
                                   .read(accountLifecycleControllerProvider
-                                      .notifier)
+                                      .notifier,)
                                   .revokeDevice(device.id);
                               if (ok) ref.invalidate(devicesListProvider);
                             },

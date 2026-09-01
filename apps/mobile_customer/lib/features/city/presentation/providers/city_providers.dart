@@ -16,10 +16,10 @@ final cityRepositoryProvider = Provider<CityRepository>((ref) {
 });
 
 final getCityUseCaseProvider = Provider((ref) =>
-    GetCityUseCase(ref.watch(cityRepositoryProvider)));
+    GetCityUseCase(ref.watch(cityRepositoryProvider)),);
 
 final listCityUseCaseProvider = Provider((ref) =>
-    ListCityUseCase(ref.watch(cityRepositoryProvider)));
+    ListCityUseCase(ref.watch(cityRepositoryProvider)),);
 
 final cityListProvider = FutureProvider.autoDispose<List<CityContext>>((ref) async {
   final result = await ref.watch(listCityUseCaseProvider).call();

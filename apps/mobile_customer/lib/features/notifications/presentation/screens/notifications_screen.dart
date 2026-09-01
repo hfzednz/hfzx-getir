@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -133,7 +135,7 @@ class NotificationsScreen extends ConsumerWidget {
       ref.invalidate(notificationsListProvider);
     }
     if (item.deepLink != null && item.deepLink!.isNotEmpty && context.mounted) {
-      context.push(item.deepLink!);
+      unawaited(context.push(item.deepLink!));
     }
   }
 }

@@ -16,7 +16,7 @@ abstract final class CouponValidator {
   static Result<String> parse(String? raw) {
     final code = raw?.trim().toUpperCase() ?? '';
     if (code.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Coupon code is required',
@@ -26,7 +26,7 @@ abstract final class CouponValidator {
     }
 
     if (code.length < minLength || code.length > maxLength) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Coupon code must be $minLength–$maxLength characters',
@@ -36,7 +36,7 @@ abstract final class CouponValidator {
     }
 
     if (!_codeRegex.hasMatch(code)) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Coupon code contains invalid characters',

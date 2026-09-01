@@ -8,7 +8,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('app boots to splash then shows NEXORA', (tester) async {
-    app.main();
+    await app.main();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pumpAndSettle(const Duration(seconds: 8));
     expect(find.text('NEXORA'), findsWidgets);

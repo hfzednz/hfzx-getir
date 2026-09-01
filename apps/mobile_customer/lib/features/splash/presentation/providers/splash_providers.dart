@@ -16,10 +16,10 @@ final splashRepositoryProvider = Provider<SplashRepository>((ref) {
 });
 
 final getSplashUseCaseProvider = Provider((ref) =>
-    GetSplashUseCase(ref.watch(splashRepositoryProvider)));
+    GetSplashUseCase(ref.watch(splashRepositoryProvider)),);
 
 final listSplashUseCaseProvider = Provider((ref) =>
-    ListSplashUseCase(ref.watch(splashRepositoryProvider)));
+    ListSplashUseCase(ref.watch(splashRepositoryProvider)),);
 
 final splashListProvider = FutureProvider.autoDispose<List<SplashState>>((ref) async {
   final result = await ref.watch(listSplashUseCaseProvider).call();

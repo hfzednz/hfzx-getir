@@ -18,7 +18,7 @@ abstract final class PasswordValidator {
   static Result<String> parse(String? raw, {int minLen = minLength}) {
     final password = raw ?? '';
     if (password.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Password is required',
@@ -38,7 +38,7 @@ abstract final class PasswordValidator {
     }
 
     if (password.length > maxLength) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Password is too long',
@@ -48,7 +48,7 @@ abstract final class PasswordValidator {
     }
 
     if (!_uppercase.hasMatch(password)) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Password must include an uppercase letter',
@@ -58,7 +58,7 @@ abstract final class PasswordValidator {
     }
 
     if (!_lowercase.hasMatch(password)) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Password must include a lowercase letter',
@@ -68,7 +68,7 @@ abstract final class PasswordValidator {
     }
 
     if (!_digit.hasMatch(password)) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Password must include a number',

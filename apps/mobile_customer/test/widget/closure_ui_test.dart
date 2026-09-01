@@ -35,7 +35,7 @@ void main() {
       ),
     );
     expect(find.text('7'), findsOneWidget);
-  }, timeout: const Timeout(Duration(seconds: 15,)));
+  }, timeout: const Timeout(Duration(seconds: 15,)),);
 
   testWidgets('Turkish error view uses localized retry', (tester) async {
     await tester.pumpWidget(
@@ -52,7 +52,7 @@ void main() {
     expect(find.text('Bir sorun oluştu'), findsOneWidget);
     expect(find.text('Tekrar dene'), findsOneWidget);
     expect(find.text('Retry'), findsNothing);
-  }, timeout: const Timeout(Duration(seconds: 15,)));
+  }, timeout: const Timeout(Duration(seconds: 15,)),);
 
   testWidgets('Turkish settings copy is generated', (tester) async {
     late AppLocalizations l10n;
@@ -72,7 +72,7 @@ void main() {
     expect(l10n.placeOrder, 'Siparişi ver');
     expect(l10n.apply, 'Uygula');
     expect(l10n.quantityLabel(7), 'Adet 7');
-  }, timeout: const Timeout(Duration(seconds: 15,)));
+  }, timeout: const Timeout(Duration(seconds: 15,)),);
 }
 
 void _noop() {}

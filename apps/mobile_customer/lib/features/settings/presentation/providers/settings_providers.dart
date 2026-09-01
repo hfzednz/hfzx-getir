@@ -16,10 +16,10 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
 });
 
 final getSettingsUseCaseProvider = Provider((ref) =>
-    GetSettingsUseCase(ref.watch(settingsRepositoryProvider)));
+    GetSettingsUseCase(ref.watch(settingsRepositoryProvider)),);
 
 final listSettingsUseCaseProvider = Provider((ref) =>
-    ListSettingsUseCase(ref.watch(settingsRepositoryProvider)));
+    ListSettingsUseCase(ref.watch(settingsRepositoryProvider)),);
 
 final settingsListProvider = FutureProvider.autoDispose<List<AppSettings>>((ref) async {
   final result = await ref.watch(listSettingsUseCaseProvider).call();

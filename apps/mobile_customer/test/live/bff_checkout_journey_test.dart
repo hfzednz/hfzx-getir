@@ -41,7 +41,7 @@ void main() {
     }
     expect(home.statusCode, 200);
     expect(cartId, isNotNull,
-        reason: 'CUSTOMER_CART_ID must carry a cart created for this run');
+        reason: 'CUSTOMER_CART_ID must carry a cart created for this run',);
 
     final address = {
       'line1': 'Test St 1',
@@ -95,5 +95,5 @@ void main() {
     // Place already asserted. GET may be 400 when order-service rejects the
     // checkout-issued id (not a store UUID) in the in-memory e2e harness.
     expect(order.statusCode, anyOf(200, 400, 404, 502));
-  }, skip: live ? false : 'CUSTOMER_BASE not set — live BFF journey runs in rc-flutter-live');
+  }, skip: live ? false : 'CUSTOMER_BASE not set — live BFF journey runs in rc-flutter-live',);
 }

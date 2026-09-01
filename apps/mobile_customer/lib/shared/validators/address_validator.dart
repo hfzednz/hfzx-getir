@@ -36,7 +36,7 @@ abstract final class AddressValidator {
     double? lng,
   }) {
     if (lat == null || lng == null) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Location coordinates are required',
@@ -63,7 +63,7 @@ abstract final class AddressValidator {
     required bool serviceable,
   }) {
     if (address == null || address.id.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Delivery address is required',

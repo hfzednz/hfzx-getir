@@ -53,7 +53,7 @@ abstract final class PaymentRules {
   static Result<String> validateIdempotencyKey(String? key) {
     final value = key?.trim() ?? '';
     if (value.isEmpty) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Payment idempotency key is required',
@@ -63,7 +63,7 @@ abstract final class PaymentRules {
     }
 
     if (!_uuidRegex.hasMatch(value)) {
-      return Failure(
+      return const Failure(
         NexoraValidationException(
           code: NexoraErrorCode.validationFailed,
           message: 'Invalid payment idempotency key format',

@@ -16,10 +16,10 @@ final aboutRepositoryProvider = Provider<AboutRepository>((ref) {
 });
 
 final getAboutUseCaseProvider = Provider((ref) =>
-    GetAboutUseCase(ref.watch(aboutRepositoryProvider)));
+    GetAboutUseCase(ref.watch(aboutRepositoryProvider)),);
 
 final listAboutUseCaseProvider = Provider((ref) =>
-    ListAboutUseCase(ref.watch(aboutRepositoryProvider)));
+    ListAboutUseCase(ref.watch(aboutRepositoryProvider)),);
 
 final aboutListProvider = FutureProvider.autoDispose<List<AboutInfo>>((ref) async {
   final result = await ref.watch(listAboutUseCaseProvider).call();

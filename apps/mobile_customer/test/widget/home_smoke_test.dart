@@ -30,5 +30,5 @@ void main() {
     );
     expect(find.text('Popular'), findsOneWidget);
     expect(find.text('Test Product'), findsOneWidget);
-  }, timeout: const Timeout(Duration(seconds: 15)));
+  }, timeout: const Timeout(Duration(seconds: 15)),);
 }
