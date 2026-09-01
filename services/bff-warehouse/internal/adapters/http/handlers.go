@@ -116,11 +116,30 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 		}
 		writeJSON(w, http.StatusOK, res)
 	})
-	mux.HandleFunc("POST /v1/warehouse/picking/{id}/lines/{lineId}/scan", func(w http.ResponseWriter, _ *http.Request) {
-		writeErr(w, app.ErrNotSupported)
+	mux.HandleFunc("POST /v1/warehouse/picking/{id}/lines/{lineId}/scan", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Barcode string `json:"barcode"`
+			Qty     int    `json:"qty"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		res, err := d.ScanLine(r.Context(), tenant(r), r.PathValue("id"), r.PathValue("lineId"), body.Barcode, body.Qty)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
 	})
-	mux.HandleFunc("POST /v1/warehouse/picking/{id}/lines/{lineId}/short-pick", func(w http.ResponseWriter, _ *http.Request) {
-		writeErr(w, app.ErrNotSupported)
+	mux.HandleFunc("POST /v1/warehouse/picking/{id}/lines/{lineId}/short-pick", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			MissingQty int `json:"missing_qty"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		res, err := d.ShortPick(r.Context(), tenant(r), r.PathValue("id"), r.PathValue("lineId"), body.MissingQty)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
 	})
 	mux.HandleFunc("POST /v1/warehouse/tasks/{id}/pack", func(w http.ResponseWriter, r *http.Request) {
 		res, err := d.Pack(r.Context(), tenant(r), r.PathValue("id"))

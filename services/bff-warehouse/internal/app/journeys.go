@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -20,12 +21,19 @@ var (
 	ErrNotSupported = errors.New("not supported")
 )
 
+type linePick struct {
+	Picked int
+	Short  int
+}
+
 type Deps struct {
 	HTTP         *http.Client
 	OrderURL     string
 	TrackingURL  string
 	RealtimeURL  string
 	PublishToken string
+	mu           sync.Mutex
+	picks        map[string]map[string]linePick
 }
 
 func DepsFromEnv() *Deps {
@@ -60,13 +68,13 @@ func (d *Deps) GetTask(ctx context.Context, tenant, taskID string) (map[string]a
 		return nil, ErrInvalid
 	}
 	if d.OrderURL == "" {
-		return orderToPickTask(map[string]any{"id": taskID, "status": "queued"}), nil
+		return d.withPickProgress(tenant, taskID, orderToPickTask(map[string]any{"id": taskID, "status": "queued"})), nil
 	}
 	o, err := d.getOrder(ctx, tenant, taskID)
 	if err != nil {
 		return nil, err
 	}
-	return orderToPickTask(o), nil
+	return d.withPickProgress(tenant, taskID, orderToPickTask(o)), nil
 }
 
 func (d *Deps) Pick(ctx context.Context, tenant, taskID string) (map[string]any, error) {
@@ -99,6 +107,49 @@ func (d *Deps) DispatchReady(ctx context.Context, tenant, taskID string) (map[st
 		return orderToPickTask(o), nil
 	}
 	return d.lifecycle(ctx, tenant, taskID, "warehouse", "PackingCompleted", "ready_for_dispatch")
+}
+
+func (d *Deps) ScanLine(ctx context.Context, tenant, taskID, lineID, barcode string, qty int) (map[string]any, error) {
+	if taskID == "" || lineID == "" {
+		return nil, ErrInvalid
+	}
+	if qty <= 0 {
+		qty = 1
+	}
+	task, err := d.GetTask(ctx, tenant, taskID)
+	if err != nil {
+		return nil, err
+	}
+	line, ok := findLine(task, lineID, barcode)
+	if !ok {
+		return nil, fmt.Errorf("%w: line or barcode does not match this task", ErrInvalid)
+	}
+	d.addPick(tenant, taskID, firstString(line, "id", "sku"), qty, 0)
+	return d.GetTask(ctx, tenant, taskID)
+}
+
+func (d *Deps) ShortPick(ctx context.Context, tenant, taskID, lineID string, missingQty int) (map[string]any, error) {
+	if taskID == "" || lineID == "" {
+		return nil, ErrInvalid
+	}
+	if missingQty <= 0 {
+		missingQty = 1
+	}
+	task, err := d.GetTask(ctx, tenant, taskID)
+	if err != nil {
+		return nil, err
+	}
+	line, ok := findLine(task, lineID, "")
+	if !ok {
+		return nil, fmt.Errorf("%w: line not on this task", ErrInvalid)
+	}
+	d.addPick(tenant, taskID, firstString(line, "id", "sku"), 0, missingQty)
+	out, err := d.GetTask(ctx, tenant, taskID)
+	if err != nil {
+		return nil, err
+	}
+	out["status"] = "short_pick"
+	return out, nil
 }
 
 func (d *Deps) lifecycle(ctx context.Context, tenant, orderID, kind, eventType, statusHint string) (map[string]any, error) {
@@ -219,6 +270,88 @@ func (d *Deps) getJSON(ctx context.Context, url, tenant string, out any) error {
 		return nil
 	}
 	return json.Unmarshal(b, out)
+}
+
+func (d *Deps) addPick(tenant, taskID, lineID string, picked, short int) {
+	if lineID == "" {
+		return
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.picks == nil {
+		d.picks = map[string]map[string]linePick{}
+	}
+	key := tenant + "|" + taskID
+	if d.picks[key] == nil {
+		d.picks[key] = map[string]linePick{}
+	}
+	cur := d.picks[key][lineID]
+	cur.Picked += picked
+	cur.Short += short
+	d.picks[key][lineID] = cur
+}
+
+func (d *Deps) withPickProgress(tenant, taskID string, task map[string]any) map[string]any {
+	d.mu.Lock()
+	prog := d.picks[tenant+"|"+taskID]
+	d.mu.Unlock()
+	if prog == nil {
+		return task
+	}
+	raw, _ := task["lines"].([]map[string]any)
+	if raw == nil {
+		raw = []map[string]any{}
+	}
+	seen := map[string]bool{}
+	for i, line := range raw {
+		id := firstString(line, "id", "sku")
+		seen[id] = true
+		if p, ok := prog[id]; ok {
+			line["picked_qty"] = p.Picked
+			line["pickedQty"] = p.Picked
+			line["shorted"] = p.Short > 0
+			line["short_qty"] = p.Short
+			raw[i] = line
+		}
+	}
+	for id, p := range prog {
+		if seen[id] {
+			continue
+		}
+		raw = append(raw, map[string]any{
+			"id": id, "sku": id, "barcode": id, "qty": p.Picked + p.Short,
+			"picked_qty": p.Picked, "pickedQty": p.Picked,
+			"shorted": p.Short > 0, "short_qty": p.Short,
+		})
+	}
+	task["lines"] = raw
+	return task
+}
+
+func findLine(task map[string]any, lineID, barcode string) (map[string]any, bool) {
+	raw, _ := task["lines"].([]map[string]any)
+	wantLine := strings.EqualFold(strings.TrimSpace(lineID), "")
+	wantCode := strings.ToUpper(strings.TrimSpace(barcode))
+	for _, line := range raw {
+		id := firstString(line, "id", "sku")
+		sku := strings.ToUpper(firstString(line, "sku", "barcode"))
+		if !wantLine && (strings.EqualFold(id, lineID) || strings.EqualFold(sku, lineID)) {
+			if wantCode == "" || sku == wantCode || strings.EqualFold(firstString(line, "barcode"), barcode) {
+				return line, true
+			}
+		}
+		if wantCode != "" && (sku == wantCode || strings.EqualFold(firstString(line, "barcode"), barcode)) {
+			return line, true
+		}
+	}
+	if lineID != "" && len(raw) == 0 {
+		code := barcode
+		if code == "" {
+			code = lineID
+		}
+		return map[string]any{"id": lineID, "sku": lineID, "barcode": code}, true
+	}
+	return nil, false
 }
 
 func orderToPickTask(o map[string]any) map[string]any {

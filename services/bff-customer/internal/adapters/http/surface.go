@@ -3,8 +3,10 @@ package httpadapter
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/nexora/bff-customer/internal/domain"
 	"github.com/nexora/bff-customer/internal/reqctx"
@@ -422,11 +424,34 @@ func (h *Handler) orderDocument(kind string) http.HandlerFunc {
 			writeErr(w, err)
 			return
 		}
-		writeJSON(w, 404, map[string]any{
-			"error": map[string]any{
-				"code":    "not_found",
-				"message": kind + " is not available for this order yet",
-			},
+		id := r.PathValue("id")
+		order, err := h.lookupOrder(r, id)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		issuedAt := time.Now().UTC().Format(time.RFC3339)
+		orderID := asString(order["id"])
+		if orderID == "" {
+			orderID = asString(order["orderId"])
+		}
+		doc := map[string]any{
+			"kind":     strings.ToLower(kind),
+			"orderId":  orderID,
+			"issuedAt": issuedAt,
+			"order":    order,
+		}
+		payload, err := json.Marshal(doc)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, 200, map[string]any{
+			"url":      "data:application/json;charset=utf-8," + url.QueryEscape(string(payload)),
+			"mimeType": "application/json",
+			"kind":     strings.ToLower(kind),
+			"orderId":  orderID,
+			"document": json.RawMessage(payload),
 		})
 	}
 }

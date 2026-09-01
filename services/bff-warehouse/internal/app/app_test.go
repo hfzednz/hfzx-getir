@@ -27,4 +27,12 @@ func TestWarehouseJourney(t *testing.T) {
 	if len(items) != 0 {
 		t.Fatalf("empty ORDER_URL must not invent tasks, got %+v", items)
 	}
+	scanned, err := d.ScanLine(context.Background(), "t", "task1", "line-1", "MILK-1L", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines, _ := scanned["lines"].([]map[string]any)
+	if len(lines) == 0 {
+		t.Fatal("scan must persist a pick line")
+	}
 }
