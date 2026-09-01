@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -87,6 +88,9 @@ func (c *Client) doJSON(ctx context.Context, method, path, tenantID, idemKey str
 	req.Header.Set("Accept", "application/json")
 	if tenantID != "" {
 		req.Header.Set("X-Tenant-Id", tenantID)
+	}
+	if tok := strings.TrimSpace(os.Getenv("LEDGER_INTERNAL_TOKEN")); tok != "" {
+		req.Header.Set("X-Ledger-Internal-Token", tok)
 	}
 	if idemKey != "" {
 		req.Header.Set("Idempotency-Key", idemKey)

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -109,7 +110,7 @@ func (d *Deps) postLedger(ctx context.Context, intent domain.PaymentIntent, acti
 	if d.Ledger == nil {
 		return
 	}
-	_, _ = d.Ledger.PostJournal(ctx, ports.PostJournalRequest{
+	if _, err := d.Ledger.PostJournal(ctx, ports.PostJournalRequest{
 		TenantID:       intent.TenantID,
 		IdempotencyKey: intent.IdempotencyKey + ":" + action,
 		Reference:      intent.ID.String(),
@@ -117,7 +118,14 @@ func (d *Deps) postLedger(ctx context.Context, intent domain.PaymentIntent, acti
 			{AccountCode: "clearing.psp", DebitMinor: intent.AmountMinor, Currency: intent.Currency},
 			{AccountCode: "liability.customer", CreditMinor: intent.AmountMinor, Currency: intent.Currency},
 		},
-	})
+	}); err != nil {
+		slog.Default().Error("payment.ledger.post",
+			"err", err,
+			"intentId", intent.ID.String(),
+			"action", action,
+			"tenantId", intent.TenantID.String(),
+		)
+	}
 }
 
 // PublishPending drains the outbox via EventPublisher.

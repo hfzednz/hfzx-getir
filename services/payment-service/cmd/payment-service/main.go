@@ -90,11 +90,14 @@ func main() {
 		IDs:       app.UUIDGen{},
 	}
 
-	_, _ = deps.UpsertRoute(context.Background(), app.UpsertRouteInput{
-		TenantID:   mustParse("11111111-1111-1111-1111-111111111111"),
-		MethodType: domain.MethodCard, Currency: "TRY",
-		Providers: []string{router.Name()}, Priority: 1,
-	})
+	if os.Getenv("NEXORA_SEED_DEMO_PAYMENT_ROUTE") == "true" {
+		_, _ = deps.UpsertRoute(context.Background(), app.UpsertRouteInput{
+			TenantID:   mustParse("11111111-1111-1111-1111-111111111111"),
+			MethodType: domain.MethodCard, Currency: "TRY",
+			Providers: []string{router.Name()}, Priority: 1,
+		})
+		log.Info("payment.seed_demo_route", "enabled", true)
+	}
 
 	ready := func(*http.Request) error {
 		if db != nil {

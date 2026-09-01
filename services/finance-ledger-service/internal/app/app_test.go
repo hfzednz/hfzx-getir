@@ -213,3 +213,25 @@ func TestPostJournalIdempotent(t *testing.T) {
 		t.Fatalf("duplicate post created money: cash=%d want 10000", bal.BalanceMinor)
 	}
 }
+
+func TestPostJournalAutoEnsuresMissingAccountCodes(t *testing.T) {
+	deps, _ := testDeps(t)
+	ctx := context.Background()
+	tenant := uuid.New()
+	j, err := deps.PostJournal(ctx, app.PostJournalInput{
+		TenantID: tenant, Currency: "TRY", Reference: "pay-1", IdempotencyKey: "auto-coa-1",
+		Lines: []app.JournalLineInput{
+			{AccountCode: "clearing.psp", DebitMinor: 2500},
+			{AccountCode: "liability.customer", CreditMinor: 2500},
+		},
+	})
+	if err != nil {
+		t.Fatalf("expected auto-ensure: %v", err)
+	}
+	if j.Status != domain.JournalStatusPosted {
+		t.Fatalf("status=%s", j.Status)
+	}
+	if j.DebitTotal() != 2500 {
+		t.Fatalf("debit=%d", j.DebitTotal())
+	}
+}

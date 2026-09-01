@@ -59,7 +59,19 @@ func (d *Deps) PostJournal(ctx context.Context, in PostJournalInput) (domain.Jou
 		if accID == uuid.Nil && code != "" {
 			acc, err := d.Accounts.GetByCode(ctx, in.TenantID, code)
 			if err != nil {
-				return domain.Journal{}, fmt.Errorf("%w: account %q", err, code)
+				if !errors.Is(err, domain.ErrNotFound) {
+					return domain.Journal{}, fmt.Errorf("%w: account %q", err, code)
+				}
+				acc, err = d.EnsureAccount(ctx, EnsureAccountInput{
+					TenantID: in.TenantID,
+					Code:     code,
+					Name:     code,
+					Type:     accountTypeForCode(code),
+					Currency: currency,
+				})
+				if err != nil {
+					return domain.Journal{}, fmt.Errorf("%w: account %q", err, code)
+				}
 			}
 			accID = acc.ID
 			code = acc.Code
@@ -148,4 +160,20 @@ func (d *Deps) GetJournal(ctx context.Context, tenantID, id uuid.UUID) (domain.J
 		return domain.Journal{}, fmt.Errorf("%w: tenant_id and id required", domain.ErrInvalidArgument)
 	}
 	return d.Journals.GetByID(ctx, tenantID, id)
+}
+
+func accountTypeForCode(code string) domain.AccountType {
+	c := strings.ToLower(code)
+	switch {
+	case strings.Contains(c, "liability"):
+		return domain.AccountTypeLiability
+	case strings.Contains(c, "revenue"):
+		return domain.AccountTypeRevenue
+	case strings.Contains(c, "expense"):
+		return domain.AccountTypeExpense
+	case strings.Contains(c, "clearing"):
+		return domain.AccountTypeClearing
+	default:
+		return domain.AccountTypeAsset
+	}
 }

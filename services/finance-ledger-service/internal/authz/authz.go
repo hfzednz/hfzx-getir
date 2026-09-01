@@ -118,6 +118,12 @@ func Gate(v Validator, opt Options) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
+			if internalTok := strings.TrimSpace(os.Getenv("LEDGER_INTERNAL_TOKEN")); internalTok != "" {
+				if hmac.Equal([]byte(r.Header.Get("X-Ledger-Internal-Token")), []byte(internalTok)) {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
 			path := r.URL.Path
 			for _, p := range opt.Public {
 				if path == p || strings.HasPrefix(path, p) {
