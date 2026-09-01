@@ -12,6 +12,7 @@ import (
 
 	grpcadapter "github.com/nexora/supplier-service/internal/adapters/grpc"
 	httpadapter "github.com/nexora/supplier-service/internal/adapters/http"
+	"github.com/nexora/supplier-service/internal/adapters/inventory"
 	"github.com/nexora/supplier-service/internal/adapters/kafka"
 	"github.com/nexora/supplier-service/internal/adapters/postgres"
 	"github.com/nexora/supplier-service/internal/app"
@@ -39,6 +40,10 @@ func main() {
 		ERP: repos.ERP, Catalog: repos.Catalog, Inventory: repos.Inventory,
 		Settlement: repos.Settlement, AI: repos.AI, Metrics: repos.Metrics,
 		Clock: app.SystemClock{}, IDs: app.UUIDGen{},
+	}
+	if cfg.InventoryURL != "" {
+		deps.Inventory = inventory.New(cfg.InventoryURL)
+		log.Info("boot.inventory", "url", cfg.InventoryURL)
 	}
 
 	var db *sql.DB

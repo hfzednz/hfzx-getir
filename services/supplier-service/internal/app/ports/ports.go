@@ -123,8 +123,18 @@ type CatalogClient interface {
 	SubmitProduct(ctx context.Context, tenantID uuid.UUID, sub domain.CatalogSubmission) error
 }
 
+type ReceiveStockRequest struct {
+	TenantID       uuid.UUID
+	WarehouseID    uuid.UUID
+	SKUCode        string
+	Qty            int64
+	IdempotencyKey string
+	Reason         string
+}
+
 type InventoryClient interface {
 	AnnounceASN(ctx context.Context, tenantID uuid.UUID, ship domain.InboundShipment) error
+	ReceiveStock(ctx context.Context, req ReceiveStockRequest) error
 }
 
 type SettlementClient interface {

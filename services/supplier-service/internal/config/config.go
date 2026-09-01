@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseURL        string
 	RedisURL           string
 	KafkaBrokers       []string
+	InventoryURL       string
 	RateLimitPerMinute int
 	CORSAllowedOrigins []string
 }
@@ -24,6 +25,7 @@ func Load() (Config, error) {
 		DatabaseURL:        env("DATABASE_URL", ""),
 		RedisURL:           env("REDIS_URL", ""),
 		KafkaBrokers:       splitCSV(env("KAFKA_BROKERS", "")),
+		InventoryURL:       env("INVENTORY_URL", ""),
 		RateLimitPerMinute: envInt("RATE_LIMIT_PER_MINUTE", 3000),
 		CORSAllowedOrigins: splitCSV(env("CORS_ALLOWED_ORIGINS", "*")),
 	}

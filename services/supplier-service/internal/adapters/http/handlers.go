@@ -3,6 +3,7 @@ package httpadapter
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,7 +59,9 @@ func NewHandler(cfg ServerConfig) http.Handler {
 	mux.HandleFunc("POST "+base+"/invoice-matches", tenant(h.invoiceMatch))
 
 	mux.HandleFunc("POST "+base+"/sellers", tenant(h.onboardSeller))
+	mux.HandleFunc("GET "+base+"/sellers", tenant(h.listSellers))
 	mux.HandleFunc("POST "+base+"/listings", tenant(h.upsertListing))
+	mux.HandleFunc("GET "+base+"/listings", tenant(h.listListings))
 	mux.HandleFunc("POST "+base+"/catalog-submissions", tenant(h.submitCatalog))
 	mux.HandleFunc("POST "+base+"/catalog-submissions/{id}/decide", tenant(h.decideCatalog))
 
@@ -454,6 +457,41 @@ func (h *Handler) onboardSeller(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeCreated(w, s)
+}
+
+func (h *Handler) listSellers(w http.ResponseWriter, r *http.Request) {
+	tid, ok := requireTenant(w, r)
+	if !ok {
+		return
+	}
+	list, err := h.Deps.ListSellers(r.Context(), tid)
+	if err != nil {
+		writeErr(w, r, err)
+		return
+	}
+	writeOK(w, map[string]any{"items": list})
+}
+
+func (h *Handler) listListings(w http.ResponseWriter, r *http.Request) {
+	tid, ok := requireTenant(w, r)
+	if !ok {
+		return
+	}
+	var sellerID uuid.UUID
+	if raw := strings.TrimSpace(r.URL.Query().Get("sellerId")); raw != "" {
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			writeErr(w, r, domain.ErrInvalidArgument)
+			return
+		}
+		sellerID = id
+	}
+	list, err := h.Deps.ListListings(r.Context(), tid, sellerID)
+	if err != nil {
+		writeErr(w, r, err)
+		return
+	}
+	writeOK(w, map[string]any{"items": list})
 }
 
 func (h *Handler) upsertListing(w http.ResponseWriter, r *http.Request) {

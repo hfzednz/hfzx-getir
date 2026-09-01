@@ -554,9 +554,33 @@ type MockCatalog struct{}
 
 func (MockCatalog) SubmitProduct(context.Context, uuid.UUID, domain.CatalogSubmission) error { return nil }
 
-type MockInventory struct{}
+type ReceivedStock struct {
+	TenantID    uuid.UUID
+	WarehouseID uuid.UUID
+	SKUCode     string
+	Qty         int64
+}
 
-func (MockInventory) AnnounceASN(context.Context, uuid.UUID, domain.InboundShipment) error { return nil }
+type MockInventory struct {
+	mu       sync.Mutex
+	Received []ReceivedStock
+}
+
+func (m *MockInventory) AnnounceASN(context.Context, uuid.UUID, domain.InboundShipment) error {
+	return nil
+}
+
+func (m *MockInventory) ReceiveStock(_ context.Context, req ports.ReceiveStockRequest) error {
+	if m == nil {
+		return nil
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.Received = append(m.Received, ReceivedStock{
+		TenantID: req.TenantID, WarehouseID: req.WarehouseID, SKUCode: req.SKUCode, Qty: req.Qty,
+	})
+	return nil
+}
 
 type MockSettlement struct{}
 

@@ -94,6 +94,13 @@ func TestSupplierEcosystemFlows(t *testing.T) {
 	if err != nil || ship.Status != domain.ShipReceived {
 		t.Fatal(err)
 	}
+	inv, ok := d.Inventory.(*memory.MockInventory)
+	if !ok || len(inv.Received) == 0 {
+		t.Fatal("receive must post stock to inventory")
+	}
+	if inv.Received[0].SKUCode != "MILK-1L" || inv.Received[0].Qty != 100 {
+		t.Fatalf("inventory receive %+v", inv.Received)
+	}
 
 	m, err := d.SignalInvoiceMatch(ctx, domain.InvoiceMatchSignal{
 		TenantID: tid, POID: po.ID, InvoiceRef: "INV-1", AmountMinor: po.TotalMinor, Currency: "TRY",

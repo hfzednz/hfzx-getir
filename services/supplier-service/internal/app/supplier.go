@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nexora/supplier-service/internal/app/ports"
 	"github.com/nexora/supplier-service/internal/domain"
 )
 
@@ -325,6 +326,24 @@ func (d *Deps) ReceiveShipment(ctx context.Context, tenantID, id uuid.UUID, qcPa
 		po.Status = domain.POReceived
 		po.UpdatedAt = now
 		_ = d.POs.Save(ctx, po)
+		if qcPassed && d.Inventory != nil {
+			wh := warehouseID(tenantID, ship.WarehouseID)
+			for i, line := range po.Lines {
+				if strings.TrimSpace(line.SKU) == "" || line.Qty <= 0 {
+					continue
+				}
+				if err := d.Inventory.ReceiveStock(ctx, ports.ReceiveStockRequest{
+					TenantID:       tenantID,
+					WarehouseID:    wh,
+					SKUCode:        line.SKU,
+					Qty:            line.Qty,
+					IdempotencyKey: fmt.Sprintf("po-recv:%s:%s:%d", ship.ID.String(), line.SKU, i),
+					Reason:         "supplier_receive",
+				}); err != nil {
+					return domain.InboundShipment{}, err
+				}
+			}
+		}
 	}
 	d.emit(ctx, tenantID, ship.ID, domain.EventShipmentReceived, map[string]any{
 		"asn": ship.ASNNumber, "qcPassed": qcPassed,
@@ -377,6 +396,46 @@ func (d *Deps) OnboardSeller(ctx context.Context, seller domain.MarketplaceSelle
 	}
 	d.emit(ctx, seller.TenantID, seller.ID, domain.EventSellerOnboarded, map[string]any{"storeName": seller.StoreName})
 	return seller, nil
+}
+
+func (d *Deps) ListSellers(ctx context.Context, tenantID uuid.UUID) ([]domain.MarketplaceSeller, error) {
+	if tenantID == uuid.Nil || d.Sellers == nil {
+		return nil, domain.ErrInvalidArgument
+	}
+	return d.Sellers.List(ctx, tenantID)
+}
+
+func (d *Deps) ListListings(ctx context.Context, tenantID, sellerID uuid.UUID) ([]domain.ListingRef, error) {
+	if tenantID == uuid.Nil || d.Listings == nil || d.Sellers == nil {
+		return nil, domain.ErrInvalidArgument
+	}
+	if sellerID != uuid.Nil {
+		if _, err := d.Sellers.Get(ctx, tenantID, sellerID); err != nil {
+			return nil, err
+		}
+		return d.Listings.ListBySeller(ctx, tenantID, sellerID)
+	}
+	sellers, err := d.Sellers.List(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]domain.ListingRef, 0)
+	for _, s := range sellers {
+		items, err := d.Listings.ListBySeller(ctx, tenantID, s.ID)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, items...)
+	}
+	return out, nil
+}
+
+func warehouseID(tenantID uuid.UUID, raw string) uuid.UUID {
+	raw = strings.TrimSpace(raw)
+	if id, err := uuid.Parse(raw); err == nil {
+		return id
+	}
+	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(tenantID.String()+"|"+raw))
 }
 
 func (d *Deps) UpsertListing(ctx context.Context, l domain.ListingRef) (domain.ListingRef, error) {
