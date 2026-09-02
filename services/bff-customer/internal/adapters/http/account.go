@@ -174,45 +174,63 @@ func (h *Handler) assistantMessage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func stagingCoupons() []map[string]any {
-	return []map[string]any{
-		{
-			"id": "welcome10", "code": "WELCOME10", "title": "Welcome 10%",
-			"description": "10% off baskets over 150 TL", "discount_type": "percent",
-			"discount_value": 10, "min_order_minor": 15000, "currency": "TRY",
-			"active": true, "status": "active",
-		},
-		{
-			"id": "fresh50", "code": "FRESH50", "title": "Fresh 50 TL",
-			"description": "50 TL off baskets over 200 TL", "discount_type": "fixed",
-			"discount_value": 5000, "min_order_minor": 20000, "currency": "TRY",
-			"active": true, "status": "active",
-		},
-		{
-			"id": "expired", "code": "EXPIRED", "title": "Expired coupon",
-			"description": "Used only to test expiry", "discount_type": "percent",
-			"discount_value": 20, "min_order_minor": 0, "currency": "TRY",
-			"active": false, "status": "expired",
-			"expires_at": time.Now().UTC().Add(-24 * time.Hour).Format(time.RFC3339),
-		},
-	}
-}
-
-func findCoupon(code string) (map[string]any, bool) {
-	want := strings.ToUpper(strings.TrimSpace(code))
-	for _, c := range stagingCoupons() {
-		if strings.ToUpper(asString(c["code"])) == want {
-			return c, true
+func customerCouponView(raw map[string]any) map[string]any {
+	code := strings.ToUpper(asString(raw["code"]))
+	status := asString(raw["status"])
+	if status == "" {
+		if raw["enabled"] == false || raw["active"] == false {
+			status = "disabled"
+		} else {
+			status = "active"
 		}
 	}
-	return nil, false
+	active := status == "active"
+	out := map[string]any{
+		"id": firstNonEmpty(asString(raw["id"]), strings.ToLower(code)),
+		"code": code, "title": firstNonEmpty(asString(raw["title"]), code),
+		"description": asString(raw["description"]),
+		"discount_type": firstNonEmpty(asString(raw["discount_type"]), asString(raw["kind"])),
+		"discount_value": raw["discount_value"],
+		"min_order_minor": raw["min_order_minor"],
+		"currency": firstNonEmpty(asString(raw["currency"]), "TRY"),
+		"active": active, "status": status, "enabled": active,
+		"maxRedemptions": raw["maxRedemptions"], "redeemedCount": raw["redeemedCount"],
+		"startsAt": raw["startsAt"], "endsAt": firstNonEmptyAny(raw["endsAt"], raw["expires_at"]),
+		"promotionId": raw["promotionId"],
+	}
+	return out
+}
+
+func firstNonEmptyAny(vals ...any) any {
+	for _, v := range vals {
+		if v == nil {
+			continue
+		}
+		if s, ok := v.(string); ok && s == "" {
+			continue
+		}
+		return v
+	}
+	return nil
 }
 
 func (h *Handler) listCoupons(w http.ResponseWriter, r *http.Request) {
 	if _, ok := requirePrincipal(w, r); !ok {
 		return
 	}
-	items := stagingCoupons()
+	if h.Deps == nil || h.Deps.Promo == nil {
+		writeErr(w, domain.ErrUpstream)
+		return
+	}
+	raw, err := h.Deps.Promo.ListCoupons(r.Context(), tenant(r))
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	items := make([]map[string]any, 0, len(raw))
+	for _, c := range raw {
+		items = append(items, customerCouponView(c))
+	}
 	writeJSON(w, 200, map[string]any{"items": items, "coupons": items})
 }
 
@@ -220,16 +238,24 @@ func (h *Handler) getCoupon(w http.ResponseWriter, r *http.Request) {
 	if _, ok := requirePrincipal(w, r); !ok {
 		return
 	}
-	c, ok := findCoupon(r.PathValue("code"))
-	if !ok {
-		writeErr(w, domain.ErrNotFound)
+	if h.Deps == nil || h.Deps.Promo == nil {
+		writeErr(w, domain.ErrUpstream)
 		return
 	}
-	writeJSON(w, 200, c)
+	raw, err := h.Deps.Promo.GetCoupon(r.Context(), tenant(r), r.PathValue("code"))
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	writeJSON(w, 200, customerCouponView(raw))
 }
 
 func (h *Handler) validateCoupon(w http.ResponseWriter, r *http.Request) {
 	if _, ok := requirePrincipal(w, r); !ok {
+		return
+	}
+	if h.Deps == nil || h.Deps.Promo == nil {
+		writeErr(w, domain.ErrUpstream)
 		return
 	}
 	var body struct {
@@ -237,32 +263,71 @@ func (h *Handler) validateCoupon(w http.ResponseWriter, r *http.Request) {
 		CartSubtotalMinor int64  `json:"cart_subtotal_minor"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
-	c, ok := findCoupon(body.Code)
-	if !ok {
-		writeJSON(w, 404, map[string]any{"code": "not_found", "message": "coupon is not valid"})
+	raw, err := h.Deps.Promo.GetCoupon(r.Context(), tenant(r), body.Code)
+	if err != nil {
+		writeErr(w, err)
 		return
 	}
-	status := asString(c["status"])
-	if status == "expired" || c["active"] == false {
+	view := customerCouponView(raw)
+	status := asString(view["status"])
+	if status == "expired" || status == "disabled" || status == "exhausted" || view["active"] == false {
 		writeJSON(w, 409, map[string]any{"code": "conflict", "message": "coupon has expired"})
 		return
 	}
-	min, _ := toFloat(c["min_order_minor"])
-	if body.CartSubtotalMinor > 0 && int64(min) > body.CartSubtotalMinor {
-		writeJSON(w, 400, map[string]any{"code": "invalid_argument", "message": "coupon minimum basket not met"})
+	eval, err := h.Deps.Promo.EvaluateCoupon(r.Context(), tenant(r), body.Code, body.CartSubtotalMinor)
+	if err != nil {
+		if err == domain.ErrInvalidArgument {
+			writeJSON(w, 400, map[string]any{"code": "invalid_argument", "message": "coupon minimum basket not met"})
+			return
+		}
+		writeErr(w, err)
 		return
 	}
 	discount := int64(0)
-	if asString(c["discount_type"]) == "percent" {
-		pct, _ := toFloat(c["discount_value"])
-		discount = body.CartSubtotalMinor * int64(pct) / 100
-	} else {
-		d, _ := toFloat(c["discount_value"])
-		discount = int64(d)
+	if eval != nil {
+		discount = asInt64Any(eval["totalDiscountMinor"])
+		if discount == 0 {
+			for _, d := range asAnyMaps(eval["discounts"]) {
+				if strings.EqualFold(asString(d["couponCode"]), body.Code) {
+					discount += asInt64Any(d["amountMinor"])
+				}
+			}
+		}
 	}
 	writeJSON(w, 200, map[string]any{
-		"coupon": c, "discount_minor": discount, "message": "applied",
+		"coupon": view, "discount_minor": discount, "message": "applied",
+		"evaluate": eval,
 	})
+}
+
+func asInt64Any(v any) int64 {
+	switch n := v.(type) {
+	case int:
+		return int64(n)
+	case int64:
+		return n
+	case float64:
+		return int64(n)
+	default:
+		return 0
+	}
+}
+
+func asAnyMaps(v any) []map[string]any {
+	switch t := v.(type) {
+	case []map[string]any:
+		return t
+	case []any:
+		out := make([]map[string]any, 0, len(t))
+		for _, item := range t {
+			if m, ok := item.(map[string]any); ok {
+				out = append(out, m)
+			}
+		}
+		return out
+	default:
+		return nil
+	}
 }
 
 func (h *Handler) listPaymentCards(w http.ResponseWriter, r *http.Request) {

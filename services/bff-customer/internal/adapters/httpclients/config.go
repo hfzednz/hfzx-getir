@@ -21,6 +21,7 @@ type Config struct {
 	CRMURL            string
 	ReviewURL         string
 	InventoryURL      string
+	PromoURL          string
 }
 
 // ConfigFromEnv loads URLs from environment with localhost registry defaults.
@@ -39,6 +40,7 @@ func ConfigFromEnv() Config {
 		CRMURL:            envOr("CRM_URL", "http://127.0.0.1:8102"),
 		ReviewURL:         envOr("REVIEW_URL", "http://127.0.0.1:8103"),
 		InventoryURL:      envOr("INVENTORY_URL", "http://127.0.0.1:8084"),
+		PromoURL:          envOr("PROMO_URL", "http://127.0.0.1:8094"),
 	}
 }
 
@@ -64,5 +66,6 @@ func NewDeps(cfg Config) *app.Deps {
 		CRM:      NewCRM(cfg.CRMURL),
 		Reviews:  NewReviews(cfg.ReviewURL),
 		Stores:   NewStores(cfg.InventoryURL),
+		Promo:    NewPromo(cfg.PromoURL),
 	}
 }

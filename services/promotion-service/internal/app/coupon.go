@@ -137,3 +137,81 @@ func (d *Deps) RedeemCoupon(ctx context.Context, in RedeemCouponInput) (domain.C
 	})
 	return red, nil
 }
+
+// ListCoupons returns tenant coupons newest first.
+func (d *Deps) ListCoupons(ctx context.Context, tenantID uuid.UUID, limit, offset int) ([]domain.Coupon, error) {
+	if tenantID == uuid.Nil {
+		return nil, fmt.Errorf("%w: tenant_id required", domain.ErrInvalidArgument)
+	}
+	if d.Coupons == nil {
+		return nil, fmt.Errorf("%w: coupon repository not configured", domain.ErrInvalidArgument)
+	}
+	if limit <= 0 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return d.Coupons.List(ctx, tenantID, limit, offset)
+}
+
+// GetCoupon looks up a coupon by code.
+func (d *Deps) GetCoupon(ctx context.Context, tenantID uuid.UUID, code string) (domain.Coupon, error) {
+	if tenantID == uuid.Nil || strings.TrimSpace(code) == "" {
+		return domain.Coupon{}, fmt.Errorf("%w: tenant_id and code required", domain.ErrInvalidArgument)
+	}
+	return d.Coupons.GetByCode(ctx, tenantID, strings.ToUpper(strings.TrimSpace(code)))
+}
+
+// UpdateCouponInput patches coupon eligibility, window, and enablement.
+type UpdateCouponInput struct {
+	TenantID       uuid.UUID
+	Code           string
+	Kind           *domain.CouponKind
+	MaxRedemptions *int
+	StartsAt       *time.Time
+	EndsAt         *time.Time
+	Enabled        *bool
+}
+
+// UpdateCoupon persists coupon configuration changes and writes an audit event.
+func (d *Deps) UpdateCoupon(ctx context.Context, in UpdateCouponInput) (domain.Coupon, error) {
+	c, err := d.GetCoupon(ctx, in.TenantID, in.Code)
+	if err != nil {
+		return domain.Coupon{}, err
+	}
+	now := d.now()
+	if in.Kind != nil && *in.Kind != "" {
+		c.Kind = *in.Kind
+	}
+	if in.MaxRedemptions != nil {
+		c.MaxRedemptions = *in.MaxRedemptions
+	}
+	if in.StartsAt != nil {
+		c.StartsAt = in.StartsAt
+	}
+	if in.EndsAt != nil {
+		c.EndsAt = in.EndsAt
+	}
+	if in.Enabled != nil {
+		if *in.Enabled {
+			if c.EndsAt != nil && !now.Before(*c.EndsAt) {
+				c.EndsAt = nil
+			}
+		} else {
+			ended := now
+			c.EndsAt = &ended
+		}
+	}
+	c.UpdatedAt = now
+	if err := c.Validate(); err != nil {
+		return domain.Coupon{}, err
+	}
+	if err := d.Coupons.Update(ctx, c); err != nil {
+		return domain.Coupon{}, err
+	}
+	d.emit(ctx, c.TenantID, c.ID, domain.EventCouponGenerated, map[string]any{
+		"code": c.Code, "action": "update", "enabled": c.IsValidAt(now),
+	})
+	return c, nil
+}

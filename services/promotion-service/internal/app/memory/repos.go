@@ -269,8 +269,30 @@ func (r *CouponRepo) GetByCode(_ context.Context, tenantID uuid.UUID, code strin
 	if !ok {
 		return domain.Coupon{}, domain.ErrNotFound
 	}
-	c := r.S.Coupons[id]
+	c, ok := r.S.Coupons[id]
+	if !ok || c.TenantID != tenantID {
+		return domain.Coupon{}, domain.ErrNotFound
+	}
 	return cloneCoupon(c), nil
+}
+
+func (r *CouponRepo) List(_ context.Context, tenantID uuid.UUID, limit, offset int) ([]domain.Coupon, error) {
+	r.S.mu.RLock()
+	defer r.S.mu.RUnlock()
+	out := []domain.Coupon{}
+	for _, c := range r.S.Coupons {
+		if c.TenantID == tenantID {
+			out = append(out, cloneCoupon(c))
+		}
+	}
+	if offset > len(out) {
+		return []domain.Coupon{}, nil
+	}
+	out = out[offset:]
+	if limit > 0 && len(out) > limit {
+		out = out[:limit]
+	}
+	return out, nil
 }
 
 func (r *CouponRepo) CreateRedemption(_ context.Context, red domain.CouponRedemption) error {

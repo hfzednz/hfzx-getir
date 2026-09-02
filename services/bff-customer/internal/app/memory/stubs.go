@@ -3,6 +3,8 @@ package memory
 import (
 	"context"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nexora/bff-customer/internal/domain"
@@ -175,4 +177,85 @@ func (o OrderStub) Refund(_ context.Context, _, orderID, reason string, amountMi
 		"orderId": orderID, "id": orderID, "status": "refunded",
 		"reason": reason, "amountMinor": amountMinor,
 	}, nil
+}
+
+func couponCatalog() []map[string]any {
+	expired := time.Now().UTC().Add(-24 * time.Hour).Format(time.RFC3339)
+	return []map[string]any{
+		{
+			"id": "welcome10", "code": "WELCOME10", "title": "Welcome 10%",
+			"description": "10% off baskets over 150 TL", "discount_type": "percent",
+			"discount_value": 10, "min_order_minor": 15000, "currency": "TRY",
+			"active": true, "status": "active", "enabled": true,
+		},
+		{
+			"id": "fresh50", "code": "FRESH50", "title": "Fresh 50 TL",
+			"description": "50 TL off baskets over 200 TL", "discount_type": "fixed",
+			"discount_value": 5000, "min_order_minor": 20000, "currency": "TRY",
+			"active": true, "status": "active", "enabled": true,
+		},
+		{
+			"id": "expired", "code": "EXPIRED", "title": "Expired coupon",
+			"description": "Used only to test expiry", "discount_type": "percent",
+			"discount_value": 20, "min_order_minor": 0, "currency": "TRY",
+			"active": false, "status": "expired", "enabled": false,
+			"expires_at": expired, "endsAt": expired,
+		},
+	}
+}
+
+func (s *Stubs) ListCoupons(_ context.Context, _ string) ([]map[string]any, error) {
+	return couponCatalog(), nil
+}
+
+func (s *Stubs) GetCoupon(_ context.Context, _, code string) (map[string]any, error) {
+	want := strings.ToUpper(strings.TrimSpace(code))
+	for _, c := range couponCatalog() {
+		if strings.ToUpper(asStubString(c["code"])) == want {
+			return c, nil
+		}
+	}
+	return nil, domain.ErrNotFound
+}
+
+func (s *Stubs) EvaluateCoupon(_ context.Context, _, code string, cartSubtotalMinor int64) (map[string]any, error) {
+	c, err := s.GetCoupon(context.Background(), "", code)
+	if err != nil {
+		return nil, err
+	}
+	if asStubString(c["status"]) == "expired" || c["active"] == false {
+		return nil, domain.ErrConflict
+	}
+	min := asStubInt64(c["min_order_minor"])
+	if cartSubtotalMinor > 0 && min > cartSubtotalMinor {
+		return nil, domain.ErrInvalidArgument
+	}
+	discount := int64(0)
+	if asStubString(c["discount_type"]) == "percent" {
+		discount = cartSubtotalMinor * asStubInt64(c["discount_value"]) / 100
+	} else {
+		discount = asStubInt64(c["discount_value"])
+	}
+	return map[string]any{
+		"totalDiscountMinor": discount,
+		"discounts": []any{map[string]any{"couponCode": c["code"], "amountMinor": discount, "currency": "TRY"}},
+	}, nil
+}
+
+func asStubString(v any) string {
+	s, _ := v.(string)
+	return s
+}
+
+func asStubInt64(v any) int64 {
+	switch n := v.(type) {
+	case int:
+		return int64(n)
+	case int64:
+		return n
+	case float64:
+		return int64(n)
+	default:
+		return 0
+	}
 }

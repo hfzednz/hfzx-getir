@@ -49,6 +49,29 @@ func (r *CouponRepo) GetByCode(ctx context.Context, tenantID uuid.UUID, code str
 	return r.scan(r.DB.QueryRowContext(ctx, couponSelect+` WHERE tenant_id=$1 AND code=$2`, tenantID, code))
 }
 
+func (r *CouponRepo) List(ctx context.Context, tenantID uuid.UUID, limit, offset int) ([]domain.Coupon, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	rows, err := r.DB.QueryContext(ctx, couponSelect+` WHERE tenant_id=$1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, tenantID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []domain.Coupon{}
+	for rows.Next() {
+		c, err := scanCoupon(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
 func (r *CouponRepo) CreateRedemption(ctx context.Context, red domain.CouponRedemption) error {
 	_, err := r.DB.ExecContext(ctx, `
 		INSERT INTO coupon_redemptions (
@@ -81,7 +104,19 @@ const couponSelect = `
 	SELECT id, tenant_id, promotion_id, code, kind, max_redemptions, redeemed_count, principal_id,
 		starts_at, ends_at, created_at, updated_at FROM coupons`
 
+type couponScanner interface {
+	Scan(dest ...any) error
+}
+
 func (r *CouponRepo) scan(row *sql.Row) (domain.Coupon, error) {
+	c, err := scanCoupon(row)
+	if isNoRows(err) {
+		return domain.Coupon{}, domain.ErrNotFound
+	}
+	return c, err
+}
+
+func scanCoupon(row couponScanner) (domain.Coupon, error) {
 	var c domain.Coupon
 	var kind string
 	var principal uuid.NullUUID
@@ -89,9 +124,6 @@ func (r *CouponRepo) scan(row *sql.Row) (domain.Coupon, error) {
 	err := row.Scan(
 		&c.ID, &c.TenantID, &c.PromotionID, &c.Code, &kind, &c.MaxRedemptions, &c.RedeemedCount, &principal,
 		&starts, &ends, &c.CreatedAt, &c.UpdatedAt)
-	if isNoRows(err) {
-		return domain.Coupon{}, domain.ErrNotFound
-	}
 	if err != nil {
 		return domain.Coupon{}, err
 	}

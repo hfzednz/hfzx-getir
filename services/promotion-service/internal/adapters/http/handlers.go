@@ -53,6 +53,9 @@ func NewHandler(cfg ServerConfig) http.Handler {
 	mux.HandleFunc("GET "+base+"/campaigns/{id}/promotions", tenant(h.listPromotions))
 
 	mux.HandleFunc("POST "+base+"/coupons", tenant(h.generateCoupon))
+	mux.HandleFunc("GET "+base+"/coupons", tenant(h.listCoupons))
+	mux.HandleFunc("GET "+base+"/coupons/{code}", tenant(h.getCoupon))
+	mux.HandleFunc("PATCH "+base+"/coupons/{code}", tenant(h.updateCoupon))
 	mux.HandleFunc("POST "+base+"/coupons/redeem", tenant(h.redeemCoupon))
 
 	mux.HandleFunc("POST "+base+"/vouchers", tenant(h.issueVoucher))
@@ -341,6 +344,59 @@ func (h *Handler) generateCoupon(w http.ResponseWriter, r *http.Request) {
 	writeCreated(w, couponDTO(c))
 }
 
+func (h *Handler) listCoupons(w http.ResponseWriter, r *http.Request) {
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	list, err := h.Deps.ListCoupons(r.Context(), h.tenantID(r), limit, offset)
+	if err != nil {
+		writeErr(w, r, err)
+		return
+	}
+	out := make([]any, 0, len(list))
+	for _, c := range list {
+		out = append(out, couponDTO(c))
+	}
+	writeOK(w, map[string]any{"items": out, "total": len(out)})
+}
+
+func (h *Handler) getCoupon(w http.ResponseWriter, r *http.Request) {
+	c, err := h.Deps.GetCoupon(r.Context(), h.tenantID(r), r.PathValue("code"))
+	if err != nil {
+		writeErr(w, r, err)
+		return
+	}
+	writeOK(w, couponDTO(c))
+}
+
+func (h *Handler) updateCoupon(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Kind           string     `json:"kind"`
+		MaxRedemptions *int       `json:"maxRedemptions"`
+		StartsAt       *time.Time `json:"startsAt"`
+		EndsAt         *time.Time `json:"endsAt"`
+		Enabled        *bool      `json:"enabled"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeErr(w, r, domain.ErrInvalidArgument)
+		return
+	}
+	in := app.UpdateCouponInput{
+		TenantID: h.tenantID(r), Code: r.PathValue("code"),
+		MaxRedemptions: body.MaxRedemptions, StartsAt: body.StartsAt, EndsAt: body.EndsAt,
+		Enabled: body.Enabled,
+	}
+	if body.Kind != "" {
+		k := domain.CouponKind(body.Kind)
+		in.Kind = &k
+	}
+	c, err := h.Deps.UpdateCoupon(r.Context(), in)
+	if err != nil {
+		writeErr(w, r, err)
+		return
+	}
+	writeOK(w, couponDTO(c))
+}
+
 func (h *Handler) redeemCoupon(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Code           string `json:"code"`
@@ -584,11 +640,25 @@ func ruleDTO(r domain.Rule) map[string]any {
 }
 
 func couponDTO(c domain.Coupon) map[string]any {
+	now := time.Now().UTC()
+	enabled := c.IsValidAt(now)
+	status := "active"
+	if !enabled {
+		status = "disabled"
+		if c.EndsAt != nil && !now.Before(*c.EndsAt) {
+			status = "expired"
+		}
+		if c.MaxRedemptions > 0 && c.RedeemedCount >= c.MaxRedemptions {
+			status = "exhausted"
+		}
+	}
 	m := map[string]any{
 		"id": c.ID.String(), "promotionId": c.PromotionID.String(),
 		"code": c.Code, "kind": string(c.Kind),
 		"maxRedemptions": c.MaxRedemptions, "redeemedCount": c.RedeemedCount,
 		"startsAt": c.StartsAt, "endsAt": c.EndsAt,
+		"enabled": enabled, "active": enabled, "status": status,
+		"createdAt": c.CreatedAt, "updatedAt": c.UpdatedAt,
 	}
 	if c.PrincipalID != nil {
 		m["principalId"] = c.PrincipalID.String()

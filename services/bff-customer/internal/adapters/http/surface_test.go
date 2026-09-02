@@ -21,7 +21,7 @@ func TestCustomerSurfaceSearchAndAddresses(t *testing.T) {
 	}
 	srv := NewServerWithAuth(":0", &app.Deps{
 		Catalog: stubs, Stores: stubs, Location: stubs, Cart: stubs, Checkout: stubs,
-		Orders: memory.OrderStub{S: stubs},
+		Orders: memory.OrderStub{S: stubs}, Promo: stubs,
 	}, v)
 	ts := httptest.NewServer(srv.Handler)
 	defer ts.Close()

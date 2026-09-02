@@ -20,6 +20,7 @@ type Deps struct {
 	CRM      ports.CRMClient
 	Reviews  ports.ReviewClient
 	Stores   ports.StoreClient
+	Promo    ports.PromoClient
 }
 
 func (d *Deps) StartOTP(ctx context.Context, tenantID, phone string) (string, error) {

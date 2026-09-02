@@ -53,6 +53,7 @@ type CouponRepository interface {
 	Update(ctx context.Context, c domain.Coupon) error
 	GetByID(ctx context.Context, tenantID, id uuid.UUID) (domain.Coupon, error)
 	GetByCode(ctx context.Context, tenantID uuid.UUID, code string) (domain.Coupon, error)
+	List(ctx context.Context, tenantID uuid.UUID, limit, offset int) ([]domain.Coupon, error)
 	CreateRedemption(ctx context.Context, r domain.CouponRedemption) error
 	GetRedemptionByIdempotency(ctx context.Context, tenantID uuid.UUID, key string) (domain.CouponRedemption, error)
 }

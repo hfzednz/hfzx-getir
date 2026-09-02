@@ -367,3 +367,47 @@ func TestScheduleWindow(t *testing.T) {
 		t.Fatalf("after window want 0 got %d", res3.TotalDiscountMinor)
 	}
 }
+
+func TestCouponListGetAndDisable(t *testing.T) {
+	env := testDeps(t)
+	tenant := uuid.New()
+	camp := activateCampaign(t, env, tenant, "list-coupons")
+	pr, err := env.Deps.CreatePromotion(context.Background(), app.CreatePromotionInput{
+		TenantID: tenant, CampaignID: camp.ID, Name: "pct", Type: domain.PromoPercent,
+		PercentOff: 10, Priority: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := env.Deps.GenerateCoupon(context.Background(), app.GenerateCouponInput{
+		TenantID: tenant, PromotionID: pr.Promotion.ID, Code: "WELCOME10", Kind: domain.CouponPublic,
+		MaxRedemptions: 100,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	list, err := env.Deps.ListCoupons(context.Background(), tenant, 50, 0)
+	if err != nil || len(list) != 1 || list[0].Code != "WELCOME10" {
+		t.Fatalf("list %+v %v", list, err)
+	}
+	got, err := env.Deps.GetCoupon(context.Background(), tenant, "welcome10")
+	if err != nil || got.Code != "WELCOME10" {
+		t.Fatalf("get %+v %v", got, err)
+	}
+	off := false
+	disabled, err := env.Deps.UpdateCoupon(context.Background(), app.UpdateCouponInput{
+		TenantID: tenant, Code: "WELCOME10", Enabled: &off,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if disabled.IsValidAt(env.Clock.Now()) {
+		t.Fatalf("disabled coupon still valid: %+v", disabled)
+	}
+	on := true
+	enabled, err := env.Deps.UpdateCoupon(context.Background(), app.UpdateCouponInput{
+		TenantID: tenant, Code: "WELCOME10", Enabled: &on,
+	})
+	if err != nil || !enabled.IsValidAt(env.Clock.Now()) {
+		t.Fatalf("re-enable %+v %v", enabled, err)
+	}
+}

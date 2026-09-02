@@ -62,3 +62,9 @@ type CRMClient interface {
 type ReviewClient interface {
 	Submit(ctx context.Context, tenantID, orderID string, rating int, body string) error
 }
+
+type PromoClient interface {
+	ListCoupons(ctx context.Context, tenantID string) ([]map[string]any, error)
+	GetCoupon(ctx context.Context, tenantID, code string) (map[string]any, error)
+	EvaluateCoupon(ctx context.Context, tenantID, code string, cartSubtotalMinor int64) (map[string]any, error)
+}
