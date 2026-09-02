@@ -18,7 +18,7 @@ func TestOpsFlows(t *testing.T) {
 		Deployments: r.Deployments, Scaling: r.Scaling, Backups: r.Backups,
 		Recoveries: r.Recoveries, Alerts: r.Alerts, Costs: r.Costs, SLOs: r.SLOs,
 		Outbox: r.Outbox, GitOps: r.GitOps, Cluster: r.Cluster, BackupTool: r.BackupTool,
-		Clock: app.SystemClock{}, IDs: app.UUIDGen{},
+		Clock: app.SystemClock{}, IDs: app.UUIDGen{}, Registry: memory.NewRegistry(),
 	}
 	tid := uuid.New()
 	dep, err := d.StartDeployment(ctx, domain.Deployment{
@@ -69,5 +69,50 @@ func TestOpsFlows(t *testing.T) {
 	slo, err := d.RecordSLO(ctx, domain.SLOReport{TenantID: tid, Service: "checkout", Objective: 99.9, Actual: 99.95})
 	if err != nil || slo.BudgetLeft <= 0 {
 		t.Fatalf("%+v %v", slo, err)
+	}
+}
+
+func TestTenantCompanyRegistry(t *testing.T) {
+	ctx := context.Background()
+	d := &app.Deps{Clock: app.SystemClock{}, IDs: app.UUIDGen{}, Registry: memory.NewRegistry()}
+	co, err := d.CreateCompany(ctx, "Acme A.S.", "Acme", "TR", "TRY", "sa@nexora")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ten, err := d.CreateTenant(ctx, "Acme QC", "acme-qc", co.ID, "shared", "eu-west-1", "sa@nexora")
+	if err != nil {
+		t.Fatal(err)
+	}
+	list, err := d.ListTenants(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if list["total"] != 1 {
+		t.Fatalf("%+v", list)
+	}
+	detail, err := d.PatchTenantIsolation(ctx, ten.ID, "hybrid", "sa@nexora")
+	if err != nil || detail["isolationMode"] != "hybrid" {
+		t.Fatalf("%+v %v", detail, err)
+	}
+	prop, err := d.ProposeTenantAction(ctx, ten.ID, "tenant_suspend", "billing", "sa1", "sa@nexora")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prop, err = d.ResolveTenantProposal(ctx, prop.ID, "approved", "sa@nexora")
+	if err != nil || prop.Status != "executed" {
+		t.Fatalf("%+v %v", prop, err)
+	}
+	got, err := d.GetTenant(ctx, ten.ID)
+	if err != nil || got["status"] != "suspended" {
+		t.Fatalf("%+v %v", got, err)
+	}
+	roles := d.RolesSnapshot(ctx)
+	rs, _ := roles["roles"].([]map[string]any)
+	if len(rs) < 10 {
+		t.Fatalf("roles=%d", len(rs))
+	}
+	audit, err := d.AuditSnapshot(ctx, "tenants")
+	if err != nil || audit["total"].(int) == 0 {
+		t.Fatalf("%+v %v", audit, err)
 	}
 }

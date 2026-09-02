@@ -53,6 +53,21 @@ func NewHandler(cfg ServerConfig) http.Handler {
 	mux.HandleFunc("GET "+base+"/admin/stats", tenant(h.stats))
 	mux.HandleFunc("POST "+base+"/outbox/publish", tenant(h.outbox))
 
+	mux.HandleFunc("GET "+base+"/tenants", tenant(h.listTenants))
+	mux.HandleFunc("POST "+base+"/tenants", tenant(h.createTenant))
+	mux.HandleFunc("GET "+base+"/tenants/{id}", tenant(h.getTenant))
+	mux.HandleFunc("PATCH "+base+"/tenants/{id}/isolation", tenant(h.patchTenantIsolation))
+	mux.HandleFunc("POST "+base+"/tenants/dual-control", tenant(h.proposeTenant))
+	mux.HandleFunc("POST "+base+"/tenants/dual-control/{id}", tenant(h.resolveTenantProposal))
+	mux.HandleFunc("GET "+base+"/companies", tenant(h.listCompanies))
+	mux.HandleFunc("POST "+base+"/companies", tenant(h.createCompany))
+	mux.HandleFunc("GET "+base+"/companies/{id}", tenant(h.getCompany))
+	mux.HandleFunc("PATCH "+base+"/companies/{id}", tenant(h.patchCompany))
+	mux.HandleFunc("DELETE "+base+"/companies/{id}", tenant(h.deleteCompany))
+	mux.HandleFunc("GET "+base+"/roles", tenant(h.rolesSnapshot))
+	mux.HandleFunc("GET "+base+"/org", tenant(h.orgSnapshot))
+	mux.HandleFunc("GET "+base+"/audit", tenant(h.auditSnapshot))
+
 	v := cfg.Auth
 	if v == nil {
 		v = authz.FromEnv()

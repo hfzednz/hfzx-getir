@@ -702,8 +702,27 @@ func (h *Handler) createPrincipal(w http.ResponseWriter, r *http.Request) {
 // --- RBAC ---
 
 func (h *Handler) listRoles(w http.ResponseWriter, r *http.Request) {
-	// RoleRepository has no List-all; return empty collection until admin catalog lands.
-	writeOK(w, map[string]any{"items": []any{}})
+	if h.Deps == nil || h.Deps.Roles == nil {
+		writeOK(w, map[string]any{"items": []any{}, "total": 0})
+		return
+	}
+	names := []string{
+		"customer", "courier", "picker", "packer", "dispatcher", "city_ops",
+		"support_agent", "finance_analyst", "admin", "super_admin",
+		"service_account", "partner", "supplier",
+	}
+	out := make([]map[string]any, 0, len(names))
+	for _, name := range names {
+		role, err := h.Deps.Roles.GetRoleByName(r.Context(), nil, name)
+		if err != nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"id": role.ID.String(), "name": role.Name, "kind": string(role.Kind),
+			"description": role.Description, "createdAt": role.CreatedAt, "updatedAt": role.UpdatedAt,
+		})
+	}
+	writeOK(w, map[string]any{"items": out, "total": len(out)})
 }
 
 func (h *Handler) listPermissions(w http.ResponseWriter, r *http.Request) {

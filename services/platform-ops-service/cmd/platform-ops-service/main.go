@@ -34,6 +34,7 @@ func main() {
 		Recoveries: repos.Recoveries, Alerts: repos.Alerts, Costs: repos.Costs, SLOs: repos.SLOs,
 		Outbox: repos.Outbox, GitOps: repos.GitOps, Cluster: repos.Cluster, BackupTool: repos.BackupTool,
 		Publisher: kafka.NewPublisher(cfg.KafkaBrokers, log), Clock: app.SystemClock{}, IDs: app.UUIDGen{},
+		Registry: memory.NewRegistry(),
 	}
 
 	var db *sql.DB
