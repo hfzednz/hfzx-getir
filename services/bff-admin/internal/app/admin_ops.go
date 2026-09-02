@@ -262,43 +262,6 @@ func mapWarehouse(wh map[string]any) map[string]any {
 	}
 }
 
-func (d *Deps) LiveSnapshot(ctx context.Context, tenant string) (map[string]any, error) {
-	if tenant == "" {
-		return nil, ErrInvalid
-	}
-	dash, err := d.Dashboard(ctx, tenant)
-	if err != nil {
-		return nil, err
-	}
-	stream := []map[string]any{}
-	if d.Orders != nil {
-		list, err := d.Orders.List(ctx, tenant, url.Values{"limit": {"50"}})
-		if err == nil {
-			for _, o := range asMaps(list["items"]) {
-				st := mapLiveStatus(firstString(o, "status", "orderStatus"))
-				stream = append(stream, map[string]any{
-					"id": firstString(o, "id"), "orderId": firstString(o, "id"),
-					"status": st, "customerName": firstString(o, "customerId", "CustomerID"),
-					"warehouseCode": "", "zone": "", "etaMinutes": nil, "delayMinutes": 0,
-					"amountMinor": asInt(o["totalMinor"]), "currency": firstNonEmpty(firstString(o, "currency"), "TRY"),
-					"updatedAt": firstString(o, "updatedAt", "UpdatedAt"),
-				})
-			}
-		}
-	}
-	empty := []any{}
-	return map[string]any{
-		"cityId": nil, "generatedAt": time.Now().UTC().Format(time.RFC3339),
-		"connection": "polling", "orderStream": stream,
-		"couriers": empty, "warehouses": empty, "delays": empty, "failedDeliveries": empty,
-		"bottlenecks": empty, "emergencies": empty, "alerts": empty,
-		"counts": map[string]any{
-			"activeOrders": dash["ordersLive"], "delayedOrders": dash["delayedOrders"],
-			"availableCouriers": dash["couriersOnDuty"], "openEmergencies": dash["openIncidents"],
-		},
-	}, nil
-}
-
 func mapLiveStatus(st string) string {
 	switch strings.ToLower(st) {
 	case "picking", "packing", "warehouse_assigned", "confirmed":
@@ -417,8 +380,50 @@ func (d *Deps) ListCustomers(ctx context.Context, tenant string, q url.Values) (
 	if tenant == "" {
 		return nil, ErrInvalid
 	}
+	needle := strings.TrimSpace(q.Get("q"))
+	if d.Profile != nil {
+		raw, err := d.Profile.Search(ctx, tenant, needle, 100)
+		if err != nil {
+			return nil, err
+		}
+		items := make([]map[string]any, 0)
+		for _, p := range asMaps(raw["items"]) {
+			pid := firstString(p, "id", "principalId")
+			phone := maskPhone(firstString(p, "phone", "msisdn"))
+			items = append(items, map[string]any{
+				"id": pid, "principalId": firstString(p, "principalId"),
+				"name": firstNonEmpty(firstString(p, "fullName", "displayName"), pid),
+				"email": firstString(p, "email"), "phone": phone,
+				"cityId": firstString(p, "city"), "status": firstString(p, "status"),
+				"tenant": firstString(p, "tenantId"),
+				"segment": "", "orderCount": 0, "lifetimeValueMinor": 0,
+				"currency": "TRY", "riskScore": 0, "fraudScore": 0, "loyaltyTier": "",
+				"walletBalanceMinor": 0,
+				"createdAt": firstString(p, "createdAt"), "lastOrderAt": firstString(p, "updatedAt"),
+			})
+		}
+		if d.Orders != nil {
+			if list, err := d.Orders.List(ctx, tenant, url.Values{"limit": {"100"}}); err == nil {
+				counts := map[string]int{}
+				last := map[string]string{}
+				for _, o := range asMaps(list["items"]) {
+					cid := firstString(o, "customerId", "CustomerID", "principalId")
+					counts[cid]++
+					last[cid] = firstString(o, "createdAt", "updatedAt")
+				}
+				for _, it := range items {
+					id := firstString(it, "id", "principalId")
+					it["orderCount"] = counts[id]
+					if last[id] != "" {
+						it["lastOrderAt"] = last[id]
+					}
+				}
+			}
+		}
+		return map[string]any{"items": items, "total": len(items), "page": 1, "pageSize": len(items), "hasMore": false}, nil
+	}
 	if d.Orders == nil {
-		return nil, fmt.Errorf("orders gateway not configured")
+		return nil, fmt.Errorf("customer directory gateway not configured")
 	}
 	list, err := d.Orders.List(ctx, tenant, url.Values{"limit": {"100"}})
 	if err != nil {
@@ -431,13 +436,13 @@ func (d *Deps) ListCustomers(ctx context.Context, tenant string, q url.Values) (
 	}
 	seen := map[string]*agg{}
 	order := []string{}
-	needle := strings.ToLower(q.Get("q"))
+	nl := strings.ToLower(needle)
 	for _, o := range asMaps(list["items"]) {
 		cid := firstString(o, "customerId", "CustomerID", "principalId")
 		if cid == "" {
 			continue
 		}
-		if needle != "" && !strings.Contains(strings.ToLower(cid), needle) {
+		if nl != "" && !strings.Contains(strings.ToLower(cid), nl) {
 			continue
 		}
 		a, ok := seen[cid]
@@ -461,6 +466,14 @@ func (d *Deps) ListCustomers(ctx context.Context, tenant string, q url.Values) (
 		})
 	}
 	return map[string]any{"items": items, "total": len(items), "page": 1, "pageSize": len(items), "hasMore": false}, nil
+}
+
+func maskPhone(phone string) string {
+	phone = strings.TrimSpace(phone)
+	if len(phone) < 4 {
+		return phone
+	}
+	return strings.Repeat("*", len(phone)-4) + phone[len(phone)-4:]
 }
 
 func (d *Deps) GetCustomer(ctx context.Context, tenant, id string) (map[string]any, error) {
@@ -490,9 +503,66 @@ func (d *Deps) CustomerAdjustment(_ context.Context, customerID, kind, note stri
 	}, nil
 }
 
-func (d *Deps) FinanceMutation(_ context.Context, kind, id string) (map[string]any, error) {
+func (d *Deps) FinanceMutation(ctx context.Context, kind, id string) (map[string]any, error) {
+	if d.Settlement == nil {
+		return map[string]any{
+			"ok": false, "id": id, "kind": kind,
+			"message": kind + " requires settlement-service and is not silently mocked",
+			"provider": "unavailable",
+		}, nil
+	}
+	tenant := ""
+	var (
+		out map[string]any
+		err error
+	)
+	switch kind {
+	case "payout_approve":
+		out, err = d.Settlement.Approve(ctx, tenant, id)
+	case "courier_settle":
+		out, err = d.Settlement.Execute(ctx, tenant, id)
+	default:
+		return map[string]any{
+			"ok": false, "id": id, "kind": kind,
+			"message": kind + " is not a settlement batch mutation",
+			"provider": "internal",
+		}, nil
+	}
+	if err != nil {
+		return map[string]any{
+			"ok": false, "id": id, "kind": kind, "message": err.Error(), "provider": "settlement",
+		}, err
+	}
+	status := firstString(out, "status", "Status")
 	return map[string]any{
-		"ok": false, "id": id, "kind": kind,
-		"message": kind + " requires settlement-service and is not silently mocked",
+		"ok": true, "id": id, "kind": kind, "status": status, "batch": out,
 	}, nil
+}
+
+func (d *Deps) FinanceMutationTenant(ctx context.Context, tenant, kind, id string) (map[string]any, error) {
+	if d.Settlement == nil {
+		return d.FinanceMutation(ctx, kind, id)
+	}
+	var (
+		out map[string]any
+		err error
+	)
+	switch kind {
+	case "payout_approve":
+		out, err = d.Settlement.Approve(ctx, tenant, id)
+	case "courier_settle":
+		out, err = d.Settlement.Execute(ctx, tenant, id)
+	case "refund_approve":
+		if d.Orders != nil {
+			out, err = d.Orders.Refund(ctx, tenant, id, map[string]any{"reason": "admin_refund_approve"})
+			break
+		}
+		return map[string]any{"ok": false, "id": id, "kind": kind, "message": "order refund gateway not configured"}, nil
+	default:
+		return d.FinanceMutation(ctx, kind, id)
+	}
+	if err != nil {
+		return map[string]any{"ok": false, "id": id, "kind": kind, "message": err.Error()}, err
+	}
+	return map[string]any{"ok": true, "id": id, "kind": kind, "status": firstString(out, "status"), "batch": out}, nil
 }

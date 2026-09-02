@@ -1,7 +1,20 @@
 import type { AiCommandSnapshot } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-/** Mock AI command center — replaced by GET /admin/ai/* when BFF is live. */
 export async function fetchAiCommandSnapshot(
+  cityId: string | null,
+): Promise<AiCommandSnapshot> {
+  try {
+    const q = cityId ? `?cityId=${encodeURIComponent(cityId)}` : "";
+    return await apiClient<AiCommandSnapshot>(`/admin/ai${q}`);
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockAiCommandSnapshot(cityId);
+  }
+}
+
+async function mockAiCommandSnapshot(
   cityId: string | null,
 ): Promise<AiCommandSnapshot> {
   await new Promise((r) => setTimeout(r, 240));

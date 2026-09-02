@@ -19,15 +19,34 @@ func main() {
 	}
 	cfg := httpclients.ConfigFromEnv()
 	deps := &app.Deps{
-		Orders:    httpclients.OrderClient{Client: httpclients.New(cfg.OrderURL)},
-		LiveOps:   httpclients.LiveOpsClient{Client: httpclients.New(cfg.LiveOpsURL)},
-		Catalog:   httpclients.CatalogClient{Client: httpclients.New(cfg.CatalogURL)},
-		CRM:       httpclients.CRMClient{Client: httpclients.New(cfg.CrmURL)},
-		Ledger:    httpclients.LedgerClient{Client: httpclients.NewLedger(cfg.LedgerURL)},
-		Promo:     httpclients.PromoClient{Client: httpclients.New(cfg.PromoURL)},
-		Pricing:   httpclients.PricingClient{Client: httpclients.New(cfg.PricingURL)},
-		Inventory: httpclients.InventoryClient{Client: httpclients.New(cfg.InventoryURL)},
-		Identity:  httpclients.IdentityClient{Client: httpclients.New(cfg.IdentityURL)},
+		Orders:     httpclients.OrderClient{Client: httpclients.New(cfg.OrderURL)},
+		LiveOps:    httpclients.LiveOpsClient{Client: httpclients.New(cfg.LiveOpsURL)},
+		Catalog:    httpclients.CatalogClient{Client: httpclients.New(cfg.CatalogURL)},
+		CRM:        httpclients.CRMClient{Client: httpclients.New(cfg.CrmURL)},
+		Ledger:     httpclients.LedgerClient{Client: httpclients.NewLedger(cfg.LedgerURL)},
+		Promo:      httpclients.PromoClient{Client: httpclients.New(cfg.PromoURL)},
+		Pricing:    httpclients.PricingClient{Client: httpclients.New(cfg.PricingURL)},
+		Inventory:  httpclients.InventoryClient{Client: httpclients.New(cfg.InventoryURL)},
+		Identity:   httpclients.IdentityClient{Client: httpclients.New(cfg.IdentityURL)},
+		Profile:    httpclients.ProfileClient{Client: httpclients.New(cfg.ProfileURL)},
+		Settlement: httpclients.SettlementClient{Client: httpclients.New(cfg.SettlementURL)},
+		Notify:     httpclients.NotifyClient{Client: httpclients.New(cfg.NotifyURL)},
+		Loyalty:    httpclients.LoyaltyClient{Client: httpclients.New(cfg.LoyaltyURL)},
+		AI:         httpclients.AIClient{Client: httpclients.New(cfg.AIURL)},
+		Tracking:   httpclients.TrackingClient{Client: httpclients.New(cfg.TrackingURL)},
+		Health: []app.HealthTarget{
+			{Name: "order-service", URL: cfg.OrderURL},
+			{Name: "liveops-service", URL: cfg.LiveOpsURL},
+			{Name: "catalog-service", URL: cfg.CatalogURL},
+			{Name: "crm-service", URL: cfg.CrmURL},
+			{Name: "ledger-service", URL: cfg.LedgerURL},
+			{Name: "promo-service", URL: cfg.PromoURL},
+			{Name: "inventory-service", URL: cfg.InventoryURL},
+			{Name: "identity-service", URL: cfg.IdentityURL},
+			{Name: "settlement-service", URL: cfg.SettlementURL},
+			{Name: "notification-service", URL: cfg.NotifyURL},
+			{Name: "tracking-service", URL: cfg.TrackingURL},
+		},
 	}
 	srv := httpadapter.NewServer(addr, deps)
 	go func() {

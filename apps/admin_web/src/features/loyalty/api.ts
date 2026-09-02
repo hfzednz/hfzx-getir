@@ -1,10 +1,17 @@
 import type { LoyaltySnapshot } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-const delay = (ms = 180) => new Promise((r) => setTimeout(r, ms));
-
-/** Mock loyalty — replaced by GET /admin/loyalty when BFF is live. */
 export async function fetchLoyaltySnapshot(): Promise<LoyaltySnapshot> {
-  await delay();
+  try {
+    return await apiClient<LoyaltySnapshot>("/admin/loyalty");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockLoyaltySnapshot();
+  }
+}
+
+async function mockLoyaltySnapshot(): Promise<LoyaltySnapshot> {
   return {
     totalMembers: 1_842_300,
     pointsIssued: 94_200_000,

@@ -1,7 +1,17 @@
 import type { SystemSnapshot } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-/** Mock system config — replaced by GET /admin/system/* when BFF is live. */
 export async function fetchSystemSnapshot(): Promise<SystemSnapshot> {
+  try {
+    return await apiClient<SystemSnapshot>("/admin/system");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockSystemSnapshot();
+  }
+}
+
+async function mockSystemSnapshot(): Promise<SystemSnapshot> {
   await new Promise((r) => setTimeout(r, 220));
   const now = new Date().toISOString();
 

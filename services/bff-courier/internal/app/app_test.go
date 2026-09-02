@@ -28,6 +28,12 @@ func TestCourierJourney(t *testing.T) {
 	if _, err := d.Complete(context.Background(), "t", "j1"); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := d.UpdateLocation(context.Background(), "t", "c1", 999, 0, 5); err == nil {
+		t.Fatal("invalid coordinates must be rejected")
+	}
+	if _, err := d.UpdateLocation(context.Background(), "t", "c1", 41.01, 28.97, 8); err == nil {
+		t.Fatal("location write without tracking-service must not fake success")
+	}
 	offers, err := d.ListOffers(context.Background(), "t", "c1")
 	if err != nil {
 		t.Fatal(err)

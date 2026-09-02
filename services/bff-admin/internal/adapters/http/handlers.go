@@ -31,6 +31,25 @@ func tenant(r *http.Request) string {
 	return t
 }
 
+func principalID(r *http.Request) string {
+	if p, ok := authz.PrincipalFrom(r.Context()); ok && p.ID != "" {
+		return p.ID
+	}
+	return r.Header.Get("X-Nexora-User")
+}
+
+func writeMutation(w http.ResponseWriter, res map[string]any, err error) {
+	if err != nil {
+		writeErr(w, 502, "upstream_error", err.Error())
+		return
+	}
+	if res["ok"] != true {
+		writeErr(w, 422, "not_supported", fmt.Sprint(res["message"]))
+		return
+	}
+	writeOK(w, res)
+}
+
 func NewServer(addr string, d *app.Deps) *http.Server {
 	return NewServerWithAuth(addr, d, authz.FromEnv())
 }
@@ -147,16 +166,16 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 		writeOK(w, res)
 	})
 	mux.HandleFunc("POST /v1/admin/finance/payouts/{id}/approve", func(w http.ResponseWriter, r *http.Request) {
-		res, _ := d.FinanceMutation(r.Context(), "payout_approve", r.PathValue("id"))
-		writeErr(w, 422, "not_supported", fmt.Sprint(res["message"]))
+		res, err := d.FinanceMutationTenant(r.Context(), tenant(r), "payout_approve", r.PathValue("id"))
+		writeMutation(w, res, err)
 	})
 	mux.HandleFunc("POST /v1/admin/finance/settlements/{id}/settle", func(w http.ResponseWriter, r *http.Request) {
-		res, _ := d.FinanceMutation(r.Context(), "courier_settle", r.PathValue("id"))
-		writeErr(w, 422, "not_supported", fmt.Sprint(res["message"]))
+		res, err := d.FinanceMutationTenant(r.Context(), tenant(r), "courier_settle", r.PathValue("id"))
+		writeMutation(w, res, err)
 	})
 	mux.HandleFunc("POST /v1/admin/finance/refunds/{id}/approve", func(w http.ResponseWriter, r *http.Request) {
-		res, _ := d.FinanceMutation(r.Context(), "refund_approve", r.PathValue("id"))
-		writeErr(w, 422, "not_supported", fmt.Sprint(res["message"]))
+		res, err := d.FinanceMutationTenant(r.Context(), tenant(r), "refund_approve", r.PathValue("id"))
+		writeMutation(w, res, err)
 	})
 	mux.HandleFunc("GET /v1/admin/campaigns", func(w http.ResponseWriter, r *http.Request) {
 		res, err := d.ListCampaigns(r.Context(), tenant(r), r.URL.Query())
@@ -286,10 +305,117 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 		}
 		writeOK(w, res)
 	})
+	mux.HandleFunc("GET /v1/admin/coupons", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.ListCoupons(r.Context(), tenant(r), r.URL.Query())
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("GET /v1/admin/coupons/{code}", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.GetCoupon(r.Context(), tenant(r), r.PathValue("code"))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("POST /v1/admin/coupons", func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		res, err := d.CreateCoupon(r.Context(), tenant(r), body)
+		if err != nil {
+			writeErr(w, 400, "invalid_argument", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("PATCH /v1/admin/coupons/{code}", func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		res, err := d.UpdateCoupon(r.Context(), tenant(r), r.PathValue("code"), body)
+		if err != nil {
+			writeErr(w, 400, "invalid_argument", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("GET /v1/admin/notifications", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.NotificationsSnapshot(r.Context(), tenant(r), principalID(r))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("POST /v1/admin/notifications/{id}/read", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.MarkNotificationRead(r.Context(), tenant(r), r.PathValue("id"))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("POST /v1/admin/notifications/read-all", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.MarkAllNotificationsRead(r.Context(), tenant(r), principalID(r))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("GET /v1/admin/reports", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		res, err := d.ReportsCatalog(r.Context(), tenant(r), q.Get("from"), q.Get("to"))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("GET /v1/admin/system", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.SystemSnapshot(r.Context(), tenant(r))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("GET /v1/admin/monitoring", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.MonitoringSnapshot(r.Context(), tenant(r))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("GET /v1/admin/ai", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.AICommandSnapshot(r.Context(), tenant(r), r.URL.Query().Get("cityId"))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
+	mux.HandleFunc("GET /v1/admin/loyalty", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.LoyaltySnapshot(r.Context(), tenant(r))
+		if err != nil {
+			writeErr(w, 502, "upstream_error", err.Error())
+			return
+		}
+		writeOK(w, res)
+	})
 	h := authz.Gate(v, authz.Options{
 		Public: []string{"/health", "/ready"},
 		Rules: []authz.Rule{
 			{Prefix: "/v1/admin/flags", Roles: []string{"admin", "super_admin"}},
+			{Prefix: "/v1/admin/system", Roles: []string{"admin", "super_admin"}},
+			{Prefix: "/v1/admin/monitoring", Roles: []string{"admin", "super_admin"}},
+			{Prefix: "/v1/admin/ai", Roles: []string{"admin", "super_admin"}},
+			{Prefix: "/v1/admin/loyalty", Roles: []string{"admin", "super_admin"}},
+			{Prefix: "/v1/admin/coupons", Roles: []string{"admin", "super_admin"}},
+			{Prefix: "/v1/admin/reports", Roles: []string{"admin", "super_admin", "finance_analyst", "city_ops"}},
 			{Prefix: "/v1/admin/finance", Roles: []string{"admin", "super_admin", "finance_analyst"}},
 			{Prefix: "/v1/admin/catalog", Roles: []string{"admin", "super_admin", "city_ops"}},
 			{Prefix: "/v1/admin", Roles: []string{"admin", "super_admin", "support_agent", "city_ops"}},

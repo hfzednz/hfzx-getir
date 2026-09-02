@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -20,6 +21,7 @@ type OrderGateway interface {
 
 type LiveOpsGateway interface {
 	SetFlag(ctx context.Context, tenant, key string, enabled bool) (map[string]any, error)
+	ListFlags(ctx context.Context, tenant string) (map[string]any, error)
 }
 
 type CatalogGateway interface {
@@ -42,6 +44,10 @@ type PromoGateway interface {
 	ListCampaigns(ctx context.Context, tenant string, q url.Values) (map[string]any, error)
 	GetCampaign(ctx context.Context, tenant, id string) (map[string]any, error)
 	CreateCampaign(ctx context.Context, tenant string, body map[string]any) (map[string]any, error)
+	ListCoupons(ctx context.Context, tenant string, q url.Values) (map[string]any, error)
+	GetCoupon(ctx context.Context, tenant, code string) (map[string]any, error)
+	CreateCoupon(ctx context.Context, tenant string, body map[string]any) (map[string]any, error)
+	UpdateCoupon(ctx context.Context, tenant, code string, body map[string]any) (map[string]any, error)
 }
 
 type PricingGateway interface {
@@ -58,16 +64,57 @@ type IdentityGateway interface {
 	ListRoles(ctx context.Context, tenant string) (map[string]any, error)
 }
 
+type ProfileGateway interface {
+	Search(ctx context.Context, tenant, q string, limit int) (map[string]any, error)
+}
+
+type SettlementGateway interface {
+	ListBatches(ctx context.Context, tenant string) (map[string]any, error)
+	Approve(ctx context.Context, tenant, id string) (map[string]any, error)
+	Execute(ctx context.Context, tenant, id string) (map[string]any, error)
+}
+
+type NotifyGateway interface {
+	Inbox(ctx context.Context, tenant, principalID string) (map[string]any, error)
+	MarkRead(ctx context.Context, tenant, id string) (map[string]any, error)
+	AdminStats(ctx context.Context, tenant string) (map[string]any, error)
+}
+
+type LoyaltyGateway interface {
+	ListRewards(ctx context.Context, tenant string) (map[string]any, error)
+}
+
+type AIGateway interface {
+	AdminStats(ctx context.Context, tenant string) (map[string]any, error)
+}
+
+type TrackingGateway interface {
+	Nearby(ctx context.Context, tenant string, lat, lon float64) (map[string]any, error)
+}
+
+type HealthTarget struct {
+	Name string
+	URL  string
+}
+
 type Deps struct {
-	Orders    OrderGateway
-	LiveOps   LiveOpsGateway
-	Catalog   CatalogGateway
-	CRM       CRMGateway
-	Ledger    LedgerGateway
-	Promo     PromoGateway
-	Pricing   PricingGateway
-	Inventory InventoryGateway
-	Identity  IdentityGateway
+	Orders     OrderGateway
+	LiveOps    LiveOpsGateway
+	Catalog    CatalogGateway
+	CRM        CRMGateway
+	Ledger     LedgerGateway
+	Promo      PromoGateway
+	Pricing    PricingGateway
+	Inventory  InventoryGateway
+	Identity   IdentityGateway
+	Profile    ProfileGateway
+	Settlement SettlementGateway
+	Notify     NotifyGateway
+	Loyalty    LoyaltyGateway
+	AI         AIGateway
+	Tracking   TrackingGateway
+	Health     []HealthTarget
+	HTTP       *http.Client
 }
 
 func (d *Deps) Dashboard(ctx context.Context, tenant string) (map[string]any, error) {

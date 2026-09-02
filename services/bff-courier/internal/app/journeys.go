@@ -296,6 +296,40 @@ func (d *Deps) postJSON(ctx context.Context, url, tenant string, body, out any) 
 	return json.Unmarshal(b, out)
 }
 
+func (d *Deps) UpdateLocation(ctx context.Context, tenant, courierID string, lat, lon, accuracyM float64) (map[string]any, error) {
+	if tenant == "" || courierID == "" {
+		return nil, ErrInvalid
+	}
+	if lat < -90 || lat > 90 || lon < -180 || lon > 180 {
+		return nil, fmt.Errorf("%w: invalid lat/lon", ErrInvalid)
+	}
+	if d.TrackingURL == "" {
+		return nil, fmt.Errorf("tracking-service not configured")
+	}
+	var out map[string]any
+	if err := d.postJSON(ctx, d.TrackingURL+"/v1/tracking/locations", tenant, map[string]any{
+		"courierId": courierID, "lat": lat, "lon": lon, "accuracyM": accuracyM,
+		"recordedAt": time.Now().UTC().Format(time.RFC3339),
+	}, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (d *Deps) LiveLocation(ctx context.Context, tenant, courierID string) (map[string]any, error) {
+	if tenant == "" || courierID == "" {
+		return nil, ErrInvalid
+	}
+	if d.TrackingURL == "" {
+		return nil, fmt.Errorf("tracking-service not configured")
+	}
+	var out map[string]any
+	if err := d.getJSON(ctx, d.TrackingURL+"/v1/tracking/couriers/"+url.PathEscape(courierID)+"/live", tenant, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (d *Deps) getJSON(ctx context.Context, url, tenant string, out any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

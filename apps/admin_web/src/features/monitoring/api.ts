@@ -1,7 +1,17 @@
 import type { MonitoringSnapshot } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-/** Mock monitoring — replaced by GET /admin/monitoring/health when BFF is live. */
 export async function fetchMonitoringSnapshot(): Promise<MonitoringSnapshot> {
+  try {
+    return await apiClient<MonitoringSnapshot>("/admin/monitoring");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockMonitoringSnapshot();
+  }
+}
+
+async function mockMonitoringSnapshot(): Promise<MonitoringSnapshot> {
   await new Promise((r) => setTimeout(r, 210));
   const mins = ["-25m", "-20m", "-15m", "-10m", "-5m", "now"];
 

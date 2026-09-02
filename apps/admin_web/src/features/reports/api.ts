@@ -1,7 +1,17 @@
 import type { ReportsCatalog } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-/** Mock report catalog — replaced by GET /admin/reports when BFF is live. */
 export async function fetchReportsCatalog(): Promise<ReportsCatalog> {
+  try {
+    return await apiClient<ReportsCatalog>("/admin/reports");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockReportsCatalog();
+  }
+}
+
+async function mockReportsCatalog(): Promise<ReportsCatalog> {
   await new Promise((r) => setTimeout(r, 200));
 
   return {

@@ -14,30 +14,42 @@ import (
 )
 
 type Config struct {
-	OrderURL     string
-	LiveOpsURL   string
-	QualityURL   string
-	CatalogURL   string
-	CrmURL       string
-	LedgerURL    string
-	PromoURL     string
-	PricingURL   string
-	InventoryURL string
-	IdentityURL  string
+	OrderURL      string
+	LiveOpsURL    string
+	QualityURL    string
+	CatalogURL    string
+	CrmURL        string
+	LedgerURL     string
+	PromoURL      string
+	PricingURL    string
+	InventoryURL  string
+	IdentityURL   string
+	ProfileURL    string
+	SettlementURL string
+	NotifyURL     string
+	LoyaltyURL    string
+	AIURL         string
+	TrackingURL   string
 }
 
 func ConfigFromEnv() Config {
 	return Config{
-		OrderURL:     env("ORDER_URL", "http://localhost:8086"),
-		LiveOpsURL:   env("LIVEOPS_URL", "http://localhost:8116"),
-		QualityURL:   env("QUALITY_URL", "http://localhost:8118"),
-		CatalogURL:   env("CATALOG_URL", "http://localhost:8082"),
-		CrmURL:       env("CRM_URL", "http://localhost:8102"),
-		LedgerURL:    env("LEDGER_URL", "http://localhost:8091"),
-		PromoURL:     env("PROMO_URL", "http://localhost:8094"),
-		PricingURL:   env("PRICING_URL", "http://localhost:8095"),
-		InventoryURL: env("INVENTORY_URL", "http://localhost:8083"),
-		IdentityURL:  env("IDENTITY_URL", "http://localhost:8081"),
+		OrderURL:      env("ORDER_URL", "http://localhost:8086"),
+		LiveOpsURL:    env("LIVEOPS_URL", "http://localhost:8116"),
+		QualityURL:    env("QUALITY_URL", "http://localhost:8118"),
+		CatalogURL:    env("CATALOG_URL", "http://localhost:8082"),
+		CrmURL:        env("CRM_URL", "http://localhost:8102"),
+		LedgerURL:     env("LEDGER_URL", "http://localhost:8091"),
+		PromoURL:      env("PROMO_URL", "http://localhost:8094"),
+		PricingURL:    env("PRICING_URL", "http://localhost:8095"),
+		InventoryURL:  env("INVENTORY_URL", "http://localhost:8083"),
+		IdentityURL:   env("IDENTITY_URL", "http://localhost:8081"),
+		ProfileURL:    env("PROFILE_URL", "http://localhost:8082"),
+		SettlementURL: env("SETTLEMENT_URL", "http://localhost:8092"),
+		NotifyURL:     env("NOTIFICATION_URL", "http://localhost:8101"),
+		LoyaltyURL:    env("LOYALTY_URL", "http://localhost:8093"),
+		AIURL:         env("AI_URL", "http://localhost:8106"),
+		TrackingURL:   env("TRACKING_URL", "http://localhost:8098"),
 	}
 }
 
@@ -72,6 +84,10 @@ func (c *Client) get(ctx context.Context, path, tenant string, out any) error {
 
 func (c *Client) post(ctx context.Context, path, tenant string, in, out any) error {
 	return c.do(ctx, http.MethodPost, path, tenant, in, out)
+}
+
+func (c *Client) patch(ctx context.Context, path, tenant string, in, out any) error {
+	return c.do(ctx, http.MethodPatch, path, tenant, in, out)
 }
 
 func (c *Client) do(ctx context.Context, method, path, tenant string, in, out any) error {
@@ -154,7 +170,13 @@ type LiveOpsClient struct{ *Client }
 
 func (c LiveOpsClient) SetFlag(ctx context.Context, tenant, key string, enabled bool) (map[string]any, error) {
 	var out map[string]any
-	err := c.post(ctx, "/v1/liveops/flags/"+url.PathEscape(key), tenant, map[string]any{"enabled": enabled}, &out)
+	err := c.post(ctx, "/v1/liveops/flags", tenant, map[string]any{"key": key, "enabled": enabled}, &out)
+	return out, err
+}
+
+func (c LiveOpsClient) ListFlags(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/liveops/flags", tenant, &out)
 	return out, err
 }
 
@@ -234,6 +256,34 @@ func (c PromoClient) CreateCampaign(ctx context.Context, tenant string, body map
 	return out, err
 }
 
+func (c PromoClient) ListCoupons(ctx context.Context, tenant string, q url.Values) (map[string]any, error) {
+	path := "/v1/promo/coupons"
+	if enc := q.Encode(); enc != "" {
+		path += "?" + enc
+	}
+	var out map[string]any
+	err := c.get(ctx, path, tenant, &out)
+	return out, err
+}
+
+func (c PromoClient) GetCoupon(ctx context.Context, tenant, code string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/promo/coupons/"+url.PathEscape(code), tenant, &out)
+	return out, err
+}
+
+func (c PromoClient) CreateCoupon(ctx context.Context, tenant string, body map[string]any) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/v1/promo/coupons", tenant, body, &out)
+	return out, err
+}
+
+func (c PromoClient) UpdateCoupon(ctx context.Context, tenant, code string, body map[string]any) (map[string]any, error) {
+	var out map[string]any
+	err := c.patch(ctx, "/v1/promo/coupons/"+url.PathEscape(code), tenant, body, &out)
+	return out, err
+}
+
 type PricingClient struct{ *Client }
 
 func (c PricingClient) AdminList(ctx context.Context, tenant string) (map[string]any, error) {
@@ -268,5 +318,85 @@ type IdentityClient struct{ *Client }
 func (c IdentityClient) ListRoles(ctx context.Context, tenant string) (map[string]any, error) {
 	var out map[string]any
 	err := c.get(ctx, "/v1/identity/roles", tenant, &out)
+	return out, err
+}
+
+type ProfileClient struct{ *Client }
+
+func (c ProfileClient) Search(ctx context.Context, tenant, q string, limit int) (map[string]any, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	path := "/v1/profile/admin/search?tenantId=" + url.QueryEscape(tenant) + "&limit=" + fmt.Sprint(limit)
+	if q != "" {
+		path += "&q=" + url.QueryEscape(q)
+	}
+	var out map[string]any
+	err := c.get(ctx, path, tenant, &out)
+	return out, err
+}
+
+type SettlementClient struct{ *Client }
+
+func (c SettlementClient) ListBatches(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/settlements/batches", tenant, &out)
+	return out, err
+}
+
+func (c SettlementClient) Approve(ctx context.Context, tenant, id string) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/v1/settlements/batches/"+url.PathEscape(id)+"/approve", tenant, map[string]any{}, &out)
+	return out, err
+}
+
+func (c SettlementClient) Execute(ctx context.Context, tenant, id string) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/v1/settlements/batches/"+url.PathEscape(id)+"/execute", tenant, map[string]any{}, &out)
+	return out, err
+}
+
+type NotifyClient struct{ *Client }
+
+func (c NotifyClient) Inbox(ctx context.Context, tenant, principalID string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/notifications/inbox/"+url.PathEscape(principalID), tenant, &out)
+	return out, err
+}
+
+func (c NotifyClient) MarkRead(ctx context.Context, tenant, id string) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/v1/notifications/inbox/"+url.PathEscape(id)+"/read", tenant, map[string]any{}, &out)
+	return out, err
+}
+
+func (c NotifyClient) AdminStats(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/notifications/admin/stats", tenant, &out)
+	return out, err
+}
+
+type LoyaltyClient struct{ *Client }
+
+func (c LoyaltyClient) ListRewards(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/loyalty/rewards", tenant, &out)
+	return out, err
+}
+
+type AIClient struct{ *Client }
+
+func (c AIClient) AdminStats(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/ai/admin/stats", tenant, &out)
+	return out, err
+}
+
+type TrackingClient struct{ *Client }
+
+func (c TrackingClient) Nearby(ctx context.Context, tenant string, lat, lon float64) (map[string]any, error) {
+	path := fmt.Sprintf("/v1/tracking/nearby?lat=%f&lon=%f&radiusM=5000&limit=50", lat, lon)
+	var out map[string]any
+	err := c.get(ctx, path, tenant, &out)
 	return out, err
 }

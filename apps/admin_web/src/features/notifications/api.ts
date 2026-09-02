@@ -1,7 +1,25 @@
 import type { NotificationsSnapshot } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-/** Mock ops alerts inbox — replaced by GET /admin/notifications when BFF is live. */
 export async function fetchNotificationsSnapshot(): Promise<NotificationsSnapshot> {
+  try {
+    return await apiClient<NotificationsSnapshot>("/admin/notifications");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockNotificationsSnapshot();
+  }
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  await apiClient(`/admin/notifications/${encodeURIComponent(id)}/read`, { method: "POST" });
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  await apiClient("/admin/notifications/read-all", { method: "POST" });
+}
+
+async function mockNotificationsSnapshot(): Promise<NotificationsSnapshot> {
   await new Promise((r) => setTimeout(r, 180));
   const t = Date.now();
 

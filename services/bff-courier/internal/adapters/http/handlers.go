@@ -85,6 +85,34 @@ func NewServerWithAuth(addr string, d *app.Deps, v authz.Validator) *http.Server
 		}
 		writeJSON(w, http.StatusOK, res)
 	})
+	mux.HandleFunc("POST /v1/courier/location", func(w http.ResponseWriter, r *http.Request) {
+		var b struct {
+			CourierID  string  `json:"courierId"`
+			Lat        float64 `json:"lat"`
+			Lon        float64 `json:"lon"`
+			Lng        float64 `json:"lng"`
+			AccuracyM  float64 `json:"accuracyM"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&b)
+		lon := b.Lon
+		if lon == 0 && b.Lng != 0 {
+			lon = b.Lng
+		}
+		res, err := d.UpdateLocation(r.Context(), tenant(r), courierID(r, b.CourierID), b.Lat, lon, b.AccuracyM)
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
+	})
+	mux.HandleFunc("GET /v1/courier/location", func(w http.ResponseWriter, r *http.Request) {
+		res, err := d.LiveLocation(r.Context(), tenant(r), courierID(r, ""))
+		if err != nil {
+			writeErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, res)
+	})
 	list := func(w http.ResponseWriter, r *http.Request) {
 		res, err := d.ListOffers(r.Context(), tenant(r), courierID(r, ""))
 		if err != nil {
