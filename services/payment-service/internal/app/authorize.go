@@ -33,6 +33,9 @@ func (d *Deps) Authorize(ctx context.Context, in AuthorizeInput) (domain.Payment
 		attempts, _ := d.Intents.ListAttempts(ctx, in.TenantID, intent.ID)
 		for _, a := range attempts {
 			if a.Kind == domain.AttemptAuthorize && a.IdempotencyKey == in.IdempotencyKey && a.Status == domain.AttemptSuccess {
+				if err := d.postLedger(ctx, intent, "authorize", intent.AmountMinor); err != nil {
+					return intent, err
+				}
 				return intent, nil
 			}
 		}
@@ -131,7 +134,10 @@ func (d *Deps) Authorize(ctx context.Context, in AuthorizeInput) (domain.Payment
 		})
 		d.emit(ctx, intent, domain.EventPaymentAuthorized, nil)
 		d.audit(ctx, intent.TenantID, &intent.ID, "authorize_wallet", intent.AmountMinor, intent.Currency, nil)
-		d.postLedger(ctx, intent, "authorize")
+		if err := d.postLedger(ctx, intent, "authorize", intent.AmountMinor); err != nil {
+			d.audit(ctx, intent.TenantID, &intent.ID, "ledger_failed", intent.AmountMinor, intent.Currency, map[string]any{"action": "authorize", "reason": err.Error()})
+			return intent, err
+		}
 		return intent, nil
 	}
 
@@ -199,6 +205,9 @@ func (d *Deps) Authorize(ctx context.Context, in AuthorizeInput) (domain.Payment
 	})
 	d.emit(ctx, intent, domain.EventPaymentAuthorized, nil)
 	d.audit(ctx, intent.TenantID, &intent.ID, "authorize", intent.AmountMinor, intent.Currency, map[string]any{"provider": provider})
-	d.postLedger(ctx, intent, "authorize")
+	if err := d.postLedger(ctx, intent, "authorize", intent.AmountMinor); err != nil {
+		d.audit(ctx, intent.TenantID, &intent.ID, "ledger_failed", intent.AmountMinor, intent.Currency, map[string]any{"action": "authorize", "reason": err.Error()})
+		return intent, err
+	}
 	return intent, nil
 }

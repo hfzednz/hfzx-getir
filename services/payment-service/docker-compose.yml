@@ -23,6 +23,8 @@ services:
       HTTP_ADDR: ":8089"
       GRPC_ADDR: ":9099"
       CORS_ALLOWED_ORIGINS: "*"
+      LEDGER_URL: ${LEDGER_URL:-http://finance-ledger-service:8091}
+      LEDGER_INTERNAL_TOKEN: ${LEDGER_INTERNAL_TOKEN:-nexora-ledger-dev}
     depends_on:
       postgres:
         condition: service_healthy

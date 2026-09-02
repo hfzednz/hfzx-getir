@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -106,18 +107,19 @@ func (d *Deps) audit(ctx context.Context, tenantID uuid.UUID, intentID *uuid.UUI
 	})
 }
 
-func (d *Deps) postLedger(ctx context.Context, intent domain.PaymentIntent, action string) {
+func (d *Deps) postLedger(ctx context.Context, intent domain.PaymentIntent, action string, amountMinor int64) error {
 	if d.Ledger == nil {
-		return
+		return nil
 	}
+	if amountMinor <= 0 {
+		amountMinor = intent.AmountMinor
+	}
+	lines := ledgerLines(action, amountMinor, intent.Currency)
 	if _, err := d.Ledger.PostJournal(ctx, ports.PostJournalRequest{
 		TenantID:       intent.TenantID,
 		IdempotencyKey: intent.IdempotencyKey + ":" + action,
 		Reference:      intent.ID.String(),
-		Lines: []ports.JournalLine{
-			{AccountCode: "clearing.psp", DebitMinor: intent.AmountMinor, Currency: intent.Currency},
-			{AccountCode: "liability.customer", CreditMinor: intent.AmountMinor, Currency: intent.Currency},
-		},
+		Lines:          lines,
 	}); err != nil {
 		slog.Default().Error("payment.ledger.post",
 			"err", err,
@@ -125,6 +127,28 @@ func (d *Deps) postLedger(ctx context.Context, intent domain.PaymentIntent, acti
 			"action", action,
 			"tenantId", intent.TenantID.String(),
 		)
+		return fmt.Errorf("%w: %s", domain.ErrLedgerFailed, err.Error())
+	}
+	return nil
+}
+
+func ledgerLines(action string, amountMinor int64, currency string) []ports.JournalLine {
+	switch action {
+	case "capture":
+		return []ports.JournalLine{
+			{AccountCode: "liability.customer", DebitMinor: amountMinor, Currency: currency},
+			{AccountCode: "revenue.sales", CreditMinor: amountMinor, Currency: currency},
+		}
+	case "refund":
+		return []ports.JournalLine{
+			{AccountCode: "revenue.sales", DebitMinor: amountMinor, Currency: currency},
+			{AccountCode: "clearing.psp", CreditMinor: amountMinor, Currency: currency},
+		}
+	default:
+		return []ports.JournalLine{
+			{AccountCode: "clearing.psp", DebitMinor: amountMinor, Currency: currency},
+			{AccountCode: "liability.customer", CreditMinor: amountMinor, Currency: currency},
+		}
 	}
 }
 

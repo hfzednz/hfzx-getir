@@ -242,3 +242,23 @@ func TestFailoverWhenPrimaryFails(t *testing.T) {
 		t.Fatalf("calls primary=%d failover=%d", env.Primary.AuthCalls(), env.Failover.AuthCalls())
 	}
 }
+
+func TestAuthorizeFailsWhenLedgerDown(t *testing.T) {
+	env := testDeps(t)
+	env.Deps.Ledger = &memory.LedgerClient{Err: errors.New("ledger unreachable")}
+	ctx := context.Background()
+	intent, err := env.Deps.CreateIntent(ctx, app.CreateIntentInput{
+		TenantID: env.Tenant, PrincipalID: env.Principal,
+		OrderID: "o-ledger", AmountMinor: 1500, Currency: "TRY",
+		MethodType: domain.MethodCard, IdempotencyKey: "led-1",
+	})
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	_, err = env.Deps.Authorize(ctx, app.AuthorizeInput{
+		TenantID: env.Tenant, IntentID: intent.ID, IdempotencyKey: "led-1-a", Token: "tok",
+	})
+	if err == nil || !errors.Is(err, domain.ErrLedgerFailed) {
+		t.Fatalf("want ErrLedgerFailed, got %v", err)
+	}
+}

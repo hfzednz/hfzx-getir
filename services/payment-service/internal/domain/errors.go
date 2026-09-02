@@ -22,4 +22,5 @@ var (
 	ErrPSPFailed           = errors.New("psp provider failed")
 	ErrNoProviderRoute     = errors.New("no provider route available")
 	ErrOverdraft           = errors.New("insufficient available balance")
+	ErrLedgerFailed        = errors.New("ledger journal post failed")
 )

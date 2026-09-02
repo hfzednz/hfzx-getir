@@ -118,5 +118,9 @@ func (d *Deps) Refund(ctx context.Context, in RefundInput) (domain.Refund, domai
 	}
 	d.emit(ctx, intent, domain.EventRefundCompleted, map[string]any{"refundId": refund.ID.String(), "amountMinor": amount})
 	d.audit(ctx, intent.TenantID, &intent.ID, "refund", amount, intent.Currency, map[string]any{"refundId": refund.ID.String()})
+	if err := d.postLedger(ctx, intent, "refund", amount); err != nil {
+		d.audit(ctx, intent.TenantID, &intent.ID, "ledger_failed", amount, intent.Currency, map[string]any{"action": "refund", "reason": err.Error()})
+		return refund, intent, err
+	}
 	return refund, intent, nil
 }

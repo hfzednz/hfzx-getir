@@ -212,3 +212,5 @@ ingress:
 env:
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.nexora-obs:4317
   KAFKA_BROKERS: kafka.nexora-data:9092
+  LEDGER_URL: http://finance-ledger-service:8091
+  LEDGER_INTERNAL_TOKEN: nexora-ledger-dev

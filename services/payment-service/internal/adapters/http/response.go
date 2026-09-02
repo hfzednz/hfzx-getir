@@ -70,6 +70,8 @@ func mapError(err error) (code string, status int, retriable bool, message strin
 		return "fraud_blocked", http.StatusUnprocessableEntity, false, message
 	case errors.Is(err, domain.ErrPSPFailed), errors.Is(err, domain.ErrNoProviderRoute):
 		return "psp_failed", http.StatusBadGateway, true, message
+	case errors.Is(err, domain.ErrLedgerFailed):
+		return "ledger_failed", http.StatusBadGateway, true, message
 	case errors.Is(err, domain.ErrOverdraft), errors.Is(err, domain.ErrInvariant):
 		return "invariant_violation", http.StatusUnprocessableEntity, false, message
 	default:

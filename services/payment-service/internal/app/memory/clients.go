@@ -58,10 +58,14 @@ func (w *WalletClient) Debit(_ context.Context, _ ports.WalletDebitRequest) (por
 // LedgerClient is a journal post stub.
 type LedgerClient struct {
 	Calls int
+	Err   error
 }
 
 func (l *LedgerClient) PostJournal(_ context.Context, _ ports.PostJournalRequest) (ports.PostJournalResult, error) {
 	l.Calls++
+	if l.Err != nil {
+		return ports.PostJournalResult{}, l.Err
+	}
 	return ports.PostJournalResult{JournalID: "j1", Posted: true}, nil
 }
 

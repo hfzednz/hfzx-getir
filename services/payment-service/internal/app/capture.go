@@ -64,6 +64,10 @@ func (d *Deps) Capture(ctx context.Context, in CaptureInput) (domain.PaymentInte
 		})
 		d.emit(ctx, intent, domain.EventPaymentCaptured, map[string]any{"capturedMinor": amount})
 		d.audit(ctx, intent.TenantID, &intent.ID, "capture", amount, intent.Currency, nil)
+		if err := d.postLedger(ctx, intent, "capture", amount); err != nil {
+			d.audit(ctx, intent.TenantID, &intent.ID, "ledger_failed", amount, intent.Currency, map[string]any{"action": "capture", "reason": err.Error()})
+			return intent, err
+		}
 		return intent, nil
 	}
 
@@ -118,7 +122,10 @@ func (d *Deps) Capture(ctx context.Context, in CaptureInput) (domain.PaymentInte
 	})
 	d.emit(ctx, intent, domain.EventPaymentCaptured, map[string]any{"capturedMinor": amount})
 	d.audit(ctx, intent.TenantID, &intent.ID, "capture", amount, intent.Currency, map[string]any{"provider": provider})
-	d.postLedger(ctx, intent, "capture")
+	if err := d.postLedger(ctx, intent, "capture", amount); err != nil {
+		d.audit(ctx, intent.TenantID, &intent.ID, "ledger_failed", amount, intent.Currency, map[string]any{"action": "capture", "reason": err.Error()})
+		return intent, err
+	}
 	return intent, nil
 }
 
