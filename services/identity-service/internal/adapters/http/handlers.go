@@ -709,7 +709,7 @@ func (h *Handler) listRoles(w http.ResponseWriter, r *http.Request) {
 	names := []string{
 		"customer", "courier", "picker", "packer", "dispatcher", "city_ops",
 		"support_agent", "finance_analyst", "admin", "super_admin",
-		"service_account", "partner", "supplier",
+		"service_account", "partner", "supplier", "merchant",
 	}
 	out := make([]map[string]any, 0, len(names))
 	for _, name := range names {

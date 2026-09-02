@@ -20,11 +20,9 @@ export default function DashboardPage() {
     enabled: Boolean(session),
     queryFn: async () => {
       const api = supplierApi();
-      const [suppliers, purchaseOrders, sellers] = await Promise.all([
+      const [suppliers, purchaseOrders, sellers, merchant] = await Promise.all([
         api.request<{ items?: Row[] } | Row[]>("/v1/supplier/suppliers"),
         api.request<{ items?: Row[] } | Row[]>("/v1/supplier/purchase-orders"),
-        // Sellers is a separate capability: report its failure instead of showing an
-        // empty list that looks like "no sellers".
         api
           .request<{ items?: Row[] } | Row[]>("/v1/supplier/sellers")
           .then((res) => ({ ok: true as const, rows: rows(res) }))
@@ -32,11 +30,22 @@ export default function DashboardPage() {
             ok: false as const,
             message: err instanceof Error ? err.message : "Sellers unavailable",
           })),
+        api
+          .request<{
+            listings?: Row[];
+            summary?: { activeOrders?: number; products?: number; inventory?: number };
+          }>("/v1/supplier/merchant/dashboard")
+          .then((res) => ({ ok: true as const, ...res }))
+          .catch((err: unknown) => ({
+            ok: false as const,
+            message: err instanceof Error ? err.message : "Merchant dashboard unavailable",
+          })),
       ]);
       return {
         suppliers: rows(suppliers),
         purchaseOrders: rows(purchaseOrders),
         sellers,
+        merchant,
       };
     },
   });
@@ -47,10 +56,10 @@ export default function DashboardPage() {
   ];
 
   return (
-    <RouteGuard session={session} allow={["supplier", "partner"]} onDeny={logout}>
+    <RouteGuard session={session} allow={["supplier", "partner", "merchant"]} onDeny={logout}>
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold">Supplier portal</h1>
+          <h1 className="text-xl font-semibold">Supplier / merchant portal</h1>
           <button
             type="button"
             className="rounded-lg px-3 text-sm"
@@ -113,6 +122,40 @@ export default function DashboardPage() {
               {data.sellers.rows.map((row, index) => (
                 <li key={row.id ?? index} className="truncate py-2">
                   {row.name ?? row.id ?? "—"}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+
+        <section className="rounded-xl border p-4">
+          <h2 className="font-medium">
+            Catalog listings
+            {data?.merchant.ok && data.merchant.listings ? ` (${data.merchant.listings.length})` : ""}
+          </h2>
+          {data && !data.merchant.ok ? (
+            <p className="text-sm text-red-600" role="alert">
+              {data.merchant.message}
+            </p>
+          ) : null}
+          {data?.merchant.ok && data.merchant.summary ? (
+            <p className="text-sm text-neutral-600">
+              Active orders {data.merchant.summary.activeOrders ?? 0} · products{" "}
+              {data.merchant.summary.products ?? 0} · inventory units{" "}
+              {data.merchant.summary.inventory ?? 0}
+            </p>
+          ) : null}
+          {data?.merchant.ok && (data.merchant.listings ?? []).length === 0 ? (
+            <p className="text-sm text-neutral-500">No listings yet.</p>
+          ) : null}
+          {data?.merchant.ok && (data.merchant.listings ?? []).length > 0 ? (
+            <ul className="mt-2 divide-y text-sm">
+              {(data.merchant.listings ?? []).map((row, index) => (
+                <li key={row.id ?? index} className="flex items-center justify-between gap-3 py-2">
+                  <span className="min-w-0 truncate">{row.name ?? row.code ?? row.id ?? "—"}</span>
+                  {row.status ? (
+                    <span className="shrink-0 text-neutral-600">{row.status}</span>
+                  ) : null}
                 </li>
               ))}
             </ul>

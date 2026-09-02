@@ -639,3 +639,53 @@ func (d *Deps) AdminStats(ctx context.Context, tenantID uuid.UUID) (map[string]a
 		"sellers": len(sellers), "ediDocuments": len(edi),
 	}, nil
 }
+
+func (d *Deps) MerchantDashboard(ctx context.Context, tenantID uuid.UUID) (map[string]any, error) {
+	if tenantID == uuid.Nil {
+		return nil, domain.ErrInvalidArgument
+	}
+	sellers, err := d.ListSellers(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	listings, err := d.ListListings(ctx, tenantID, uuid.Nil)
+	if err != nil {
+		listings = []domain.ListingRef{}
+	}
+	var pos []domain.SourcingPurchaseOrder
+	if d.POs != nil {
+		pos, _ = d.POs.List(ctx, tenantID)
+	}
+	if pos == nil {
+		pos = []domain.SourcingPurchaseOrder{}
+	}
+	if sellers == nil {
+		sellers = []domain.MarketplaceSeller{}
+	}
+	activeListings := 0
+	stockUnits := int64(0)
+	for _, l := range listings {
+		if l.Active {
+			activeListings++
+		}
+		stockUnits += l.StockHint
+	}
+	var profile any
+	if len(sellers) > 0 {
+		profile = sellers[0]
+	}
+	return map[string]any{
+		"profile": profile,
+		"status":  "ready",
+		"sellers": sellers,
+		"listings": listings,
+		"orders": pos,
+		"inventory": listings,
+		"summary": map[string]any{
+			"activeOrders": len(pos),
+			"products":     activeListings,
+			"inventory":    stockUnits,
+			"sellers":      len(sellers),
+		},
+	}, nil
+}

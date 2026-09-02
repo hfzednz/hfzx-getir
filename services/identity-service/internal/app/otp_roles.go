@@ -20,6 +20,7 @@ func defaultDestPhoneRoles() map[string][]string {
 		"+905551112239": {"admin"},
 		"+905551112240": {"supplier", "partner"},
 		"+905551112241": {"super_admin"},
+		"+905551112242": {"merchant"},
 	}
 }
 

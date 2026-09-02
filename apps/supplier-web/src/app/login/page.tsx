@@ -8,8 +8,8 @@ export default function LoginPage() {
   const setSession = useSession((s) => s.setSession);
   return (
     <OtpLoginForm
-      title="Supplier"
-      expectedRoles={["supplier", "partner"]}
+      title="Supplier / Merchant"
+      expectedRoles={["supplier", "partner", "merchant"]}
       onSuccess={(s) => { setSession(s); router.push("/dashboard"); }}
     />
   );

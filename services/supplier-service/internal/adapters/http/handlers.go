@@ -72,6 +72,7 @@ func NewHandler(cfg ServerConfig) http.Handler {
 	mux.HandleFunc("POST "+base+"/changes/{id}/decide", tenant(h.decideChange))
 	mux.HandleFunc("GET "+base+"/ai/recommend", tenant(h.recommend))
 	mux.HandleFunc("GET "+base+"/admin/stats", tenant(h.stats))
+	mux.HandleFunc("GET "+base+"/merchant/dashboard", tenant(h.merchantDashboard))
 	mux.HandleFunc("POST "+base+"/outbox/publish", tenant(h.outbox))
 
 	v := cfg.Auth
@@ -84,7 +85,7 @@ func NewHandler(cfg ServerConfig) http.Handler {
 			Public: []string{"/health", "/ready"},
 			Rules: []authz.Rule{
 				{Prefix: "/v1/supplier/admin", Roles: []string{"admin", "super_admin"}},
-				{Prefix: "/v1/supplier", Roles: []string{"supplier", "partner", "admin", "super_admin"}},
+				{Prefix: "/v1/supplier", Roles: []string{"supplier", "partner", "merchant", "admin", "super_admin"}},
 			},
 		}))
 }
@@ -687,6 +688,19 @@ func (h *Handler) stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeOK(w, st)
+}
+
+func (h *Handler) merchantDashboard(w http.ResponseWriter, r *http.Request) {
+	tid, ok := requireTenant(w, r)
+	if !ok {
+		return
+	}
+	dash, err := h.Deps.MerchantDashboard(r.Context(), tid)
+	if err != nil {
+		writeErr(w, r, err)
+		return
+	}
+	writeOK(w, dash)
 }
 
 func (h *Handler) outbox(w http.ResponseWriter, r *http.Request) {

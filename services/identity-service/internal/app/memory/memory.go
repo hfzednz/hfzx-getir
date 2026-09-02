@@ -91,7 +91,7 @@ func seedPlatformRoles(s *Store) {
 	for _, name := range []string{
 		"customer", "courier", "picker", "packer", "dispatcher", "city_ops",
 		"support_agent", "finance_analyst", "admin", "super_admin",
-		"service_account", "partner", "supplier",
+		"service_account", "partner", "supplier", "merchant",
 	} {
 		id := uuid.NewSHA1(uuid.NameSpaceOID, []byte("nexora.platform.role."+name))
 		s.Roles[id] = domain.Role{
