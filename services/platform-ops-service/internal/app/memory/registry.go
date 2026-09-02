@@ -7,8 +7,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nexora/platform-ops-service/internal/app/ports"
 	"github.com/nexora/platform-ops-service/internal/domain"
 )
+
+var _ ports.Registry = (*Registry)(nil)
 
 // Registry is an in-process super-admin directory (tenants, companies, audit).
 type Registry struct {

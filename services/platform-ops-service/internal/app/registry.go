@@ -8,10 +8,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nexora/platform-ops-service/internal/app/memory"
+	"github.com/nexora/platform-ops-service/internal/app/ports"
 	"github.com/nexora/platform-ops-service/internal/domain"
 )
 
-func (d *Deps) registry() *memory.Registry {
+func (d *Deps) registry() ports.Registry {
 	if d.Registry == nil {
 		d.Registry = memory.NewRegistry()
 	}
@@ -299,7 +300,7 @@ func platformRoleNames() []string {
 	return []string{
 		"customer", "courier", "picker", "packer", "dispatcher", "city_ops",
 		"support_agent", "finance_analyst", "admin", "super_admin",
-		"service_account", "partner", "supplier",
+		"service_account", "partner", "supplier", "merchant",
 	}
 }
 

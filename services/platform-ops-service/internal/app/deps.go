@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nexora/platform-ops-service/internal/app/memory"
 	"github.com/nexora/platform-ops-service/internal/app/ports"
 	"github.com/nexora/platform-ops-service/internal/domain"
 )
@@ -25,7 +24,7 @@ type Deps struct {
 	BackupTool  ports.BackupClient
 	Clock       ports.Clock
 	IDs         ports.IDGen
-	Registry    *memory.Registry
+	Registry    ports.Registry
 }
 
 type SystemClock struct{}

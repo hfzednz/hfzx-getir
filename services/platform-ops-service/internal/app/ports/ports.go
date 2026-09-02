@@ -72,3 +72,20 @@ type ClusterClient interface {
 type BackupClient interface {
 	RunBackup(ctx context.Context, kind, target string) (location string, err error)
 }
+
+// Registry persists the super-admin tenant/company directory.
+type Registry interface {
+	ListTenants(ctx context.Context) ([]domain.PlatformTenant, []domain.DualControlProposal, error)
+	GetTenant(ctx context.Context, id string) (domain.PlatformTenant, error)
+	SaveTenant(ctx context.Context, t domain.PlatformTenant) error
+	ListCompanies(ctx context.Context) ([]domain.PlatformCompany, error)
+	GetCompany(ctx context.Context, id string) (domain.PlatformCompany, error)
+	SaveCompany(ctx context.Context, c domain.PlatformCompany) error
+	DeleteCompany(ctx context.Context, id string) error
+	SaveProposal(ctx context.Context, p domain.DualControlProposal) error
+	GetProposal(ctx context.Context, id string) (domain.DualControlProposal, error)
+	AppendAudit(ctx context.Context, e domain.PlatformAuditEntry) error
+	ListAudit(ctx context.Context, q string) ([]domain.PlatformAuditEntry, error)
+	ListPeople(ctx context.Context) ([]domain.PlatformPerson, error)
+	SavePerson(ctx context.Context, p domain.PlatformPerson) error
+}

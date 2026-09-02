@@ -12,6 +12,7 @@ type Repos struct {
 	Costs       *CostRepo
 	SLOs        *SLORepo
 	Outbox      *OutboxRepo
+	Registry    *Registry
 }
 
 // NewRepos constructs postgres-backed repositories.
@@ -25,5 +26,6 @@ func NewRepos(db *sql.DB) *Repos {
 		Costs:       &CostRepo{DB: db},
 		SLOs:        &SLORepo{DB: db},
 		Outbox:      &OutboxRepo{DB: db},
+		Registry:    &Registry{DB: db},
 	}
 }

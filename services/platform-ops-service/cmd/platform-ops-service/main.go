@@ -56,6 +56,7 @@ func main() {
 		deps.Costs = pg.Costs
 		deps.SLOs = pg.SLOs
 		deps.Outbox = pg.Outbox
+		deps.Registry = pg.Registry
 		log.Info("boot.database", "driver", "pgx", "repos", "postgres")
 	}
 
