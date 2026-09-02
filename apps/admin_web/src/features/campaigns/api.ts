@@ -1,5 +1,6 @@
 import type { Paginated } from "@/shared/types/common";
-import { ApiError } from "@/shared/api/client";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { ApiError, apiClient } from "@/shared/api/client";
 import type {
   Campaign,
   CampaignListParams,
@@ -157,79 +158,107 @@ let mockCampaigns: Campaign[] = [
   },
 ];
 
-/** Mock campaigns — replaced by GET /admin/campaigns when BFF is live. */
+/** Live campaigns from bff-admin → promotion-service. */
 export async function fetchCampaigns(
   params: CampaignListParams = {},
 ): Promise<Paginated<Campaign>> {
-  await delay();
-  let items = [...mockCampaigns];
-  if (params.status && params.status !== "all") {
-    items = items.filter((c) => c.status === params.status);
+  try {
+    const qs = new URLSearchParams();
+    if (params.status && params.status !== "all") qs.set("status", params.status);
+    if (params.q?.trim()) qs.set("q", params.q.trim());
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return await apiClient<Paginated<Campaign>>(`/admin/campaigns${suffix}`);
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay();
+    let items = [...mockCampaigns];
+    if (params.status && params.status !== "all") {
+      items = items.filter((c) => c.status === params.status);
+    }
+    if (params.type && params.type !== "all") {
+      items = items.filter((c) => c.type === params.type);
+    }
+    if (params.cityId) {
+      items = items.filter((c) => c.cityIds.includes(params.cityId!));
+    }
+    if (params.q?.trim()) {
+      const q = params.q.trim().toLowerCase();
+      items = items.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.id.toLowerCase().includes(q) ||
+          c.coupon?.code.toLowerCase().includes(q),
+      );
+    }
+    return { items, page: 1, pageSize: 50, total: items.length, hasMore: false };
   }
-  if (params.type && params.type !== "all") {
-    items = items.filter((c) => c.type === params.type);
-  }
-  if (params.cityId) {
-    items = items.filter((c) => c.cityIds.includes(params.cityId!));
-  }
-  if (params.q?.trim()) {
-    const q = params.q.trim().toLowerCase();
-    items = items.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
-        c.coupon?.code.toLowerCase().includes(q),
-    );
-  }
-  return { items, page: 1, pageSize: 50, total: items.length, hasMore: false };
 }
 
 export async function fetchCampaign(id: string): Promise<Campaign> {
-  await delay();
-  const found = mockCampaigns.find((c) => c.id === id);
-  if (!found) {
-    throw new ApiError(404, {
-      code: "not_found",
-      message: "Campaign not found",
-      traceId: "mock",
-    });
+  try {
+    return await apiClient<Campaign>(`/admin/campaigns/${id}`);
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay();
+    const found = mockCampaigns.find((c) => c.id === id);
+    if (!found) {
+      throw new ApiError(404, {
+        code: "not_found",
+        message: "Campaign not found",
+        traceId: "mock",
+      });
+    }
+    return { ...found };
   }
-  return { ...found };
 }
 
 export async function createCampaign(
   input: CampaignUpsertInput,
 ): Promise<Campaign> {
-  await delay(260);
-  const now = new Date().toISOString();
-  const created: Campaign = {
-    id: `cmp_${Date.now().toString(36)}`,
-    name: input.name,
-    type: input.type,
-    status: "draft",
-    cityIds: input.cityIds,
-    startsAt: input.startsAt ?? null,
-    endsAt: input.endsAt ?? null,
-    budgetMinor: input.budgetMinor ?? 0,
-    spentMinor: 0,
-    currency: "TRY",
-    audience: input.audienceId
-      ? {
-          id: input.audienceId,
-          name: "Selected audience",
-          segmentSize: 0,
-          rulesSummary: "—",
-        }
-      : null,
-    coupon: input.coupon ?? null,
-    bundle: input.bundle ?? null,
-    flashSale: input.flashSale ?? null,
-    personalized: input.personalized ?? null,
-    createdAt: now,
-    updatedAt: now,
-  };
-  mockCampaigns = [created, ...mockCampaigns];
-  return created;
+  try {
+    return await apiClient<Campaign>("/admin/campaigns", {
+      method: "POST",
+      body: {
+        name: input.name,
+        description: input.name,
+        startsAt: input.startsAt,
+        endsAt: input.endsAt,
+      },
+      idempotent: true,
+    });
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay(260);
+    const now = new Date().toISOString();
+    const created: Campaign = {
+      id: `cmp_${Date.now().toString(36)}`,
+      name: input.name,
+      type: input.type,
+      status: "draft",
+      cityIds: input.cityIds,
+      startsAt: input.startsAt ?? null,
+      endsAt: input.endsAt ?? null,
+      budgetMinor: input.budgetMinor ?? 0,
+      spentMinor: 0,
+      currency: "TRY",
+      audience: input.audienceId
+        ? {
+            id: input.audienceId,
+            name: "Selected audience",
+            segmentSize: 0,
+            rulesSummary: "—",
+          }
+        : null,
+      coupon: input.coupon ?? null,
+      bundle: input.bundle ?? null,
+      flashSale: input.flashSale ?? null,
+      personalized: input.personalized ?? null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    mockCampaigns = [created, ...mockCampaigns];
+    return created;
+  }
 }
 
 export async function updateCampaign(

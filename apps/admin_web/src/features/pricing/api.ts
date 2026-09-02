@@ -1,5 +1,6 @@
 import type { Paginated } from "@/shared/types/common";
-import { ApiError } from "@/shared/api/client";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { ApiError, apiClient } from "@/shared/api/client";
 import type {
   PricingKind,
   PricingListParams,
@@ -181,33 +182,43 @@ let mockRules: PricingRule[] = [
   },
 ];
 
-/** Mock pricing — replaced by GET /admin/pricing when BFF is live. */
+/** Live pricing from bff-admin → pricing-service. */
 export async function fetchPricingRules(
   params: PricingListParams = {},
 ): Promise<Paginated<PricingRule>> {
-  await delay();
-  let items = [...mockRules];
-  if (params.kind && params.kind !== "all") {
-    items = items.filter((r) => r.kind === params.kind);
+  try {
+    const qs = new URLSearchParams();
+    if (params.kind && params.kind !== "all") qs.set("kind", params.kind);
+    if (params.status && params.status !== "all") qs.set("status", params.status);
+    if (params.q?.trim()) qs.set("q", params.q.trim());
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return await apiClient<Paginated<PricingRule>>(`/admin/pricing${suffix}`);
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay();
+    let items = [...mockRules];
+    if (params.kind && params.kind !== "all") {
+      items = items.filter((r) => r.kind === params.kind);
+    }
+    if (params.status && params.status !== "all") {
+      items = items.filter((r) => r.status === params.status);
+    }
+    if (params.cityId) {
+      items = items.filter(
+        (r) => r.cityId === params.cityId || r.cityId === null,
+      );
+    }
+    if (params.q?.trim()) {
+      const q = params.q.trim().toLowerCase();
+      items = items.filter(
+        (r) =>
+          r.name.toLowerCase().includes(q) ||
+          r.id.toLowerCase().includes(q) ||
+          (r.skuId?.toLowerCase().includes(q) ?? false),
+      );
+    }
+    return { items, page: 1, pageSize: 100, total: items.length, hasMore: false };
   }
-  if (params.status && params.status !== "all") {
-    items = items.filter((r) => r.status === params.status);
-  }
-  if (params.cityId) {
-    items = items.filter(
-      (r) => r.cityId === params.cityId || r.cityId === null,
-    );
-  }
-  if (params.q?.trim()) {
-    const q = params.q.trim().toLowerCase();
-    items = items.filter(
-      (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.id.toLowerCase().includes(q) ||
-        (r.skuId?.toLowerCase().includes(q) ?? false),
-    );
-  }
-  return { items, page: 1, pageSize: 100, total: items.length, hasMore: false };
 }
 
 export async function createPricingRule(

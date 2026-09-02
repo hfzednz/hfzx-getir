@@ -1,8 +1,18 @@
 import type { RbacSnapshot } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-/** Mock RBAC — replaced by GET /admin/rbac/* when BFF is live. */
+/** Live RBAC from bff-admin → identity role catalog. */
 export async function fetchRbacSnapshot(): Promise<RbacSnapshot> {
-  await new Promise((r) => setTimeout(r, 230));
+  try {
+    return await apiClient<RbacSnapshot>("/admin/rbac");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockRbacSnapshot();
+  }
+}
+
+function mockRbacSnapshot(): RbacSnapshot {
   const matrixRoles = ["viewer", "city_ops", "support_lead", "admin", "super_admin"];
   const matrixPermissions = [
     "orders:read",

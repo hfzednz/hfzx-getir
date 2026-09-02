@@ -265,44 +265,74 @@ export async function fetchFinanceSnapshot(): Promise<FinanceSnapshot> {
 }
 
 export async function approvePayout(id: string): Promise<FinanceSnapshot> {
-  await delay(240);
-  const po = mockSnapshot.payouts.find((p) => p.id === id);
-  if (!po) {
-    throw new ApiError(404, {
-      code: "not_found",
-      message: "Payout not found",
-      traceId: "mock",
+  try {
+    await apiClient(`/admin/finance/payouts/${id}/approve`, {
+      method: "POST",
+      body: {},
+      idempotent: true,
     });
+    return await fetchFinanceSnapshot();
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay(240);
+    const po = mockSnapshot.payouts.find((p) => p.id === id);
+    if (!po) {
+      throw new ApiError(404, {
+        code: "not_found",
+        message: "Payout not found",
+        traceId: "mock",
+      });
+    }
+    mockSnapshot = {
+      ...mockSnapshot,
+      payouts: mockSnapshot.payouts.map((p) =>
+        p.id === id ? { ...p, status: "approved" as const } : p,
+      ),
+    };
+    return structuredClone(mockSnapshot);
   }
-  mockSnapshot = {
-    ...mockSnapshot,
-    payouts: mockSnapshot.payouts.map((p) =>
-      p.id === id ? { ...p, status: "approved" as const } : p,
-    ),
-  };
-  return structuredClone(mockSnapshot);
 }
 
 export async function settleCourier(id: string): Promise<FinanceSnapshot> {
-  await delay(240);
-  mockSnapshot = {
-    ...mockSnapshot,
-    courierSettlements: mockSnapshot.courierSettlements.map((c) =>
-      c.id === id ? { ...c, status: "settled" as const } : c,
-    ),
-  };
-  return structuredClone(mockSnapshot);
+  try {
+    await apiClient(`/admin/finance/settlements/${id}/settle`, {
+      method: "POST",
+      body: {},
+      idempotent: true,
+    });
+    return await fetchFinanceSnapshot();
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay(240);
+    mockSnapshot = {
+      ...mockSnapshot,
+      courierSettlements: mockSnapshot.courierSettlements.map((c) =>
+        c.id === id ? { ...c, status: "settled" as const } : c,
+      ),
+    };
+    return structuredClone(mockSnapshot);
+  }
 }
 
 export async function approveFinanceRefund(
   id: string,
 ): Promise<FinanceSnapshot> {
-  await delay(240);
-  mockSnapshot = {
-    ...mockSnapshot,
-    refunds: mockSnapshot.refunds.map((r) =>
-      r.id === id ? { ...r, status: "approved" as const } : r,
-    ),
-  };
-  return structuredClone(mockSnapshot);
+  try {
+    await apiClient(`/admin/finance/refunds/${id}/approve`, {
+      method: "POST",
+      body: {},
+      idempotent: true,
+    });
+    return await fetchFinanceSnapshot();
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    await delay(240);
+    mockSnapshot = {
+      ...mockSnapshot,
+      refunds: mockSnapshot.refunds.map((r) =>
+        r.id === id ? { ...r, status: "approved" as const } : r,
+      ),
+    };
+    return structuredClone(mockSnapshot);
+  }
 }

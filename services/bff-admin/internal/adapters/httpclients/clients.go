@@ -14,22 +14,30 @@ import (
 )
 
 type Config struct {
-	OrderURL   string
-	LiveOpsURL string
-	QualityURL string
-	CatalogURL string
-	CrmURL     string
-	LedgerURL  string
+	OrderURL     string
+	LiveOpsURL   string
+	QualityURL   string
+	CatalogURL   string
+	CrmURL       string
+	LedgerURL    string
+	PromoURL     string
+	PricingURL   string
+	InventoryURL string
+	IdentityURL  string
 }
 
 func ConfigFromEnv() Config {
 	return Config{
-		OrderURL:   env("ORDER_URL", "http://localhost:8086"),
-		LiveOpsURL: env("LIVEOPS_URL", "http://localhost:8116"),
-		QualityURL: env("QUALITY_URL", "http://localhost:8118"),
-		CatalogURL: env("CATALOG_URL", "http://localhost:8082"),
-		CrmURL:     env("CRM_URL", "http://localhost:8102"),
-		LedgerURL:  env("LEDGER_URL", "http://localhost:8091"),
+		OrderURL:     env("ORDER_URL", "http://localhost:8086"),
+		LiveOpsURL:   env("LIVEOPS_URL", "http://localhost:8116"),
+		QualityURL:   env("QUALITY_URL", "http://localhost:8118"),
+		CatalogURL:   env("CATALOG_URL", "http://localhost:8082"),
+		CrmURL:       env("CRM_URL", "http://localhost:8102"),
+		LedgerURL:    env("LEDGER_URL", "http://localhost:8091"),
+		PromoURL:     env("PROMO_URL", "http://localhost:8094"),
+		PricingURL:   env("PRICING_URL", "http://localhost:8095"),
+		InventoryURL: env("INVENTORY_URL", "http://localhost:8083"),
+		IdentityURL:  env("IDENTITY_URL", "http://localhost:8081"),
 	}
 }
 
@@ -199,5 +207,66 @@ type LedgerClient struct{ *Client }
 func (c LedgerClient) ListJournals(ctx context.Context, tenant string) (map[string]any, error) {
 	var out map[string]any
 	err := c.get(ctx, "/v1/ledger/journals", tenant, &out)
+	return out, err
+}
+
+type PromoClient struct{ *Client }
+
+func (c PromoClient) ListCampaigns(ctx context.Context, tenant string, q url.Values) (map[string]any, error) {
+	path := "/v1/promo/campaigns"
+	if enc := q.Encode(); enc != "" {
+		path += "?" + enc
+	}
+	var out map[string]any
+	err := c.get(ctx, path, tenant, &out)
+	return out, err
+}
+
+func (c PromoClient) GetCampaign(ctx context.Context, tenant, id string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/promo/campaigns/"+url.PathEscape(id), tenant, &out)
+	return out, err
+}
+
+func (c PromoClient) CreateCampaign(ctx context.Context, tenant string, body map[string]any) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/v1/promo/campaigns", tenant, body, &out)
+	return out, err
+}
+
+type PricingClient struct{ *Client }
+
+func (c PricingClient) AdminList(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/pricing/admin", tenant, &out)
+	return out, err
+}
+
+type InventoryClient struct{ *Client }
+
+func (c InventoryClient) ListWarehouses(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/inventory/warehouses", tenant, &out)
+	return out, err
+}
+
+func (c InventoryClient) GetWarehouse(ctx context.Context, tenant, id string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/inventory/warehouses/"+url.PathEscape(id), tenant, &out)
+	return out, err
+}
+
+func (c InventoryClient) ListStock(ctx context.Context, tenant, warehouseID string) (map[string]any, error) {
+	path := "/v1/inventory/stock?warehouseId=" + url.QueryEscape(warehouseID) + "&limit=200"
+	var out map[string]any
+	err := c.get(ctx, path, tenant, &out)
+	return out, err
+}
+
+type IdentityClient struct{ *Client }
+
+func (c IdentityClient) ListRoles(ctx context.Context, tenant string) (map[string]any, error) {
+	var out map[string]any
+	err := c.get(ctx, "/v1/identity/roles", tenant, &out)
 	return out, err
 }

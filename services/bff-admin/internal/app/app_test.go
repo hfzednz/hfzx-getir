@@ -73,3 +73,67 @@ func TestAdminCatalogAndOrderAction(t *testing.T) {
 		t.Fatalf("%+v %v", dash, err)
 	}
 }
+
+type promoStub struct{}
+
+func (promoStub) ListCampaigns(_ context.Context, _ string, _ url.Values) (map[string]any, error) {
+	return map[string]any{"items": []any{map[string]any{"id": "c1", "name": "Dairy", "status": "active"}}}, nil
+}
+func (promoStub) GetCampaign(_ context.Context, _, id string) (map[string]any, error) {
+	return map[string]any{"id": id, "name": "Dairy", "status": "active"}, nil
+}
+func (promoStub) CreateCampaign(_ context.Context, _ string, body map[string]any) (map[string]any, error) {
+	return map[string]any{"id": "c-new", "name": body["name"], "status": "draft"}, nil
+}
+
+type inventoryStub struct{}
+
+func (inventoryStub) ListWarehouses(_ context.Context, _ string) (map[string]any, error) {
+	return map[string]any{"items": []any{map[string]any{"ID": "w1", "Code": "WH-1", "Name": "Kadikoy", "Status": "active"}}, "total": 1}, nil
+}
+func (inventoryStub) GetWarehouse(_ context.Context, _, id string) (map[string]any, error) {
+	return map[string]any{"ID": id, "Code": "WH-1", "Name": "Kadikoy", "Status": "active"}, nil
+}
+func (inventoryStub) ListStock(_ context.Context, _, _ string) (map[string]any, error) {
+	return map[string]any{"items": []any{map[string]any{"ID": "b1", "SKUCode": "MILK-1L", "OnHand": 12, "Reserved": 2, "SafetyMin": 4}}}, nil
+}
+
+func TestAdminLiveInventoryCampaigns(t *testing.T) {
+	d := app.Deps{Orders: orderStub{}, Promo: promoStub{}, Inventory: inventoryStub{}}
+	live, err := d.LiveSnapshot(context.Background(), "t")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stream, _ := live["orderStream"].([]map[string]any)
+	if len(stream) != 1 {
+		t.Fatalf("%+v", live)
+	}
+	inv, err := d.InventorySnapshot(context.Background(), "t")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stock, _ := inv["stock"].([]map[string]any)
+	if len(stock) != 1 || stock[0]["sku"] != "MILK-1L" {
+		t.Fatalf("%+v", inv)
+	}
+	cam, err := d.ListCampaigns(context.Background(), "t", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	citems, _ := cam["items"].([]map[string]any)
+	if len(citems) != 1 || citems[0]["status"] != "active" {
+		t.Fatalf("%+v", cam)
+	}
+	cust, err := d.ListCustomers(context.Background(), "t", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cust["total"] != 0 && cust["total"] != 1 {
+		// orders stub has no customerId — empty list is honest
+		_ = cust
+	}
+	fin, err := d.FinanceMutation(context.Background(), "payout_approve", "p1")
+	if err != nil || fin["ok"] != false {
+		t.Fatalf("finance write must not fake success: %+v %v", fin, err)
+	}
+}

@@ -38,12 +38,36 @@ type LedgerGateway interface {
 	ListJournals(ctx context.Context, tenant string) (map[string]any, error)
 }
 
+type PromoGateway interface {
+	ListCampaigns(ctx context.Context, tenant string, q url.Values) (map[string]any, error)
+	GetCampaign(ctx context.Context, tenant, id string) (map[string]any, error)
+	CreateCampaign(ctx context.Context, tenant string, body map[string]any) (map[string]any, error)
+}
+
+type PricingGateway interface {
+	AdminList(ctx context.Context, tenant string) (map[string]any, error)
+}
+
+type InventoryGateway interface {
+	ListWarehouses(ctx context.Context, tenant string) (map[string]any, error)
+	GetWarehouse(ctx context.Context, tenant, id string) (map[string]any, error)
+	ListStock(ctx context.Context, tenant, warehouseID string) (map[string]any, error)
+}
+
+type IdentityGateway interface {
+	ListRoles(ctx context.Context, tenant string) (map[string]any, error)
+}
+
 type Deps struct {
-	Orders  OrderGateway
-	LiveOps LiveOpsGateway
-	Catalog CatalogGateway
-	CRM     CRMGateway
-	Ledger  LedgerGateway
+	Orders    OrderGateway
+	LiveOps   LiveOpsGateway
+	Catalog   CatalogGateway
+	CRM       CRMGateway
+	Ledger    LedgerGateway
+	Promo     PromoGateway
+	Pricing   PricingGateway
+	Inventory InventoryGateway
+	Identity  IdentityGateway
 }
 
 func (d *Deps) Dashboard(ctx context.Context, tenant string) (map[string]any, error) {

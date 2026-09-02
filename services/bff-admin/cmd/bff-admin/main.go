@@ -19,11 +19,15 @@ func main() {
 	}
 	cfg := httpclients.ConfigFromEnv()
 	deps := &app.Deps{
-		Orders:  httpclients.OrderClient{Client: httpclients.New(cfg.OrderURL)},
-		LiveOps: httpclients.LiveOpsClient{Client: httpclients.New(cfg.LiveOpsURL)},
-		Catalog: httpclients.CatalogClient{Client: httpclients.New(cfg.CatalogURL)},
-		CRM:     httpclients.CRMClient{Client: httpclients.New(cfg.CrmURL)},
-		Ledger:  httpclients.LedgerClient{Client: httpclients.NewLedger(cfg.LedgerURL)},
+		Orders:    httpclients.OrderClient{Client: httpclients.New(cfg.OrderURL)},
+		LiveOps:   httpclients.LiveOpsClient{Client: httpclients.New(cfg.LiveOpsURL)},
+		Catalog:   httpclients.CatalogClient{Client: httpclients.New(cfg.CatalogURL)},
+		CRM:       httpclients.CRMClient{Client: httpclients.New(cfg.CrmURL)},
+		Ledger:    httpclients.LedgerClient{Client: httpclients.NewLedger(cfg.LedgerURL)},
+		Promo:     httpclients.PromoClient{Client: httpclients.New(cfg.PromoURL)},
+		Pricing:   httpclients.PricingClient{Client: httpclients.New(cfg.PricingURL)},
+		Inventory: httpclients.InventoryClient{Client: httpclients.New(cfg.InventoryURL)},
+		Identity:  httpclients.IdentityClient{Client: httpclients.New(cfg.IdentityURL)},
 	}
 	srv := httpadapter.NewServer(addr, deps)
 	go func() {

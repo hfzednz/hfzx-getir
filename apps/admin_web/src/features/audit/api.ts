@@ -1,8 +1,18 @@
 import type { AuditSnapshot } from "./types";
+import { ALLOW_MOCK_FALLBACK } from "@/shared/config/platform";
+import { apiClient } from "@/shared/api/client";
 
-/** Mock audit log — replaced by GET /admin/audit when BFF is live. */
+/** Live audit from bff-admin (derived from orders + tickets). */
 export async function fetchAuditSnapshot(): Promise<AuditSnapshot> {
-  await new Promise((r) => setTimeout(r, 200));
+  try {
+    return await apiClient<AuditSnapshot>("/admin/audit");
+  } catch (err) {
+    if (!ALLOW_MOCK_FALLBACK) throw err;
+    return mockAuditSnapshot();
+  }
+}
+
+function mockAuditSnapshot(): AuditSnapshot {
   const base = Date.now();
 
   return {
