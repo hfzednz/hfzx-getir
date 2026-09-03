@@ -1,7 +1,7 @@
 // Package payout provides a bank/PSP PayoutClient for settlement-service.
 //
 // Behavior:
-//   - Empty BaseURL → synthetic in-process success (local / adapter-ready; PSP is external).
+//   - Empty BaseURL → honest provider-unavailable (never fake a paid rail).
 //   - Non-empty BaseURL → real HTTP POST to the payout provider.
 package payout
 
@@ -20,15 +20,15 @@ import (
 )
 
 // Client executes payouts via an external PSP/provider when BaseURL is set.
-// When BaseURL is empty, returns in-process success for local development
-// (adapter-ready; real PSP wiring is external via PAYOUT_PROVIDER_URL).
+// When BaseURL is empty, Execute reports provider_unavailable rather than
+// fabricating a paid settlement.
 type Client struct {
 	BaseURL    string
 	log        *slog.Logger
 	HTTPClient *http.Client
 }
 
-// NewClient returns a PayoutClient. Empty baseURL keeps synthetic success.
+// NewClient returns a PayoutClient. Empty baseURL keeps the rail unavailable.
 func NewClient(baseURL string, log *slog.Logger) *Client {
 	if log == nil {
 		log = slog.Default()
@@ -42,15 +42,15 @@ func NewClient(baseURL string, log *slog.Logger) *Client {
 	if baseURL != "" {
 		log.Info("payout.client.http", "baseURL", baseURL)
 	} else {
-		log.Warn("payout.client.synthetic", "reason", "PAYOUT_PROVIDER_URL empty; in-process success only")
+		log.Warn("payout.client.unavailable", "reason", "PAYOUT_PROVIDER_URL empty")
 	}
 	return c
 }
 
-// Execute posts a payout to the provider, or returns synthetic success when BaseURL is empty.
+// Execute posts a payout to the provider, or reports unavailable when BaseURL is empty.
 func (c *Client) Execute(ctx context.Context, req ports.PayoutRequest) (ports.PayoutResult, error) {
 	if c.BaseURL == "" {
-		c.log.Info("payout.execute.synthetic",
+		c.log.Warn("payout.execute.unavailable",
 			"instructionId", req.InstructionID.String(),
 			"payeeType", string(req.PayeeType),
 			"payeeRef", req.PayeeRef,
@@ -58,8 +58,8 @@ func (c *Client) Execute(ctx context.Context, req ports.PayoutRequest) (ports.Pa
 			"currency", req.Currency,
 		)
 		return ports.PayoutResult{
-			ProviderRef: "psp-stub-" + req.InstructionID.String(),
-			Succeeded:   true,
+			Succeeded: false,
+			Error:     "provider_unavailable",
 		}, nil
 	}
 

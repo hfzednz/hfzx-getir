@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS platform_slo_reports (
   objective DOUBLE PRECISION NOT NULL,
   actual DOUBLE PRECISION NOT NULL,
   budget_left DOUBLE PRECISION NOT NULL,
-  window TEXT NOT NULL,
+  "window" TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL
 );
 

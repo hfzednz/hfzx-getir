@@ -89,12 +89,12 @@ func NewServerWithAuth(addr string, deps *app.Deps, v authz.Validator) *http.Ser
 	mux.HandleFunc("POST "+base+"/payment-methods/wallet/pay", h.walletPay)
 	mux.HandleFunc("POST "+base+"/payment-methods/retry", h.retryPayment)
 	mux.HandleFunc("POST "+base+"/reviews", h.review)
-	gated := authz.Gate(v, authz.Options{
+	gated := requestIDMiddleware(authz.Gate(v, authz.Options{
 		Public: []string{"/health", "/ready", "/v1/customer/auth/otp/"},
 		Rules: []authz.Rule{
 			{Prefix: "/v1/customer", Roles: []string{"customer"}},
 		},
-	})(requestIDMiddleware(mux))
+	})(mux))
 	return &http.Server{Addr: addr, Handler: gated, ReadHeaderTimeout: 5 * time.Second}
 }
 

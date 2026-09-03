@@ -254,7 +254,7 @@ type SLORepo struct{ DB *sql.DB }
 func (r *SLORepo) Save(ctx context.Context, s domain.SLOReport) error {
 	_, err := r.DB.ExecContext(ctx, `
 		INSERT INTO platform_slo_reports (
-			id, tenant_id, service, objective, actual, budget_left, window, created_at
+			id, tenant_id, service, objective, actual, budget_left, "window", created_at
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
 		s.ID, s.TenantID, s.Service, s.Objective, s.Actual, s.BudgetLeft, s.Window, s.CreatedAt.UTC())
 	return mapUniqueViolation(err)
@@ -262,7 +262,7 @@ func (r *SLORepo) Save(ctx context.Context, s domain.SLOReport) error {
 
 func (r *SLORepo) List(ctx context.Context, tenantID uuid.UUID) ([]domain.SLOReport, error) {
 	rows, err := r.DB.QueryContext(ctx, `
-		SELECT id, tenant_id, service, objective, actual, budget_left, window, created_at
+		SELECT id, tenant_id, service, objective, actual, budget_left, "window", created_at
 		FROM platform_slo_reports WHERE tenant_id=$1 ORDER BY created_at DESC`, tenantID)
 	if err != nil {
 		return nil, err

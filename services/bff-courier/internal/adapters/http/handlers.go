@@ -49,6 +49,9 @@ func courierID(r *http.Request, bodyID string) string {
 	if q := r.URL.Query().Get("courierId"); q != "" {
 		return q
 	}
+	if p, ok := authz.PrincipalFrom(r.Context()); ok && p.ID != "" {
+		return p.ID
+	}
 	return r.Header.Get("X-Nexora-User")
 }
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/nexora/bff-admin/internal/app"
@@ -40,7 +41,18 @@ func principalID(r *http.Request) string {
 
 func writeMutation(w http.ResponseWriter, res map[string]any, err error) {
 	if err != nil {
-		writeErr(w, 502, "upstream_error", err.Error())
+		msg := err.Error()
+		status, code := 502, "upstream_error"
+		if strings.Contains(msg, "invalid argument") || strings.Contains(msg, `"code":"invalid_argument"`) {
+			status, code = 400, "invalid_argument"
+		} else if strings.Contains(msg, "not found") || strings.Contains(msg, `"code":"not_found"`) {
+			status, code = 404, "not_found"
+		} else if strings.Contains(msg, "invalid_transition") || strings.Contains(msg, `"code":"conflict"`) {
+			status, code = 409, "conflict"
+		} else if strings.Contains(msg, "provider_unavailable") || strings.Contains(msg, "invariant_violation") {
+			status, code = 422, "unprocessable"
+		}
+		writeErr(w, status, code, msg)
 		return
 	}
 	if res["ok"] != true {

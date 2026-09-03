@@ -288,6 +288,9 @@ func (d *Deps) postJSON(ctx context.Context, url, tenant string, body, out any) 
 	defer resp.Body.Close()
 	b, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if resp.StatusCode >= 300 {
+		if resp.StatusCode == 400 {
+			return fmt.Errorf("%w: %s", ErrInvalid, string(b))
+		}
 		return fmt.Errorf("upstream %s: %d %s", url, resp.StatusCode, string(b))
 	}
 	if out == nil || len(b) == 0 {

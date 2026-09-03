@@ -2,12 +2,14 @@ package app_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/nexora/tracking-service/internal/app"
 	"github.com/nexora/tracking-service/internal/app/memory"
+	"github.com/nexora/tracking-service/internal/app/ports"
 	"github.com/nexora/tracking-service/internal/domain"
 )
 
@@ -151,5 +153,26 @@ func TestHistoryCapped(t *testing.T) {
 	n := env.Store.HistoryLen(env.Tenant, env.CourierID)
 	if n != 5 {
 		t.Fatalf("history len=%d want 5", n)
+	}
+}
+
+type failGeofence struct{}
+
+func (failGeofence) Check(_ context.Context, _ ports.GeofenceCheckRequest) (ports.GeofenceCheckResult, error) {
+	return ports.GeofenceCheckResult{}, fmt.Errorf("geofence down")
+}
+
+func TestIngestSucceedsWhenGeofenceUnavailable(t *testing.T) {
+	env := testDeps(t)
+	env.Deps.Geofence = failGeofence{}
+	loc, err := env.Deps.IngestLocation(context.Background(), app.IngestLocationInput{
+		TenantID: env.Tenant, CourierID: env.CourierID,
+		Lat: 41.01, Lon: 28.98, AccuracyM: 10,
+	})
+	if err != nil {
+		t.Fatalf("ingest must persist GPS even if geofence is down: %v", err)
+	}
+	if loc.Lat != 41.01 {
+		t.Fatalf("lat=%v", loc.Lat)
 	}
 }

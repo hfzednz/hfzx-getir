@@ -31,7 +31,7 @@ func Load() (Config, error) {
 		DatabaseURL:        env("DATABASE_URL", ""),
 		RedisURL:           env("REDIS_URL", ""),
 		KafkaBrokers:       splitCSV(env("KAFKA_BROKERS", "")),
-		GeofenceBaseURL:    env("GEOFENCE_BASE_URL", "http://localhost:8099"),
+		GeofenceBaseURL:    env("GEOFENCE_BASE_URL", ""),
 		HistoryCap:         envInt("HISTORY_CAP", 100),
 		ArrivalThresholdM:  envFloat("ARRIVAL_THRESHOLD_M", 50),
 		RateLimitPerMinute: envInt("RATE_LIMIT_PER_MINUTE", 600),

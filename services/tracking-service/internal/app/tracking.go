@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -130,32 +131,34 @@ func (d *Deps) IngestLocation(ctx context.Context, in IngestLocationInput) (doma
 			Lat: in.Lat, Lon: in.Lon,
 		})
 		if err != nil {
-			return loc, err
-		}
-		for _, hit := range res.Hits {
-			evType := domain.EventGeofenceEnter
-			if hit.Kind == domain.GeofenceExit {
-				evType = domain.EventGeofenceExit
-			}
-			ge := domain.GeofenceEvent{
-				ID: d.newID(), TenantID: in.TenantID, CourierID: in.CourierID,
-				OrderID: in.OrderID, ZoneID: hit.ZoneID, Kind: hit.Kind,
-				Lat: in.Lat, Lon: in.Lon, OccurredAt: now, CreatedAt: now,
-			}
-			_ = d.Timelines.SaveGeofenceEvent(ctx, ge)
-			d.emit(ctx, in.TenantID, in.CourierID, evType, map[string]any{
-				"zoneId": hit.ZoneID, "kind": string(hit.Kind),
-			})
-			if in.OrderID != nil {
-				tlType := domain.TimelineGeofenceEnter
+			slog.Default().Warn("tracking.geofence.check",
+				"err", err, "courierId", in.CourierID.String(), "tenantId", in.TenantID.String())
+		} else {
+			for _, hit := range res.Hits {
+				evType := domain.EventGeofenceEnter
 				if hit.Kind == domain.GeofenceExit {
-					tlType = domain.TimelineGeofenceExit
+					evType = domain.EventGeofenceExit
 				}
-				lat, lon := in.Lat, in.Lon
-				_, _ = d.AppendTimeline(ctx, AppendTimelineInput{
-					TenantID: in.TenantID, OrderID: *in.OrderID, CourierID: &in.CourierID,
-					Type: tlType, Lat: &lat, Lon: &lon, Message: string(hit.Kind) + " " + hit.ZoneID,
+				ge := domain.GeofenceEvent{
+					ID: d.newID(), TenantID: in.TenantID, CourierID: in.CourierID,
+					OrderID: in.OrderID, ZoneID: hit.ZoneID, Kind: hit.Kind,
+					Lat: in.Lat, Lon: in.Lon, OccurredAt: now, CreatedAt: now,
+				}
+				_ = d.Timelines.SaveGeofenceEvent(ctx, ge)
+				d.emit(ctx, in.TenantID, in.CourierID, evType, map[string]any{
+					"zoneId": hit.ZoneID, "kind": string(hit.Kind),
 				})
+				if in.OrderID != nil {
+					tlType := domain.TimelineGeofenceEnter
+					if hit.Kind == domain.GeofenceExit {
+						tlType = domain.TimelineGeofenceExit
+					}
+					lat, lon := in.Lat, in.Lon
+					_, _ = d.AppendTimeline(ctx, AppendTimelineInput{
+						TenantID: in.TenantID, OrderID: *in.OrderID, CourierID: &in.CourierID,
+						Type: tlType, Lat: &lat, Lon: &lon, Message: string(hit.Kind) + " " + hit.ZoneID,
+					})
+				}
 			}
 		}
 	}

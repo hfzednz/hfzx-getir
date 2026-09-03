@@ -13,6 +13,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -23,9 +24,10 @@ import (
 // When BaseURL is empty, returns a synthetic success for local/unit tests
 // (ledger is typically mocked in app tests via memory.LedgerClient).
 type Client struct {
-	BaseURL    string
-	log        *slog.Logger
-	HTTPClient *http.Client
+	BaseURL        string
+	log            *slog.Logger
+	HTTPClient     *http.Client
+	internalToken  string
 }
 
 // NewClient returns a LedgerClient. Empty baseURL keeps synthetic success.
@@ -35,9 +37,10 @@ func NewClient(baseURL string, log *slog.Logger) *Client {
 	}
 	baseURL = strings.TrimRight(baseURL, "/")
 	c := &Client{
-		BaseURL:    baseURL,
-		log:        log,
-		HTTPClient: &http.Client{Timeout: 15 * time.Second},
+		BaseURL:        baseURL,
+		log:            log,
+		HTTPClient:     &http.Client{Timeout: 15 * time.Second},
+		internalToken:  strings.TrimSpace(os.Getenv("LEDGER_INTERNAL_TOKEN")),
 	}
 	if baseURL != "" {
 		log.Info("ledger.client.http", "baseURL", baseURL)
@@ -95,6 +98,9 @@ func (c *Client) doJSON(ctx context.Context, method, path, tenantID, idemKey str
 	}
 	if idemKey != "" {
 		req.Header.Set("Idempotency-Key", idemKey)
+	}
+	if c.internalToken != "" {
+		req.Header.Set("X-Ledger-Internal-Token", c.internalToken)
 	}
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
