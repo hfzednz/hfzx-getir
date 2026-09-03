@@ -1,4 +1,4 @@
-.PHONY: help bootstrap doctor deps deps-go deps-flutter deps-web verify verify-structure test-go-focus test-certs build-validate compose-up compose-down integration-cert prod-validate
+.PHONY: help bootstrap doctor deps deps-go deps-flutter deps-web verify verify-structure test-go-focus test-certs build-validate compose-up compose-down stack-up stack-down live-e2e integration-cert prod-validate
 
 help:
 	@echo "NEXORA monorepo targets:"
@@ -57,6 +57,15 @@ test-go-focus:
 test-certs:
 	cd tools/prod-validate && go run . -env=staging
 	cd tools/integration-cert && go test ./... || go run .
+
+stack-up:
+	python scripts/local/prompt87_live_gate.py --start
+
+live-e2e:
+	python scripts/local/prompt87_live_gate.py
+
+stack-down:
+	python scripts/local/prompt87_live_gate.py --stop
 
 compose-up:
 	docker compose -f infra/docker/docker-compose.yml up -d
