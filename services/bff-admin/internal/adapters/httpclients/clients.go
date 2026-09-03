@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/nexora/bff-admin/internal/authz"
 )
 
 type Config struct {
@@ -34,15 +36,15 @@ type Config struct {
 
 func ConfigFromEnv() Config {
 	return Config{
-		OrderURL:      env("ORDER_URL", "http://localhost:8086"),
+		OrderURL:      env("ORDER_URL", "http://localhost:8085"),
 		LiveOpsURL:    env("LIVEOPS_URL", "http://localhost:8116"),
 		QualityURL:    env("QUALITY_URL", "http://localhost:8118"),
-		CatalogURL:    env("CATALOG_URL", "http://localhost:8082"),
+		CatalogURL:    env("CATALOG_URL", "http://localhost:8083"),
 		CrmURL:        env("CRM_URL", "http://localhost:8102"),
 		LedgerURL:     env("LEDGER_URL", "http://localhost:8091"),
 		PromoURL:      env("PROMO_URL", "http://localhost:8094"),
 		PricingURL:    env("PRICING_URL", "http://localhost:8095"),
-		InventoryURL:  env("INVENTORY_URL", "http://localhost:8083"),
+		InventoryURL:  env("INVENTORY_URL", "http://localhost:8084"),
 		IdentityURL:   env("IDENTITY_URL", "http://localhost:8081"),
 		ProfileURL:    env("PROFILE_URL", "http://localhost:8082"),
 		SettlementURL: env("SETTLEMENT_URL", "http://localhost:8092"),
@@ -109,6 +111,9 @@ func (c *Client) do(ctx context.Context, method, path, tenant string, in, out an
 	}
 	if tenant != "" {
 		req.Header.Set("X-Tenant-Id", tenant)
+	}
+	if p, ok := authz.PrincipalFrom(ctx); ok && p.ID != "" {
+		req.Header.Set("X-Nexora-User", p.ID)
 	}
 	if c.internalToken != "" && c.tokenHeader != "" {
 		req.Header.Set(c.tokenHeader, c.internalToken)

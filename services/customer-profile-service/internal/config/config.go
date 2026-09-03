@@ -33,7 +33,7 @@ type Config struct {
 // Load reads configuration from environment variables with sensible defaults.
 func Load() (Config, error) {
 	cfg := Config{
-		HTTPAddr:           env("HTTP_ADDR", ":8081"),
+		HTTPAddr:           env("HTTP_ADDR", ":8082"),
 		GRPCAddr:           env("GRPC_ADDR", ":9091"),
 		DatabaseURL:        env("DATABASE_URL", ""),
 		RedisURL:           env("REDIS_URL", ""),

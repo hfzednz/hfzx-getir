@@ -29,9 +29,9 @@ type Config struct {
 // Load reads configuration from environment variables with sensible defaults.
 func Load() (Config, error) {
 	cfg := Config{
-		HTTPAddr:           env("HTTP_ADDR", ":8086"),
+		HTTPAddr:           env("HTTP_ADDR", ":8085"),
 		GRPCAddr:           env("GRPC_ADDR", ":9096"),
-		PublicBaseURL:      strings.TrimRight(env("PUBLIC_BASE_URL", "http://localhost:8086"), "/"),
+		PublicBaseURL:      strings.TrimRight(env("PUBLIC_BASE_URL", "http://localhost:8085"), "/"),
 		DatabaseURL:        env("DATABASE_URL", ""),
 		RedisURL:           env("REDIS_URL", ""),
 		KafkaBrokers:       splitCSV(env("KAFKA_BROKERS", "")),
@@ -39,9 +39,9 @@ func Load() (Config, error) {
 		RateLimitPerMinute: envInt("RATE_LIMIT_PER_MINUTE", 240),
 		CORSAllowedOrigins: splitCSV(env("CORS_ALLOWED_ORIGINS", "*")),
 		InventoryURL:       env("INVENTORY_URL", "http://localhost:8084"),
-		PaymentURL:         env("PAYMENT_URL", "http://localhost:8087"),
-		WarehouseURL:       env("WAREHOUSE_URL", "http://localhost:8085"),
-		DispatchURL:        env("DISPATCH_URL", "http://localhost:8088"),
+		PaymentURL:         env("PAYMENT_URL", "http://localhost:8089"),
+		WarehouseURL:       env("WAREHOUSE_URL", "http://localhost:8088"),
+		DispatchURL:        env("DISPATCH_URL", "http://localhost:8096"),
 	}
 	if cfg.HTTPAddr == "" {
 		return Config{}, fmt.Errorf("HTTP_ADDR is required")

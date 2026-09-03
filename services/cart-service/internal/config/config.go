@@ -25,9 +25,9 @@ type Config struct {
 // Load reads configuration from environment variables with sensible defaults.
 func Load() (Config, error) {
 	cfg := Config{
-		HTTPAddr:           env("HTTP_ADDR", ":8087"),
+		HTTPAddr:           env("HTTP_ADDR", ":8086"),
 		GRPCAddr:           env("GRPC_ADDR", ":9097"),
-		PublicBaseURL:      strings.TrimRight(env("PUBLIC_BASE_URL", "http://localhost:8087"), "/"),
+		PublicBaseURL:      strings.TrimRight(env("PUBLIC_BASE_URL", "http://localhost:8086"), "/"),
 		DatabaseURL:        env("DATABASE_URL", ""),
 		RedisURL:           env("REDIS_URL", ""),
 		KafkaBrokers:       splitCSV(env("KAFKA_BROKERS", "")),
