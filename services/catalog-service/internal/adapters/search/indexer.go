@@ -242,7 +242,20 @@ func queryVariants(q string) []string {
 			out = append(out, strings.TrimSuffix(q, suf))
 		}
 	}
+	for _, syn := range grocerySynonyms[q] {
+		out = append(out, syn)
+	}
 	return out
+}
+
+// grocerySynonyms expands folded TR↔EN grocery queries so "süt" matches milk
+// even when only the English title is indexed (and the reverse).
+var grocerySynonyms = map[string][]string{
+	"sut":    {"milk"},
+	"milk":   {"sut"},
+	"ekmek":  {"bread"},
+	"bread":  {"ekmek"},
+	"yogurt": {"yogurt"},
 }
 
 func levenshtein(a, b string) int {

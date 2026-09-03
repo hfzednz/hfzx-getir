@@ -69,3 +69,24 @@ func TestSearchMemoryBilingualLocales(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchMemoryGrocerySynonymsWithoutLocales(t *testing.T) {
+	idx := NewIndexer("", slog.Default())
+	tenant := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	ctx := context.Background()
+	doc := ports.SearchDocument{
+		ProductID: uuid.New(), TenantID: tenant, SKU: "MILK-1L", Title: "Fresh Milk",
+	}
+	if err := idx.IndexProduct(ctx, doc); err != nil {
+		t.Fatal(err)
+	}
+	for _, q := range []string{"süt", "SÜT", " milk ", "Milk"} {
+		res, err := idx.Search(ctx, ports.SearchQuery{TenantID: tenant, Query: q, Limit: 10})
+		if err != nil {
+			t.Fatalf("%q: %v", q, err)
+		}
+		if len(res.Hits) != 1 || res.Hits[0].SKU != "MILK-1L" {
+			t.Fatalf("%q expected MILK-1L, got %+v", q, res.Hits)
+		}
+	}
+}

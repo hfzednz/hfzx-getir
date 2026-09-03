@@ -26,16 +26,16 @@ type EventPublisher interface {
 
 // SearchDocument is the OpenSearch projection for a product.
 type SearchDocument struct {
-	ProductID   uuid.UUID
-	TenantID    uuid.UUID
-	SKU         string
-	Barcodes    []string
-	Title       string
-	Brand       string
-	CategoryIDs []uuid.UUID
-	Attributes  map[string]any
-	Status      domain.ProductStatus
-	Locales     map[string]map[string]string
+	ProductID   uuid.UUID                  `json:"productId"`
+	TenantID    uuid.UUID                  `json:"tenantId"`
+	SKU         string                     `json:"sku"`
+	Barcodes    []string                   `json:"barcodes,omitempty"`
+	Title       string                     `json:"title"`
+	Brand       string                     `json:"brand,omitempty"`
+	CategoryIDs []uuid.UUID                `json:"categoryIds,omitempty"`
+	Attributes  map[string]any             `json:"attributes,omitempty"`
+	Status      domain.ProductStatus       `json:"status,omitempty"`
+	Locales     map[string]map[string]string `json:"locales,omitempty"`
 }
 
 // SearchQuery filters catalog search.
@@ -51,8 +51,8 @@ type SearchQuery struct {
 
 // SearchResult is a page of search hits.
 type SearchResult struct {
-	Total int
-	Hits  []SearchDocument
+	Total int              `json:"total"`
+	Hits  []SearchDocument `json:"hits"`
 }
 
 // SearchIndexer indexes and queries catalog documents (OpenSearch adapter).

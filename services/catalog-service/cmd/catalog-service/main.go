@@ -61,7 +61,7 @@ func main() {
 		ImportJobs:  importJobs,
 		Compliance:  compliance,
 		Suppliers:   &memory.SupplierRepo{S: store},
-		Search:      &memory.SearchIndexer{S: store},
+		Search:      searchIdx,
 		Events:      publisher,
 		MediaClient: media.NewClient(cfg.MediaServiceURL, log),
 		AI:          memory.AIClient{},
